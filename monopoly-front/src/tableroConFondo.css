@@ -1,0 +1,367 @@
+/* ==== ESTILOS BASE ==== */
+
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: sans-serif;
+}
+
+body {
+  background-image: url("/fondo-monopoly-partida-4.jpeg");
+  background-size: cover;
+  background-position: center;
+  background-repeat: no-repeat;
+  color: white;
+}
+
+.tablero-fondo {
+  position: relative;
+  width: 740px;
+  height: 740px;
+  margin: 0 auto;
+  padding-top: 1rem;
+  background-color: transparent;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.fondo-tablero {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  border: 4px solid white;
+  border-radius: 8px;
+}
+
+/* ==== NUEVO: GRID CON MEDIDAS EN PX ==== */
+
+.rejilla-tablero {
+  display: grid;
+  grid-template-columns: 92px repeat(9, 61px) 95px;
+  grid-template-rows: 92px repeat(9, 61px) 95px;
+  width: 736px;
+  height: 736px;
+  position: relative;
+  background-image: url("/tablero-monopoly.jpg");
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  padding-top: 1px;
+  padding-left: 1px;
+  z-index: 2;
+}
+
+.casilla-grid {
+  position: relative;
+  font-size: 9px;
+  font-weight: bold;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  color: black;
+  padding: 4px;
+  box-sizing: border-box;
+  word-break: break-word;
+  border: none;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  z-index: 10;
+}
+
+/* Orientaciones */
+
+.casilla-grid.abajo {
+  writing-mode: horizontal-tb;
+}
+
+.casilla-grid.arriba {
+  writing-mode: horizontal-tb;
+  transform: rotate(180deg);
+}
+
+.casilla-grid.izquierda {
+  writing-mode: vertical-rl;
+  direction: ltr;
+}
+
+.casilla-grid.derecha {
+  writing-mode: vertical-rl;
+  transform: rotate(180deg);
+  direction: rtl;
+}
+
+/* Icono jugador */
+
+.ficha-jugador-img {
+  width: 24px;
+  height: 24px;
+  position: absolute;
+  bottom: 4px;
+  left: 4px;
+  border-radius: 50%;
+  object-fit: contain;
+  box-shadow: 0 0 4px #000;
+}
+
+
+/* Botón dado */
+
+.panel-dado {
+  position: fixed;
+  top: 50%;
+  right: 40px;
+  transform: translateY(-50%);
+  background-color: rgba(255, 255, 255, 0.95);
+  padding: 15px 20px;
+  border-radius: 10px;
+  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  font-size: 14px;
+  z-index: 1000;
+  text-align: center;
+}
+
+.panel-dado button {
+  background-color: #4CAF50;
+  border: none;
+  padding: 10px 16px;
+  color: white;
+  font-weight: bold;
+  border-radius: 5px;
+  cursor: pointer;
+}
+
+/* Colores de propiedad */
+
+.color-marron { background-color: #8B4513; color: white; }
+.color-azul-claro { background-color: #87CEEB; }
+.color-rosa { background-color: #FF69B4; }
+.color-naranja { background-color: #FFA500; }
+.color-rojo { background-color: #DC143C; }
+.color-amarillo { background-color: #FFD700; }
+.color-verde { background-color: #228B22; color: white; }
+.color-azul-oscuro { background-color: #00008B; color: white; }
+
+.tarjeta-suerte-diagonal,
+.tarjeta-comunidad-vertical {
+  position: absolute !important;
+  top: 21% !important;         /* misma distancia desde arriba */
+  z-index: 3 !important;
+  pointer-events: auto !important;
+}
+
+.tarjeta-suerte-diagonal {
+  top: 21% !important;
+  left: 20% !important;
+}
+
+.tarjeta-comunidad-vertical {
+  bottom: 21% !important;
+  right: 20% !important;
+  top: auto !important; /* Anula top */
+}
+
+.tarjeta-suerte-diagonal img {
+  width: 150px !important;   /* Aumenta progresivamente hasta igualarla */
+  height: auto !important;
+  object-fit: contain !important;
+  cursor: pointer !important;
+  transition: transform 0.2s ease !important;
+}
+.tarjeta-comunidad-vertical img {
+  width: 160px !important;       /* Aumentamos el ancho si hace falta */
+  height: 190px !important;      /* Igualamos altura */
+  object-fit: contain !important;
+  cursor: pointer !important;
+  transition: transform 0.2s ease !important;
+}
+
+.tarjeta-suerte-diagonal img:hover,
+.tarjeta-comunidad-vertical img:hover {
+  transform: scale(1.05) !important;
+}
+.tapadera-izquierda {
+  position: absolute;
+  top: 20%;
+  left: 20%;
+  width: 200px;  /* Ajusta el ancho al hueco */
+  height: 180px; /* Ajusta la altura al hueco */
+  z-index: 1;
+  pointer-events: none;
+}
+.tapadera-derecha {
+  position: absolute;
+  top: 60%;
+  right: 15%;  /* usamos `right` en lugar de `left` */
+  width: 200px;
+  height: 180px;
+  z-index: 1;
+  pointer-events: none;
+}
+.panel-turno {
+  position: fixed;
+  bottom: 370px;
+  right: 40px;
+  width: 260px;
+  padding: 20px;
+  border-radius: 16px;
+  background: rgba(255, 255, 255, 0.15);  /* fondo translúcido */
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+  backdrop-filter: blur(10px);            /* efecto glass */
+  -webkit-backdrop-filter: blur(10px);    /* compatibilidad Safari */
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  z-index: 1000;
+  font-family: 'Segoe UI', sans-serif;
+  color: #ffffff;                         /* textos blancos para contraste */
+}
+
+.panel-turno p,
+.panel-turno li {
+  color: #fff;
+  font-size: 14px;
+  margin: 5px 0;
+}
+
+.boton-dado {
+  width: 100%;
+  padding: 10px;
+  font-size: 18px;
+  font-weight: bold;
+  background: #36d16b;
+  color: white;
+  border: none;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.boton-dado:hover {
+  background: #2abf5e;
+}
+
+.info-turno {
+  margin-top: 15px;
+}
+
+.acciones-turno ul {
+  margin: 5px 0 0 15px;
+  padding: 0;
+  list-style-type: disc;
+}
+.modal-bienvenida {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(17, 17, 17, 0.85);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 999;
+  animation: fadeInZoom 0.6s ease-out forwards;
+}
+
+.contenido-modal {
+  background: rgba(255, 255, 255, 0.1);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  padding: 2rem 3rem;
+  border-radius: 1.5rem;
+  text-align: center;
+  font-size: 1.5rem;
+  box-shadow: 0 0 25px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(255, 255, 255, 0.2);
+  color: white;
+}
+
+/* Animación de aparición con zoom */
+@keyframes fadeInZoom {
+  0% {
+    opacity: 0;
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+.boton-finalizar-container {
+  position: absolute;
+  left: -20rem;
+  bottom: 2rem; /* lo colocamos en la parte inferior izquierda */
+  z-index: 2000;
+}
+
+.boton-finalizar {
+  background: linear-gradient(135deg, #ef4444, #b91c1c);
+  color: white;
+  padding: 14px 28px;
+  font-size: 16px;
+  font-weight: 600;
+  border: none;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.25);
+  cursor: pointer;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.boton-finalizar:hover {
+  transform: scale(1.05);
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.35);
+}
+.boton-guardar-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+.boton-guardar {
+  background-color: #16a34a; /* verde */
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.boton-guardar:hover {
+  background-color: #15803d;
+}
+.botones-partida-container {
+  position: fixed;
+  bottom: 20px;
+  left: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.boton-finalizar {
+  background-color: #dc2626;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.boton-finalizar:hover {
+  background-color: #b91c1c;
+}
+
+.boton-guardar {
+  background-color: #16a34a;
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+}
+
+.boton-guardar:hover {
+  background-color: #15803d;
+}

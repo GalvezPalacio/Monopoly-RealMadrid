@@ -1,0 +1,56 @@
+.pagina-partida {
+  display: flex;
+  padding: 2rem;
+  background: #111;
+  color: white;
+}
+
+.tablero-monopoly {
+  display: grid;
+  grid-template-columns: repeat(11, 1fr);
+  grid-template-rows: repeat(11, 1fr);
+  grid-template-areas:
+    "pos20 pos21 pos22 pos23 pos24 pos25 pos26 pos27 pos28 pos29 pos30"
+    "pos19  .     .     .     .     .     .     .     .     .    pos31"
+    "pos18  .     .     .     .     .     .     .     .     .    pos32"
+    "pos17  .     .     .     .     .     .     .     .     .    pos33"
+    "pos16  .     .     .     .     .     .     .     .     .    pos34"
+    "pos15  .     .     .     .     .     .     .     .     .    pos35"
+    "pos14  .     .     .     .     .     .     .     .     .    pos36"
+    "pos13  .     .     .     .     .     .     .     .     .    pos37"
+    "pos12  .     .     .     .     .     .     .     .     .    pos38"
+    "pos11  .     .     .     .     .     .     .     .     .    pos39"
+    "pos10 pos9  pos8  pos7  pos6  pos5  pos4  pos3  pos2  pos1  pos0";
+  width: 80vmin;
+  height: 80vmin;
+  background-color: #ccc;
+  position: relative;
+  border: 3px solid #444;
+}
+
+.casilla {
+  border: 1px solid #666;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 11px;
+  background-color: white;
+  color: black;
+  padding: 2px;
+  text-align: center;
+  overflow: hidden;
+  cursor: pointer;
+  pointer-events: auto;
+  user-select: none;
+  z-index: 10;
+}
+
+.jugador {
+  background-color: gold !important;
+  font-weight: bold;
+}
+
+.panel-lateral {
+  margin-left: 2rem;
+}
+

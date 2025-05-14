@@ -1,0 +1,15 @@
+# Java / NetBeans
+/build/
+/target/
+/*.class
+*.log
+
+# Node / React / VS Code
+node_modules/
+dist/
+.vscode/
+.env
+
+# General
+.DS_Store
+Thumbs.db
