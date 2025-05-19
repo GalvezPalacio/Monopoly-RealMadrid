@@ -4,6 +4,7 @@
  */
 package com.monopoly.monopoly_web.modelo;
 
+import com.fasterxml.jackson.annotation.JsonManagedReference;
 import jakarta.persistence.Entity;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
@@ -26,6 +27,7 @@ public class PropiedadPartida {
 
     @ManyToOne
     @JoinColumn(name = "propiedad_id", nullable = false)
+    @JsonManagedReference
     private Propiedad propiedad;
 
     @ManyToOne

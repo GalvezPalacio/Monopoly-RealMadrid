@@ -6,7 +6,11 @@ import TarjetaPropiedad from "../componentes/TarjetaPropiedad";
 import PanelTurno from "../componentes/panelTurno";
 import fichasImagenes from "../datos/fichasImagenes";
 
-export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marcarPartidaComoGuardada }) {
+export default function TableroConFondo({
+  partidaId,
+  guardadaEnEstaSesion,
+  marcarPartidaComoGuardada,
+}) {
   const location = useLocation();
   const jugadorInicial = location.state?.jugadorInicial || "Jugador 1";
 
@@ -24,7 +28,8 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
   useEffect(() => {
     if (!partidaId) return;
 
-    document.body.style.backgroundImage = 'url("/fondo-monopoly-partida-4.jpeg")';
+    document.body.style.backgroundImage =
+      'url("/fondo-monopoly-partida-4.jpeg")';
     document.body.style.backgroundSize = "cover";
     document.body.style.backgroundPosition = "center";
     document.body.style.backgroundRepeat = "no-repeat";
@@ -48,11 +53,7 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
         const mensaje = `Empieza ${jugadorTurno.nombre}`;
         setMensajeBienvenida(mensaje);
         setMostrarBienvenida(true);
-
-        const timeout = setTimeout(() => {
-          setMostrarBienvenida(false);
-        }, 3000);
-
+        const timeout = setTimeout(() => setMostrarBienvenida(false), 3000);
         return () => clearTimeout(timeout);
       }
     }
@@ -60,18 +61,15 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
 
   useEffect(() => {
     if (!turnoRecienCambiado) return;
-
     const jugadorTurno = jugadores.find((j) => j.turno);
     if (jugadorTurno) {
       const mensaje = `Ahora le toca a ${jugadorTurno.nombre}`;
       setMensajeBienvenida(mensaje);
       setMostrarBienvenida(true);
-
       const timeout = setTimeout(() => {
         setMostrarBienvenida(false);
         setTurnoRecienCambiado(false);
       }, 3000);
-
       return () => clearTimeout(timeout);
     }
   }, [turnoRecienCambiado, jugadores]);
@@ -81,11 +79,15 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
     if (!jugadorActual) return;
 
     try {
-      const res = await fetch(`http://localhost:8081/api/jugadores/${jugadorActual.id}/tirar`, { method: "POST" });
-      const mensaje = await res.text();
-      console.log("🎲", mensaje);
+      const res = await fetch(
+        `http://localhost:8081/api/jugadores/${jugadorActual.id}/tirar`,
+        { method: "POST" }
+      );
+      await res.text();
 
-      const nuevos = await fetch(`http://localhost:8081/api/partidas/${partidaId}/jugadores`).then((r) => r.json());
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
       setJugadores(nuevos);
 
       const jugadorActualizado = nuevos.find((j) => j.id === jugadorActual.id);
@@ -93,40 +95,52 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
 
       setResultadoDado(jugadorActualizado.ultimoDado || 0);
       setPosicionJugador(nuevaPos);
-      const casilla = casillasInfo[nuevaPos];
-      setPropiedadSeleccionada(casilla);
 
-      if (["propiedad", "compania", "estacion"].includes(casilla.tipo)) {
-        if (!casilla.dueno) {
-          setAccionesDisponibles(["Comprar"]);
-        } else if (casilla.dueno.id === jugadorActual.id) {
-          setAccionesDisponibles(["Hipotecar"]);
-        } else {
-          setAccionesDisponibles(["Pagar alquiler"]);
-        }
+      const casilla = casillasInfo[nuevaPos];
+
+      if (casilla.tipo === "propiedad") {
+        const response = await fetch(
+          `http://localhost:8081/api/jugadores/partida/${partidaId}/posicion/${casilla.id}`
+        );
+        const propiedadPartida = await response.json();
+        console.log("🧩 PropiedadPartida desde backend:", propiedadPartida);
+
+        // Buscar datos visuales desde casillasInfo
+        const extra = casillasInfo.find(
+          (c) => c.id === propiedadPartida.propiedad.posicion
+        );
+
+        // Enriquecer la propiedad
+        const propiedadEnriquecida = {
+          ...propiedadPartida,
+          propiedad: {
+            ...propiedadPartida.propiedad,
+            ...extra, // fondo, alquileres, hipoteca, color...
+          },
+        };
+
+        setPropiedadSeleccionada(propiedadEnriquecida);
       } else {
-        setAccionesDisponibles([]);
+        setPropiedadSeleccionada(casilla);
       }
     } catch (err) {
       console.error("❌ Error al tirar el dado:", err);
     }
   };
-
   const terminarTurno = async () => {
     if (!jugadorActual) return;
-
     try {
-      await fetch(`http://localhost:8081/api/jugadores/${jugadorActual.id}/terminar-turno`, { method: "POST" });
-
-      const nuevos = await fetch(`http://localhost:8081/api/partidas/${partidaId}/jugadores`).then((r) => r.json());
-
+      await fetch(
+        `http://localhost:8081/api/jugadores/${jugadorActual.id}/terminar-turno`,
+        { method: "POST" }
+      );
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
       setJugadores(nuevos);
       setResultadoDado(null);
       setPropiedadSeleccionada(null);
-
-      setTimeout(() => {
-        setTurnoRecienCambiado(true);
-      }, 100);
+      setTimeout(() => setTurnoRecienCambiado(true), 100);
     } catch (err) {
       console.error("❌ Error al terminar el turno:", err);
     }
@@ -134,12 +148,16 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
 
   const comprarPropiedad = async () => {
     if (!jugadorActual) return;
-
     try {
-      const res = await fetch(`http://localhost:8081/api/jugadores/${jugadorActual.id}/comprar`, { method: "POST" });
+      const res = await fetch(
+        `http://localhost:8081/api/jugadores/${jugadorActual.id}/comprar`,
+        { method: "POST" }
+      );
       const texto = await res.text();
       alert(texto);
-      const nuevos = await fetch(`http://localhost:8081/api/partidas/${partidaId}/jugadores`).then((r) => r.json());
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
       setJugadores(nuevos);
     } catch (err) {
       console.error("❌ Error al comprar:", err);
@@ -170,8 +188,16 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
       )}
 
       <div className="rejilla-tablero">
-        <img src="/tarjetas/fondo-verde.png" alt="Fondo derecha" className="tapadera-derecha" />
-        <img src="/tarjetas/fondo-verde.png" alt="Fondo izquierda" className="tapadera-izquierda" />
+        <img
+          src="/tarjetas/fondo-verde.png"
+          alt="Fondo derecha"
+          className="tapadera-derecha"
+        />
+        <img
+          src="/tarjetas/fondo-verde.png"
+          alt="Fondo izquierda"
+          className="tapadera-izquierda"
+        />
 
         {casillasInfo.map((casilla) => {
           const posicion = obtenerGridArea(casilla.id);
@@ -186,20 +212,30 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
               key={casilla.id}
               className={`casilla-grid ${clase}`}
               style={{ gridArea: posicion }}
-              onClick={() => {
-                if ([
-                  "propiedad",
-                  "salida",
-                  "comunidad",
-                  "impuesto",
-                  "suerte",
-                  "estacion",
-                  "compania",
-                  "visita-carcel",
-                  "palco-vip",
-                  "vas-grada",
-                ].includes(casilla.tipo)) {
-                  setPropiedadSeleccionada(casilla);
+              onClick={async () => {
+                if (
+                  [
+                    "propiedad",
+                    "salida",
+                    "comunidad",
+                    "impuesto",
+                    "suerte",
+                    "estacion",
+                    "compania",
+                    "visita-carcel",
+                    "palco-vip",
+                    "vas-grada",
+                  ].includes(casilla.tipo)
+                ) {
+                  if (casilla.tipo === "propiedad") {
+                    const res = await fetch(
+                      `http://localhost:8081/api/jugadores/partida/${partidaId}/posicion/${casilla.id}`
+                    );
+                    const propiedadPartida = await res.json();
+                    setPropiedadSeleccionada(propiedadPartida);
+                  } else {
+                    setPropiedadSeleccionada(casilla);
+                  }
                 }
               }}
             >
@@ -218,26 +254,26 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
             </div>
           );
         })}
-
-        <div className="tarjeta-suerte-diagonal">
-          <img src="/tarjetas/suerte-tablero.png" alt="Suerte" />
-        </div>
-        <div className="tarjeta-comunidad-vertical">
-          <img src="/tarjetas/comunidad-tablero.png" alt="Comunidad" />
-        </div>
       </div>
 
       <div className="botones-partida-container">
         <button
           className="boton-guardar"
           onClick={async () => {
-            const nombre = prompt("Introduce un nombre para guardar la partida:");
+            const nombre = prompt(
+              "Introduce un nombre para guardar la partida:"
+            );
             if (!nombre) return;
 
             try {
-              const res = await fetch(`http://localhost:8081/api/partidas/${partidaId}/guardar?nombre=${encodeURIComponent(nombre)}`, {
-                method: "PATCH",
-              });
+              const res = await fetch(
+                `http://localhost:8081/api/partidas/${partidaId}/guardar?nombre=${encodeURIComponent(
+                  nombre
+                )}`,
+                {
+                  method: "PATCH",
+                }
+              );
 
               if (res.ok) {
                 alert("✅ Partida guardada correctamente.");
@@ -256,12 +292,17 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
         <button
           className="boton-finalizar"
           onClick={async () => {
-            const confirmar = window.confirm("¿Seguro que quieres finalizar la partida?");
+            const confirmar = window.confirm(
+              "¿Seguro que quieres finalizar la partida?"
+            );
             if (confirmar) {
               if (!guardadaEnEstaSesion) {
-                await fetch(`http://localhost:8081/api/partidas/${partidaId}/finalizar`, {
-                  method: "DELETE",
-                });
+                await fetch(
+                  `http://localhost:8081/api/partidas/${partidaId}/finalizar`,
+                  {
+                    method: "DELETE",
+                  }
+                );
               }
               window.location.href = "/";
             }

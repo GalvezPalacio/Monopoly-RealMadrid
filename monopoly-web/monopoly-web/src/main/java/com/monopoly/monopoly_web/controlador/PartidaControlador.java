@@ -11,8 +11,10 @@ package com.monopoly.monopoly_web.controlador;
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Partida;
 import com.monopoly.monopoly_web.modelo.Propiedad;
+import com.monopoly.monopoly_web.modelo.PropiedadPartida;
 import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
 import com.monopoly.monopoly_web.repositorio.PartidaRepositorio;
+import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
 import com.monopoly.monopoly_web.servicio.PartidaServicio;
 import jakarta.persistence.EntityManager;
@@ -43,18 +45,42 @@ public class PartidaControlador {
     private final PartidaServicio partidaServicio;
 
     @Autowired
+    private PropiedadPartidaRepositorio propiedadPartidaRepositorio;
+
+    @Autowired
     public PartidaControlador(PartidaServicio partidaServicio) {
         this.partidaServicio = partidaServicio;
     }
 
     // Crear nueva partida
     @PostMapping
-    public Partida crearPartida(@RequestBody Partida partida) {
-        partida.setFechaInicio(LocalDateTime.now());
-        partida.setEnProgreso(true);
-        partida.setGuardada(false); // <--- clave
-        return partidaRepositorio.save(partida);
+public Partida crearPartida(@RequestBody Partida partida) {
+    partida.setFechaInicio(LocalDateTime.now());
+    partida.setEnProgreso(true);
+    partida.setGuardada(false);
+    Partida partidaGuardada = partidaRepositorio.save(partida);
+
+    // Crear PropiedadPartida para cada propiedad base
+    List<Propiedad> propiedadesBase = propiedadRepositorio.findAll();
+    for (Propiedad propiedad : propiedadesBase) {
+        if (propiedad.getTipo().equals("propiedad") ||
+            propiedad.getTipo().equals("estacion") ||
+            propiedad.getTipo().equals("compania")) {
+
+            PropiedadPartida pp = new PropiedadPartida();
+            pp.setPartida(partidaGuardada);
+            pp.setPropiedad(propiedad);
+            pp.setCasas(0);
+            pp.setHotel(false);
+            pp.setHipotecada(false);
+            pp.setDueno(null);
+
+            propiedadPartidaRepositorio.save(pp);
+        }
     }
+
+    return partidaGuardada;
+}
 
     // Listar todas las partidas y verificar si hay una partida activa
     @GetMapping

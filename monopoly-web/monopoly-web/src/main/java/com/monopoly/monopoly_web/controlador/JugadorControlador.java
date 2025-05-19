@@ -11,6 +11,7 @@ package com.monopoly.monopoly_web.controlador;
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Partida;
 import com.monopoly.monopoly_web.modelo.Propiedad;
+import com.monopoly.monopoly_web.modelo.PropiedadPartida;
 import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
 import com.monopoly.monopoly_web.repositorio.PartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
@@ -20,6 +21,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.*;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.server.ResponseStatusException;
 
 @RestController
 @RequestMapping("/api/jugadores")
@@ -130,7 +134,8 @@ public class JugadorControlador {
             if (propiedad.getDueno() == null) {
                 mensajeExtra += "Cayó en " + propiedad.getNombre() + ". Puede comprarla por " + propiedad.getPrecio() + "€.";
             } else if (!propiedad.getDueno().getId().equals(jugador.getId())) {
-                int alquiler = propiedad.getAlquiler();
+                Map<String, Integer> alquileres = propiedad.getAlquiler();
+                int alquiler = alquileres.getOrDefault("base", 0);
                 jugador.setDinero(jugador.getDinero() - alquiler);
                 Jugador dueno = propiedad.getDueno();
                 dueno.setDinero(dueno.getDinero() + alquiler);
@@ -286,5 +291,20 @@ public class JugadorControlador {
         Jugador siguiente = jugadores.get(siguienteIndex);
         siguiente.setTurno(true);
         jugadorRepositorio.save(siguiente);
+    }
+
+    @GetMapping("/partida/{partidaId}/posicion/{posicion}")
+    public ResponseEntity<PropiedadPartida> obtenerPorPartidaYPosicion(@PathVariable Long partidaId, @PathVariable int posicion) {
+        Partida partida = partidaRepositorio.findById(partidaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida no encontrada"));
+
+        Propiedad propiedad = propiedadRepositorio.findByPosicion(posicion);
+        if (propiedad == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada en esa posición");
+        }
+
+        return propiedadPartidaServicio.obtenerPorPartidaYPropiedad(partida, propiedad)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PropiedadPartida no encontrada"));
     }
 }
