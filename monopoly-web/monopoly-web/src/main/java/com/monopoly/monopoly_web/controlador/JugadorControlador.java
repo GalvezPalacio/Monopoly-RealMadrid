@@ -14,7 +14,7 @@ import com.monopoly.monopoly_web.modelo.Propiedad;
 import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
 import com.monopoly.monopoly_web.repositorio.PartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
-import com.monopoly.monopoly_web.servicio.JuegoServicio;
+import com.monopoly.monopoly_web.servicio.PropiedadPartidaServicio;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.web.bind.annotation.*;
@@ -35,7 +35,7 @@ public class JugadorControlador {
     private PropiedadRepositorio propiedadRepositorio;
 
     @Autowired
-    private JuegoServicio juegoServicio;
+    private PropiedadPartidaServicio propiedadPartidaServicio;
 
     @GetMapping
     public List<Jugador> obtenerTodos() {
@@ -197,28 +197,28 @@ public class JugadorControlador {
             @PathVariable Long jugadorId,
             @RequestParam String grupoColor,
             @RequestParam int cantidad) {
-        return juegoServicio.construirGrupo(jugadorId, grupoColor, cantidad);
+        return propiedadPartidaServicio.construirGrupo(jugadorId, grupoColor, cantidad);
     }
 
     @PostMapping("/{jugadorId}/construir-hotel")
     public String construirHotel(
             @PathVariable Long jugadorId,
             @RequestParam String grupoColor) {
-        return juegoServicio.construirHotel(jugadorId, grupoColor);
+        return propiedadPartidaServicio.construirHotel(jugadorId, grupoColor);
     }
 
     @PostMapping("/{jugadorId}/construir-casa")
     public String construirCasaEnPropiedad(
             @PathVariable Long jugadorId,
             @RequestParam Long propiedadId) {
-        return juegoServicio.construirCasaEnPropiedad(jugadorId, propiedadId);
+        return propiedadPartidaServicio.construirCasaEnPropiedad(jugadorId, propiedadId);
     }
 
     @PostMapping("/{jugadorId}/construir-hotel-propiedad")
     public String construirHotelEnPropiedad(
             @PathVariable Long jugadorId,
             @RequestParam Long propiedadId) {
-        return juegoServicio.construirHotelEnPropiedad(jugadorId, propiedadId);
+        return propiedadPartidaServicio.construirHotelEnPropiedad(jugadorId, propiedadId);
     }
 
     @GetMapping("/{jugadorId}/mis-propiedades")
