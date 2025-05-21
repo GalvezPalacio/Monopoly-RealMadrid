@@ -1,0 +1,110 @@
+/*
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Licenses/license-default.txt to change this license
+ * Click nbfs://nbhost/SystemFileSystem/Templates/Classes/Class.java to edit this template
+ */
+package com.monopoly.monopoly_web.controlador;
+
+import com.monopoly.monopoly_web.modelo.Jugador;
+import com.monopoly.monopoly_web.modelo.Partida;
+import com.monopoly.monopoly_web.modelo.Propiedad;
+import com.monopoly.monopoly_web.modelo.PropiedadPartida;
+import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
+import com.monopoly.monopoly_web.repositorio.PartidaRepositorio;
+import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
+import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
+import com.monopoly.monopoly_web.servicio.PropiedadPartidaServicio;
+import java.util.Map;
+import java.util.Optional;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.server.ResponseStatusException;
+
+/**
+ *
+ * @author gabri
+ */
+@RestController
+@RequestMapping("/api/propiedadPartida")
+public class PropiedadPartidaControlador {
+
+    @Autowired
+    private PropiedadPartidaServicio propiedadPartidaServicio;
+
+    @Autowired
+    private PartidaRepositorio partidaRepositorio;
+
+    @Autowired
+    private PropiedadRepositorio propiedadRepositorio;
+
+    @Autowired
+    private JugadorRepositorio jugadorRepositorio;
+
+    @Autowired
+    private PropiedadPartidaRepositorio propiedadPartidaRepositorio;
+
+    @GetMapping("/partida/{partidaId}/posicion/{posicion}")
+    public ResponseEntity<PropiedadPartida> obtenerPropiedadPartida(
+            @PathVariable Long partidaId,
+            @PathVariable int posicion) {
+
+        Partida partida = partidaRepositorio.findById(partidaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida no encontrada"));
+
+        Propiedad propiedad = propiedadRepositorio.findByPosicion(posicion);
+        if (propiedad == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada en esa posición");
+        }
+
+        return propiedadPartidaServicio.obtenerPorPartidaYPropiedad(partida, propiedad)
+                .map(ResponseEntity::ok)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PropiedadPartida no encontrada"));
+    }
+
+    @PostMapping("/comprar")
+    public ResponseEntity<String> comprarPropiedad(@RequestBody Map<String, Object> datos) {
+        Long jugadorId = Long.valueOf(datos.get("jugadorId").toString());
+        Long partidaId = Long.valueOf(datos.get("partidaId").toString());
+        int casillaId = Integer.parseInt(datos.get("casillaId").toString());
+
+        Jugador jugador = jugadorRepositorio.findById(jugadorId)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+
+        Partida partida = partidaRepositorio.findById(partidaId)
+                .orElseThrow(() -> new RuntimeException("Partida no encontrada"));
+
+        Propiedad propiedad = propiedadRepositorio.findByPosicion(casillaId);
+        if (propiedad == null) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No hay propiedad en esta casilla.");
+        }
+
+        Optional<PropiedadPartida> opt = propiedadPartidaServicio.obtenerPorPartidaYPropiedad(partida, propiedad);
+        if (opt.isEmpty()) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("No se encontró propiedadPartida.");
+        }
+
+        PropiedadPartida propiedadPartida = opt.get();
+
+        if (propiedadPartida.getDueno() != null) {
+            return ResponseEntity.badRequest().body("Esta propiedad ya tiene dueño.");
+        }
+
+        if (jugador.getDinero() < propiedad.getPrecio()) {
+            return ResponseEntity.badRequest().body("No tienes suficiente dinero para comprar esta propiedad.");
+        }
+
+        jugador.setDinero(jugador.getDinero() - propiedad.getPrecio());
+        jugadorRepositorio.save(jugador);
+
+        propiedadPartida.setDueno(jugador);
+        propiedadPartidaRepositorio.save(propiedadPartida);
+
+        return ResponseEntity.ok("Has comprado " + propiedad.getNombre() + " por " + propiedad.getPrecio() + "€.");
+    }
+}

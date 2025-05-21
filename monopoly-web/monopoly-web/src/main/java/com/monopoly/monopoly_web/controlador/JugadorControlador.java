@@ -151,35 +151,35 @@ public class JugadorControlador {
         return mensajeExtra;
     }
 
-    @PostMapping("/{id}/comprar")
-    public String comprarPropiedad(@PathVariable Long id) {
-        Jugador jugador = jugadorRepositorio.findById(id)
-                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
-
-        int posicionActual = jugador.getPosicion();
-        Propiedad propiedad = propiedadRepositorio.findByPosicion(posicionActual);
-
-        if (propiedad == null) {
-            return "No hay ninguna propiedad en esta casilla.";
-        }
-
-        if (propiedad.getDueno() != null) {
-            return "Esta propiedad ya tiene dueño.";
-        }
-
-        if (jugador.getDinero() < propiedad.getPrecio()) {
-            return "No tienes suficiente dinero para comprar esta propiedad.";
-        }
-
-        jugador.setDinero(jugador.getDinero() - propiedad.getPrecio());
-        propiedad.setDueno(jugador);
-        propiedad.setPartida(jugador.getPartida()); // ✅ esta línea es clave
-
-        jugadorRepositorio.save(jugador);
-        propiedadRepositorio.save(propiedad);
-
-        return "Has comprado " + propiedad.getNombre() + " por " + propiedad.getPrecio() + "€.";
-    }
+//    @PostMapping("/{id}/comprar")
+//    public String comprarPropiedad(@PathVariable Long id) {
+//        Jugador jugador = jugadorRepositorio.findById(id)
+//                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+//
+//        int posicionActual = jugador.getPosicion();
+//        Propiedad propiedad = propiedadRepositorio.findByPosicion(posicionActual);
+//
+//        if (propiedad == null) {
+//            return "No hay ninguna propiedad en esta casilla.";
+//        }
+//
+//        if (propiedad.getDueno() != null) {
+//            return "Esta propiedad ya tiene dueño.";
+//        }
+//
+//        if (jugador.getDinero() < propiedad.getPrecio()) {
+//            return "No tienes suficiente dinero para comprar esta propiedad.";
+//        }
+//
+//        jugador.setDinero(jugador.getDinero() - propiedad.getPrecio());
+//        propiedad.setDueno(jugador);
+//        propiedad.setPartida(jugador.getPartida()); // ✅ esta línea es clave
+//
+//        jugadorRepositorio.save(jugador);
+//        propiedadRepositorio.save(propiedad);
+//
+//        return "Has comprado " + propiedad.getNombre() + " por " + propiedad.getPrecio() + "€.";
+//    }
 
     @Transactional
     private void pasarTurnoAlSiguiente(Long idActual) {
@@ -293,18 +293,18 @@ public class JugadorControlador {
         jugadorRepositorio.save(siguiente);
     }
 
-    @GetMapping("/partida/{partidaId}/posicion/{posicion}")
-    public ResponseEntity<PropiedadPartida> obtenerPorPartidaYPosicion(@PathVariable Long partidaId, @PathVariable int posicion) {
-        Partida partida = partidaRepositorio.findById(partidaId)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida no encontrada"));
-
-        Propiedad propiedad = propiedadRepositorio.findByPosicion(posicion);
-        if (propiedad == null) {
-            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada en esa posición");
-        }
-
-        return propiedadPartidaServicio.obtenerPorPartidaYPropiedad(partida, propiedad)
-                .map(ResponseEntity::ok)
-                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PropiedadPartida no encontrada"));
-    }
+//    @GetMapping("/partida/{partidaId}/posicion/{posicion}")
+//    public ResponseEntity<PropiedadPartida> obtenerPorPartidaYPosicion(@PathVariable Long partidaId, @PathVariable int posicion) {
+//        Partida partida = partidaRepositorio.findById(partidaId)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida no encontrada"));
+//
+//        Propiedad propiedad = propiedadRepositorio.findByPosicion(posicion);
+//        if (propiedad == null) {
+//            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada en esa posición");
+//        }
+//
+//        return propiedadPartidaServicio.obtenerPorPartidaYPropiedad(partida, propiedad)
+//                .map(ResponseEntity::ok)
+//                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PropiedadPartida no encontrada"));
+//    }
 }

@@ -77,40 +77,53 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
   }, [turnoRecienCambiado, jugadores]);
 
   const tirarDado = async () => {
-    if (mostrarBienvenida) setMostrarBienvenida(false);
-    if (!jugadorActual) return;
+  if (mostrarBienvenida) setMostrarBienvenida(false);
+  if (!jugadorActual) return;
 
-    try {
-      const res = await fetch(`http://localhost:8081/api/jugadores/${jugadorActual.id}/tirar`, { method: "POST" });
-      const mensaje = await res.text();
-      console.log("🎲", mensaje);
+  try {
+    // Mueve al jugador
+    const res = await fetch(`http://localhost:8081/api/jugadores/${jugadorActual.id}/tirar`, { method: "POST" });
+    const mensaje = await res.text();
+    console.log("🎲", mensaje);
 
-      const nuevos = await fetch(`http://localhost:8081/api/partidas/${partidaId}/jugadores`).then((r) => r.json());
-      setJugadores(nuevos);
+    // Refresca estado de jugadores
+    const nuevos = await fetch(`http://localhost:8081/api/partidas/${partidaId}/jugadores`).then((r) => r.json());
+    setJugadores(nuevos);
 
-      const jugadorActualizado = nuevos.find((j) => j.id === jugadorActual.id);
-      const nuevaPos = jugadorActualizado?.posicion ?? 0;
+    const jugadorActualizado = nuevos.find((j) => j.id === jugadorActual.id);
+    const nuevaPos = jugadorActualizado?.posicion ?? 0;
 
-      setResultadoDado(jugadorActualizado.ultimoDado || 0);
-      setPosicionJugador(nuevaPos);
-      const casilla = casillasInfo[nuevaPos];
-      setPropiedadSeleccionada(casilla);
+    setResultadoDado(jugadorActualizado.ultimoDado || 0);
+    setPosicionJugador(nuevaPos);
 
-      if (["propiedad", "compania", "estacion"].includes(casilla.tipo)) {
-        if (!casilla.dueno) {
+    const casilla = casillasInfo[nuevaPos];
+    setPropiedadSeleccionada(casilla); // popup se muestra igual 🎉
+
+    // Si la casilla es de tipo dinámico, consulta el estado real desde el backend
+    if (["propiedad", "compania", "estacion"].includes(casilla.tipo)) {
+      const propiedadPartidaRes = await fetch(`http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`);
+      
+      if (propiedadPartidaRes.ok) {
+        const propiedadPartida = await propiedadPartidaRes.json();
+
+        if (!propiedadPartida.duenio) {
           setAccionesDisponibles(["Comprar"]);
-        } else if (casilla.dueno.id === jugadorActual.id) {
+        } else if (propiedadPartida.duenio.id === jugadorActual.id) {
           setAccionesDisponibles(["Hipotecar"]);
         } else {
           setAccionesDisponibles(["Pagar alquiler"]);
         }
       } else {
+        console.warn("No se encontró propiedadPartida para esta casilla.");
         setAccionesDisponibles([]);
       }
-    } catch (err) {
-      console.error("❌ Error al tirar el dado:", err);
+    } else {
+      setAccionesDisponibles([]);
     }
-  };
+  } catch (err) {
+    console.error("❌ Error al tirar el dado:", err);
+  }
+};
 
   const terminarTurno = async () => {
     if (!jugadorActual) return;
@@ -133,18 +146,30 @@ export default function TableroConFondo({ partidaId, guardadaEnEstaSesion, marca
   };
 
   const comprarPropiedad = async () => {
-    if (!jugadorActual) return;
+  if (!jugadorActual) return;
 
-    try {
-      const res = await fetch(`http://localhost:8081/api/jugadores/${jugadorActual.id}/comprar`, { method: "POST" });
-      const texto = await res.text();
-      alert(texto);
-      const nuevos = await fetch(`http://localhost:8081/api/partidas/${partidaId}/jugadores`).then((r) => r.json());
-      setJugadores(nuevos);
-    } catch (err) {
-      console.error("❌ Error al comprar:", err);
-    }
-  };
+  try {
+    const res = await fetch("http://localhost:8081/api/propiedadPartida/comprar", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        jugadorId: jugadorActual.id,
+        partidaId: partidaId,
+        casillaId: posicionJugador // puedes usar propiedadSeleccionada.id si lo prefieres
+      }),
+    });
+
+    const texto = await res.text();
+    alert(texto);
+
+    const nuevos = await fetch(`http://localhost:8081/api/partidas/${partidaId}/jugadores`).then((r) => r.json());
+    setJugadores(nuevos);
+  } catch (err) {
+    console.error("❌ Error al comprar:", err);
+  }
+};
 
   const obtenerGridArea = (id) => {
     if (id === 0) return "11 / 11";
