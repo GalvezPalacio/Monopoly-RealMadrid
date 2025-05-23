@@ -1,0 +1,110 @@
+.selector-construccion-overlay {
+  position: fixed;
+  top: 0; left: 0;
+  width: 100vw; height: 100vh;
+  background: rgba(0, 0, 0, 0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 999;
+}
+
+.selector-construccion-popup {
+  background: white;
+  padding: 25px 30px;
+  border-radius: 12px;
+  width: 90%;
+  max-width: 500px;
+  text-align: center;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+  animation: fadeIn 0.3s ease-in-out;
+}
+
+.selector-construccion-popup h3 {
+  margin-bottom: 20px;
+  font-size: 1.2rem;
+  font-weight: bold;
+}
+
+.grid-propiedades {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 15px;
+  margin-bottom: 20px;
+}
+
+.tarjeta-propiedad-construccion {
+  padding: 15px;
+  border-radius: 10px;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  transition: transform 0.2s ease, opacity 0.2s ease;
+  text-shadow: 1px 1px 2px black;
+}
+
+.tarjeta-propiedad-construccion:hover {
+  transform: scale(1.05);
+  opacity: 0.9;
+}
+
+/* Botón cancelar */
+.cerrar-popup {
+  padding: 10px 20px;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  background: #ccc;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.cerrar-popup:hover {
+  background: #aaa;
+}
+
+/* Colores por grupo */
+.color-marron     { background: #8B4513; }
+.color-celeste    { background: #1E90FF; }
+.color-rosa       { background: #FF69B4; }
+.color-naranja    { background: #FFA500; }
+.color-rojo       { background: #FF3333; }
+.color-amarillo   { background: #FFD700; color: #222; }
+.color-verde      { background: #228B22; }
+.color-azul       { background: #1C1CF0; }
+.color-gris       { background: #777; }
+
+/* Animación */
+@keyframes fadeIn {
+  from { opacity: 0; transform: scale(0.95); }
+  to   { opacity: 1; transform: scale(1); }
+}
+.icono-edificacion {
+  width: 20px;
+  height: auto;
+  margin: 2px;
+  display: inline-block;
+  vertical-align: middle;
+}
+
+.edificaciones {
+  margin-top: 6px;
+  display: flex;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 4px;
+}
+
+.nombre-propiedad {
+  display: block;
+  font-weight: bold;
+  margin-bottom: 4px;
+}
+.contenido-propiedad {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 100%;
+}

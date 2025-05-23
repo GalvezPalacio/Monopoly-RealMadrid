@@ -13,6 +13,7 @@ import com.monopoly.monopoly_web.repositorio.PartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
 import com.monopoly.monopoly_web.servicio.PropiedadPartidaServicio;
+import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -23,6 +24,7 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import org.springframework.web.server.ResponseStatusException;
 
@@ -107,4 +109,32 @@ public class PropiedadPartidaControlador {
 
         return ResponseEntity.ok("Has comprado " + propiedad.getNombre() + " por " + propiedad.getPrecio() + "€.");
     }
+
+    @PostMapping("/construir-casa")
+    public String construirCasaEnPropiedad(@RequestBody Map<String, Object> datos) {
+        Long jugadorId = Long.valueOf(datos.get("jugadorId").toString());
+        Long propiedadId = Long.valueOf(datos.get("propiedadId").toString());
+
+        return propiedadPartidaServicio.construirCasaEnPropiedad(jugadorId, propiedadId);
+    }
+
+    @PostMapping("/construir-hotel")
+    public String construirHotelEnPropiedad(@RequestBody Map<String, Object> datos) {
+        Long jugadorId = Long.valueOf(datos.get("jugadorId").toString());
+        Long propiedadId = Long.valueOf(datos.get("propiedadId").toString());
+
+        return propiedadPartidaServicio.construirHotelEnPropiedad(jugadorId, propiedadId);
+    }
+
+    @GetMapping("/opciones-construccion")
+    public ResponseEntity<Map<String, List<String>>> obtenerOpcionesConstruccion(@RequestParam Long jugadorId) {
+        Map<String, List<String>> opciones = propiedadPartidaServicio.obtenerOpcionesConstruccion(jugadorId);
+        return ResponseEntity.ok(opciones);
+    }
+
+    @GetMapping("/del-jugador")
+    public List<PropiedadPartida> obtenerPropiedadesDelJugador(@RequestParam Long jugadorId) {
+        return propiedadPartidaRepositorio.findByDuenoId(jugadorId);
+    }
+
 }

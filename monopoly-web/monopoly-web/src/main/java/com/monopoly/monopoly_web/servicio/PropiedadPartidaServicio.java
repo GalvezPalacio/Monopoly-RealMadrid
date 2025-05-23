@@ -16,12 +16,16 @@ import com.monopoly.monopoly_web.modelo.PropiedadPartida;
 import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
+import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.stream.Collectors;
 
 @Service
 public class PropiedadPartidaServicio {
@@ -173,33 +177,31 @@ public class PropiedadPartidaServicio {
         Jugador jugador = jugadorRepositorio.findById(jugadorId)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
-        Propiedad propiedadElegida = propiedadRepositorio.findById(propiedadId)
-                .orElseThrow(() -> new RuntimeException("Propiedad no encontrada"));
+        PropiedadPartida propiedadPartida = propiedadPartidaRepositorio
+                .findByPartidaIdAndPropiedad_Id(jugador.getPartida().getId(), propiedadId)
+                .orElseThrow(() -> new RuntimeException("PropiedadPartida no encontrada"));
 
-        if (propiedadElegida.getDueno() == null || !propiedadElegida.getDueno().getId().equals(jugadorId)) {
+        if (propiedadPartida.getDueno() == null || !propiedadPartida.getDueno().getId().equals(jugadorId)) {
             return "No puedes construir en esta propiedad. No es tuya.";
         }
 
-        String grupoColor = propiedadElegida.getGrupoColor();
+        String grupoColor = propiedadPartida.getPropiedad().getGrupoColor();
 
-        List<Propiedad> grupo = propiedadRepositorio.findAll().stream()
-                .filter(p -> grupoColor.equalsIgnoreCase(p.getGrupoColor()))
+        List<PropiedadPartida> grupo = propiedadPartidaRepositorio.findByDueno_Id(jugadorId).stream()
+                .filter(pp -> pp.getPropiedad().getGrupoColor().equalsIgnoreCase(grupoColor))
                 .toList();
 
-        List<Propiedad> delJugador = grupo.stream()
-                .filter(p -> p.getDueno() != null && p.getDueno().getId().equals(jugadorId))
-                .toList();
-
-        if (delJugador.size() < grupo.size()) {
+        long totalEnGrupo = propiedadRepositorio.countByGrupoColor(grupoColor);
+        if (grupo.size() < totalEnGrupo) {
             return "No puedes construir casas en este grupo. Aún no tienes todas las propiedades del color " + grupoColor + ".";
         }
 
-        if (propiedadElegida.getCasas() >= 4 || propiedadElegida.isHotel()) {
+        if (propiedadPartida.getCasas() >= 4 || propiedadPartida.isHotel()) {
             return "No se puede construir más en esta propiedad. Ya tiene 4 casas o un hotel.";
         }
 
-        int casasActuales = propiedadElegida.getCasas();
-        boolean rompeUniformidad = delJugador.stream()
+        int casasActuales = propiedadPartida.getCasas();
+        boolean rompeUniformidad = grupo.stream()
                 .anyMatch(p -> p.getCasas() < casasActuales);
 
         if (rompeUniformidad) {
@@ -208,54 +210,51 @@ public class PropiedadPartidaServicio {
 
         int coste = CostesConstruccion.getCoste(grupoColor);
         if (jugador.getDinero() < coste) {
-            return "No tienes suficiente dinero para construir una casa en esta propiedad. Cuesta " + coste + "€.";
+            return "No tienes suficiente dinero para construir una casa. Cuesta " + coste + "€.";
         }
 
-        propiedadElegida.setCasas(casasActuales + 1);
+        propiedadPartida.setCasas(casasActuales + 1);
         jugador.setDinero(jugador.getDinero() - coste);
 
-        propiedadRepositorio.save(propiedadElegida);
+        propiedadPartidaRepositorio.save(propiedadPartida);
         jugadorRepositorio.save(jugador);
 
-        return "Casa construida en '" + propiedadElegida.getNombre() + "'. Ahora tiene " + propiedadElegida.getCasas() + " casas.";
+        return "Casa construida en '" + propiedadPartida.getPropiedad().getNombre()
+                + "'. Ahora tiene " + propiedadPartida.getCasas() + " casas.";
     }
 
     public String construirHotelEnPropiedad(Long jugadorId, Long propiedadId) {
         Jugador jugador = jugadorRepositorio.findById(jugadorId)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
-        Propiedad propiedadElegida = propiedadRepositorio.findById(propiedadId)
-                .orElseThrow(() -> new RuntimeException("Propiedad no encontrada"));
+        PropiedadPartida propiedadPartida = propiedadPartidaRepositorio
+                .findByPartidaIdAndPropiedad_Id(jugador.getPartida().getId(), propiedadId)
+                .orElseThrow(() -> new RuntimeException("PropiedadPartida no encontrada"));
 
-        // Comprobar que la propiedad es del jugador
-        if (propiedadElegida.getDueno() == null || !propiedadElegida.getDueno().getId().equals(jugadorId)) {
+        if (propiedadPartida.getDueno() == null || !propiedadPartida.getDueno().getId().equals(jugadorId)) {
             return "No puedes construir hotel en esta propiedad. No es tuya.";
         }
 
-        String grupoColor = propiedadElegida.getGrupoColor();
+        String grupoColor = propiedadPartida.getPropiedad().getGrupoColor();
 
-        // Obtener todo el grupo y filtrar propiedades del jugador
-        List<Propiedad> grupo = propiedadRepositorio.findAll().stream()
-                .filter(p -> grupoColor.equalsIgnoreCase(p.getGrupoColor()))
+        List<PropiedadPartida> grupo = propiedadPartidaRepositorio.findByDueno_Id(jugadorId).stream()
+                .filter(pp -> grupoColor.equalsIgnoreCase(pp.getPropiedad().getGrupoColor()))
                 .toList();
 
-        List<Propiedad> delJugador = grupo.stream()
-                .filter(p -> p.getDueno() != null && p.getDueno().getId().equals(jugadorId))
-                .toList();
-
-        if (delJugador.size() < grupo.size()) {
+        long totalEnGrupo = propiedadRepositorio.countByGrupoColor(grupoColor);
+        if (grupo.size() < totalEnGrupo) {
             return "No puedes construir hotel. No tienes todas las propiedades del grupo " + grupoColor + ".";
         }
 
-        if (propiedadElegida.isHotel()) {
+        if (propiedadPartida.isHotel()) {
             return "Esta propiedad ya tiene un hotel.";
         }
 
-        if (propiedadElegida.getCasas() != 4) {
-            return "Solo puedes construir un hotel si la propiedad tiene exactamente 4 casas.";
+        if (propiedadPartida.getCasas() != 4) {
+            return "Solo puedes construir un hotel si esta propiedad tiene exactamente 4 casas.";
         }
 
-        boolean todasCon4Casas = delJugador.stream()
+        boolean todasCon4Casas = grupo.stream()
                 .allMatch(p -> p.getCasas() == 4 || p.isHotel());
 
         if (!todasCon4Casas) {
@@ -267,13 +266,51 @@ public class PropiedadPartidaServicio {
             return "No tienes suficiente dinero para construir el hotel. Cuesta " + coste + "€.";
         }
 
-        propiedadElegida.setCasas(0);
-        propiedadElegida.setHotel(true);
+        propiedadPartida.setCasas(0);
+        propiedadPartida.setHotel(true);
         jugador.setDinero(jugador.getDinero() - coste);
 
-        propiedadRepositorio.save(propiedadElegida);
+        propiedadPartidaRepositorio.save(propiedadPartida);
         jugadorRepositorio.save(jugador);
 
-        return "Hotel construido con éxito en '" + propiedadElegida.getNombre() + "'.";
+        return "Hotel construido con éxito en '" + propiedadPartida.getPropiedad().getNombre() + "'.";
+    }
+
+    public Map<String, List<String>> obtenerOpcionesConstruccion(Long jugadorId) {
+        List<PropiedadPartida> propiedadesJugador = propiedadPartidaRepositorio.findByDuenoId(jugadorId);
+
+        // Agrupar por grupoColor
+        Map<String, List<PropiedadPartida>> grupos = propiedadesJugador.stream()
+                .filter(pp -> pp.getPropiedad() != null && pp.getPropiedad().getGrupoColor() != null)
+                .collect(Collectors.groupingBy(pp -> pp.getPropiedad().getGrupoColor()));
+
+        List<String> gruposConCasas = new ArrayList<>();
+        List<String> gruposConHotel = new ArrayList<>();
+
+        for (Map.Entry<String, List<PropiedadPartida>> entry : grupos.entrySet()) {
+            String grupo = entry.getKey();
+            List<PropiedadPartida> propiedadesGrupo = entry.getValue();
+
+            // Comprobamos si el jugador tiene todas las propiedades del grupo
+            long totalEnGrupo = propiedadRepositorio.countByGrupoColor(grupo);
+            if (propiedadesGrupo.size() < totalEnGrupo) {
+                continue;
+            }
+
+            boolean todasCon4Casas = propiedadesGrupo.stream().allMatch(p -> p.getCasas() == 4);
+            boolean algunaConMenosDe4 = propiedadesGrupo.stream().anyMatch(p -> p.getCasas() < 4);
+            boolean ningunaConHotel = propiedadesGrupo.stream().noneMatch(PropiedadPartida::isHotel);
+
+            if (todasCon4Casas && ningunaConHotel) {
+                gruposConHotel.add(grupo);
+            } else if (algunaConMenosDe4) {
+                gruposConCasas.add(grupo);
+            }
+        }
+
+        Map<String, List<String>> resultado = new HashMap<>();
+        resultado.put("gruposConCasas", gruposConCasas);
+        resultado.put("gruposConHotel", gruposConHotel);
+        return resultado;
     }
 }

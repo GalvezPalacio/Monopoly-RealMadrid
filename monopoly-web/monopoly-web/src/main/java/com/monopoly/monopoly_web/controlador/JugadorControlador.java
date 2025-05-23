@@ -197,34 +197,34 @@ public class JugadorControlador {
         }
     }
 
-    @PostMapping("/{jugadorId}/construir-grupo")
-    public String construirGrupo(
-            @PathVariable Long jugadorId,
-            @RequestParam String grupoColor,
-            @RequestParam int cantidad) {
-        return propiedadPartidaServicio.construirGrupo(jugadorId, grupoColor, cantidad);
-    }
-
-    @PostMapping("/{jugadorId}/construir-hotel")
-    public String construirHotel(
-            @PathVariable Long jugadorId,
-            @RequestParam String grupoColor) {
-        return propiedadPartidaServicio.construirHotel(jugadorId, grupoColor);
-    }
-
-    @PostMapping("/{jugadorId}/construir-casa")
-    public String construirCasaEnPropiedad(
-            @PathVariable Long jugadorId,
-            @RequestParam Long propiedadId) {
-        return propiedadPartidaServicio.construirCasaEnPropiedad(jugadorId, propiedadId);
-    }
-
-    @PostMapping("/{jugadorId}/construir-hotel-propiedad")
-    public String construirHotelEnPropiedad(
-            @PathVariable Long jugadorId,
-            @RequestParam Long propiedadId) {
-        return propiedadPartidaServicio.construirHotelEnPropiedad(jugadorId, propiedadId);
-    }
+//    @PostMapping("/{jugadorId}/construir-grupo")
+//    public String construirGrupo(
+//            @PathVariable Long jugadorId,
+//            @RequestParam String grupoColor,
+//            @RequestParam int cantidad) {
+//        return propiedadPartidaServicio.construirGrupo(jugadorId, grupoColor, cantidad);
+//    }
+//
+//    @PostMapping("/{jugadorId}/construir-hotel")
+//    public String construirHotel(
+//            @PathVariable Long jugadorId,
+//            @RequestParam String grupoColor) {
+//        return propiedadPartidaServicio.construirHotel(jugadorId, grupoColor);
+//    }
+//
+//    @PostMapping("/{jugadorId}/construir-casa")
+//    public String construirCasaEnPropiedad(
+//            @PathVariable Long jugadorId,
+//            @RequestParam Long propiedadId) {
+//        return propiedadPartidaServicio.construirCasaEnPropiedad(jugadorId, propiedadId);
+//    }
+//
+//    @PostMapping("/{jugadorId}/construir-hotel-propiedad")
+//    public String construirHotelEnPropiedad(
+//            @PathVariable Long jugadorId,
+//            @RequestParam Long propiedadId) {
+//        return propiedadPartidaServicio.construirHotelEnPropiedad(jugadorId, propiedadId);
+//    }
 
     @GetMapping("/{jugadorId}/mis-propiedades")
     public List<Propiedad> obtenerPropiedadesJugador(@PathVariable Long jugadorId) {

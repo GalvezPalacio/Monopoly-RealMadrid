@@ -5,7 +5,10 @@ export default function PanelTurno({
   onTirarDado,
   onTerminarTurno,
   tieneElTurno,
-  onComprar
+  onComprar,
+  opcionesConstruccion,
+  onConstruirCasa,
+  onConstruirHotel
 }) {
   if (!tieneElTurno) return null;
 
@@ -23,6 +26,19 @@ export default function PanelTurno({
                 Comprar propiedad
               </button>
             )}
+
+            {opcionesConstruccion?.gruposConCasas?.length > 0 && (
+              <button className="boton-construir-casa" onClick={onConstruirCasa}>
+                Construir casa
+              </button>
+            )}
+
+            {opcionesConstruccion?.gruposConHotel?.length > 0 && (
+              <button className="boton-construir-hotel" onClick={onConstruirHotel}>
+                Construir hotel
+              </button>
+            )}
+
             <button className="boton-terminar-turno" onClick={onTerminarTurno}>
               Terminar turno
             </button>

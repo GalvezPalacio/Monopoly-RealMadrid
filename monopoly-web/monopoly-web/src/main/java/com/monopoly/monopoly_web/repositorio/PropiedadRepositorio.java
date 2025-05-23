@@ -14,13 +14,13 @@ import java.util.List;
 
 public interface PropiedadRepositorio extends JpaRepository<Propiedad, Long> {
 
-    int countByGrupoColor(String grupoColor);
-
     List<Propiedad> findByGrupoColor(String grupoColor);
 
     Propiedad findByPosicion(int posicion);
 
+    long countByGrupoColor(String grupoColor);
+
     List<Propiedad> findByDuenoId(Long duenoId);
-    
+
     List<Propiedad> findByPartida_Id(Long partidaId);
 }

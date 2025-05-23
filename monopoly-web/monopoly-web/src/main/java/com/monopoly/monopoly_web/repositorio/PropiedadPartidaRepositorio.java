@@ -8,7 +8,6 @@ package com.monopoly.monopoly_web.repositorio;
  *
  * @author gabri
  */
-
 import com.monopoly.monopoly_web.modelo.Partida;
 import com.monopoly.monopoly_web.modelo.Propiedad;
 import com.monopoly.monopoly_web.modelo.PropiedadPartida;
@@ -22,5 +21,11 @@ public interface PropiedadPartidaRepositorio extends JpaRepository<PropiedadPart
     List<PropiedadPartida> findByPartida(Partida partida);
 
     Optional<PropiedadPartida> findByPartidaAndPropiedad(Partida partida, Propiedad propiedad);
+
+    List<PropiedadPartida> findByDuenoId(Long duenoId);
+
+    Optional<PropiedadPartida> findByPartidaIdAndPropiedad_Id(Long partidaId, Long propiedadId);
+
+    List<PropiedadPartida> findByDueno_Id(Long jugadorId);
 
 }
