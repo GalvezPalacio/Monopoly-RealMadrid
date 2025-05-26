@@ -291,19 +291,25 @@ public class PropiedadPartidaServicio {
             String grupo = entry.getKey();
             List<PropiedadPartida> propiedadesGrupo = entry.getValue();
 
-            // Comprobamos si el jugador tiene todas las propiedades del grupo
+            // Verificar si el jugador tiene todas las propiedades del grupo
             long totalEnGrupo = propiedadRepositorio.countByGrupoColor(grupo);
             if (propiedadesGrupo.size() < totalEnGrupo) {
                 continue;
             }
 
             boolean todasCon4Casas = propiedadesGrupo.stream().allMatch(p -> p.getCasas() == 4);
+            boolean todasConHotel = propiedadesGrupo.stream().allMatch(PropiedadPartida::isHotel);
             boolean algunaConMenosDe4 = propiedadesGrupo.stream().anyMatch(p -> p.getCasas() < 4);
-            boolean ningunaConHotel = propiedadesGrupo.stream().noneMatch(PropiedadPartida::isHotel);
+            boolean tiene4CasasYSinHotel = propiedadesGrupo.stream().allMatch(p -> p.getCasas() == 4 || p.isHotel());
 
-            if (todasCon4Casas && ningunaConHotel) {
+            if (todasConHotel) {
+                // Ya tiene todos los hoteles → no se muestra en ningún grupo
+                continue;
+            } else if (tiene4CasasYSinHotel) {
+                // Tiene 4 casas o hotel en todas, pero aún falta al menos 1 hotel → se puede construir hotel
                 gruposConHotel.add(grupo);
             } else if (algunaConMenosDe4) {
+                // Aún hay casas por construir
                 gruposConCasas.add(grupo);
             }
         }

@@ -29,6 +29,7 @@ export default function TableroConFondo({
   });
   const [mostrarSelectorCasa, setMostrarSelectorCasa] = useState(false);
   const [propiedadesJugador, setPropiedadesJugador] = useState([]);
+  const [mostrarSelectorHotel, setMostrarSelectorHotel] = useState(false);
 
   const jugadorActual = jugadores.find((j) => j.turno);
 
@@ -225,7 +226,7 @@ export default function TableroConFondo({
   };
 
   const construirCasa = async (propiedadId) => {
-    if (!jugadorActual) return;
+    if (!jugadorActual || !partidaId) return;
 
     try {
       const res = await fetch(
@@ -250,16 +251,23 @@ export default function TableroConFondo({
         `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
       );
       const props = await propsRes.json();
-      setPropiedadesJugador(props); // <-- asegúrate de tener esto definido como estado
+      setPropiedadesJugador(props);
 
-      setMostrarSelectorCasa(false); // opcional: cierra ventana al construir
+      // 🔁 ACTUALIZAR opciones de construcción después de construir
+      const opcionesRes = await fetch(
+        `http://localhost:8081/api/propiedadPartida/opciones-construccion?jugadorId=${jugadorActual.id}`
+      );
+      const opciones = await opcionesRes.json();
+      setOpcionesConstruccion(opciones);
+
+      setMostrarSelectorCasa(false);
     } catch (err) {
       console.error("❌ Error al construir casa:", err);
     }
   };
 
-  const construirHotel = async () => {
-    if (!jugadorActual || !propiedadSeleccionada) return;
+  const construirHotel = async (propiedadId) => {
+    if (!jugadorActual || !partidaId) return;
 
     try {
       const res = await fetch(
@@ -271,18 +279,40 @@ export default function TableroConFondo({
           },
           body: JSON.stringify({
             jugadorId: jugadorActual.id,
-            propiedadId: propiedadSeleccionada.id,
+            propiedadId,
+            partidaId,
           }),
         }
       );
 
       const mensaje = await res.text();
       alert(mensaje);
+
+      // 🔁 Refrescar propiedades (para actualizar visualización de hoteles)
+      const propsRes = await fetch(
+        `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+      );
+      const props = await propsRes.json();
+      setPropiedadesJugador(props); // 👈 Esto faltaba
+
+      // 🔁 Refrescar jugadores
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+      setJugadores(nuevos);
+
+      // 🔁 Refrescar opciones de construcción
+      const opcionesRes = await fetch(
+        `http://localhost:8081/api/propiedadPartida/opciones-construccion?jugadorId=${jugadorActual.id}`
+      );
+      const nuevasOpciones = await opcionesRes.json();
+      setOpcionesConstruccion(nuevasOpciones);
+
+      setMostrarSelectorHotel(false); // opcional: cierra selector al construir
     } catch (err) {
       console.error("❌ Error al construir hotel:", err);
     }
   };
-
   return (
     <div className="tablero-fondo">
       {mostrarBienvenida && (
@@ -427,9 +457,7 @@ export default function TableroConFondo({
         tieneElTurno={jugadorActual}
         opcionesConstruccion={opcionesConstruccion}
         onConstruirCasa={() => setMostrarSelectorCasa(true)}
-        onConstruirHotel={() =>
-          construirHotel(jugadorActual.id, propiedadSeleccionada.id)
-        }
+        onConstruirHotel={() => setMostrarSelectorHotel(true)}
       />
 
       {propiedadSeleccionada && (
@@ -443,11 +471,25 @@ export default function TableroConFondo({
           propiedades={propiedadesJugador.filter((p) =>
             opcionesConstruccion.gruposConCasas.includes(p.propiedad.grupoColor)
           )}
+          tipo="casa" // ✅ NECESARIO para que se vean las casas
           onSeleccionar={async (propiedadId) => {
             await construirCasa(propiedadId);
             setMostrarSelectorCasa(false);
           }}
           onCerrar={() => setMostrarSelectorCasa(false)}
+        />
+      )}
+      {mostrarSelectorHotel && (
+        <SelectorConstruccion
+          propiedades={propiedadesJugador.filter((p) =>
+            opcionesConstruccion.gruposConHotel.includes(p.propiedad.grupoColor)
+          )}
+          tipo="hotel"
+          onSeleccionar={(id) => {
+            construirHotel(id);
+            setMostrarSelectorHotel(false);
+          }}
+          onCerrar={() => setMostrarSelectorHotel(false)}
         />
       )}
     </div>
