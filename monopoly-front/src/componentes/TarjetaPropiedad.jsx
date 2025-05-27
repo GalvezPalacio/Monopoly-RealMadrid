@@ -1,40 +1,40 @@
 import "./TarjetaPropiedad.css";
 
-export default function TarjetaPropiedad({ propiedad, onClose }) {
+export default function TarjetaPropiedad({ propiedad, onClose, tipoEspecial }) {
   if (!propiedad) return null;
 
   // ================== TARJETAS DE ESQUINA ==================
   const esquinas = {
-    "salida": {
+    salida: {
       imagen: "/casilla-salida.png",
-      alt: "Casilla de salida"
+      alt: "Casilla de salida",
     },
     "visita-carcel": {
       imagen: "/carcel-visita.png",
-      alt: "Visita a la cárcel"
+      alt: "Visita a la cárcel",
     },
     "palco-vip": {
       imagen: "/palco-vip.png",
-      alt: "Palco VIP"
+      alt: "Palco VIP",
     },
     "vas-grada": {
       imagen: "/vas-a-la-grada.png",
-      alt: "Vas a la grada"
-    }
+      alt: "Vas a la grada",
+    },
   };
-if (esquinas[propiedad.tipo]) {
-  const { imagen, alt } = esquinas[propiedad.tipo];
-  return (
-    <div className="popup-esquina">
-      <div className="tarjeta-esquina">
-        <img src={imagen} alt={alt} className="imagen-esquina" />
-        <button className="boton-cerrar-esquina" onClick={onClose}>
-          Cerrar
-        </button>
+  if (esquinas[propiedad.tipo]) {
+    const { imagen, alt } = esquinas[propiedad.tipo];
+    return (
+      <div className="popup-esquina">
+        <div className="tarjeta-esquina">
+          <img src={imagen} alt={alt} className="imagen-esquina" />
+          <button className="boton-cerrar-esquina" onClick={onClose}>
+            Cerrar
+          </button>
+        </div>
       </div>
-    </div>
-  );
-}
+    );
+  }
 
   // ================== RESTO DE TARJETAS ==================
 
@@ -46,8 +46,16 @@ if (esquinas[propiedad.tipo]) {
           src="/caja-comunidad.png"
           alt="Carta de comunidad"
         />
-        <button className="cerrar-imagen" onClick={onClose}>
-          Cerrar
+        <button
+          className="cerrar-imagen"
+          onClick={() => {
+            onClose();
+            if (tipoEspecial === "comunidad") {
+              setTimeout(() => window.setMostrarTarjetaReal?.(true), 100);
+            }
+          }}
+        >
+          Roba una carta
         </button>
       </div>
     );
@@ -81,8 +89,16 @@ if (esquinas[propiedad.tipo]) {
           <p className="texto-inferior">
             Coge una tarjeta para descubrir tu destino...
           </p>
-          <button className="boton-cerrar-suerte" onClick={onClose}>
-            Cerrar
+          <button
+            className="boton-cerrar-suerte"
+            onClick={() => {
+              onClose();
+              if (tipoEspecial === "suerte") {
+                setTimeout(() => window.setMostrarTarjetaReal?.(true), 100);
+              }
+            }}
+          >
+            Roba una carta
           </button>
         </div>
       </div>
@@ -129,7 +145,7 @@ if (esquinas[propiedad.tipo]) {
           backgroundSize: "cover",
           backgroundPosition: "center 40px",
           position: "relative",
-          overflow: "hidden"
+          overflow: "hidden",
         }}
       >
         <div className="overlay-carta" />
@@ -140,20 +156,38 @@ if (esquinas[propiedad.tipo]) {
 
         <div className="detalles-arriba">
           <p className="precio-grande">Precio: {propiedad.precio}€</p>
-          <p><span>Hipoteca:</span> <span>{propiedad.hipoteca}€</span></p>
-          <p><span>Coste casa:</span> <span>{propiedad.costeCasa}€</span></p>
-          <p><span>Coste hotel:</span> <span>{propiedad.costeHotel}€</span></p>
+          <p>
+            <span>Hipoteca:</span> <span>{propiedad.hipoteca}€</span>
+          </p>
+          <p>
+            <span>Coste casa:</span> <span>{propiedad.costeCasa}€</span>
+          </p>
+          <p>
+            <span>Coste hotel:</span> <span>{propiedad.costeHotel}€</span>
+          </p>
         </div>
 
         <hr />
 
         <div className="detalles-abajo">
-          <p><span>Alquiler base:</span> <span>{propiedad.alquiler?.base}€</span></p>
-          <p><span>Con 1 casa:</span> <span>{propiedad.alquiler?.casa1}€</span></p>
-          <p><span>Con 2 casas:</span> <span>{propiedad.alquiler?.casa2}€</span></p>
-          <p><span>Con 3 casas:</span> <span>{propiedad.alquiler?.casa3}€</span></p>
-          <p><span>Con 4 casas:</span> <span>{propiedad.alquiler?.casa4}€</span></p>
-          <p><span>Con hotel:</span> <span>{propiedad.alquiler?.hotel}€</span></p>
+          <p>
+            <span>Alquiler base:</span> <span>{propiedad.alquiler?.base}€</span>
+          </p>
+          <p>
+            <span>Con 1 casa:</span> <span>{propiedad.alquiler?.casa1}€</span>
+          </p>
+          <p>
+            <span>Con 2 casas:</span> <span>{propiedad.alquiler?.casa2}€</span>
+          </p>
+          <p>
+            <span>Con 3 casas:</span> <span>{propiedad.alquiler?.casa3}€</span>
+          </p>
+          <p>
+            <span>Con 4 casas:</span> <span>{propiedad.alquiler?.casa4}€</span>
+          </p>
+          <p>
+            <span>Con hotel:</span> <span>{propiedad.alquiler?.hotel}€</span>
+          </p>
         </div>
 
         <button onClick={onClose}>Cerrar</button>

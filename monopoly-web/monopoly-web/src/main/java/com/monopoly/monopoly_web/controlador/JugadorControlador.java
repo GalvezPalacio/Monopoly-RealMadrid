@@ -111,10 +111,12 @@ public class JugadorControlador {
 
         if (nuevaPosicion == 2 || nuevaPosicion == 17 || nuevaPosicion == 33) {
             mensajeExtra += "Has caído en 'Caja de Comunidad'. Roba una carta.\n";
+            mensajeExtra += com.monopoly.monopoly_web.servicio.util.GeneradorMensajesComunidad.obtenerMensajeAleatorio() + "\n";
         }
 
         if (nuevaPosicion == 7 || nuevaPosicion == 22 || nuevaPosicion == 36) {
             mensajeExtra += "Has caído en 'Suerte'. Roba una carta.\n";
+            mensajeExtra += com.monopoly.monopoly_web.servicio.util.GeneradorMensajesSuerte.obtenerMensajeAleatorio() + "\n";
         }
 
         if (nuevaPosicion == 20) {
@@ -180,7 +182,6 @@ public class JugadorControlador {
 //
 //        return "Has comprado " + propiedad.getNombre() + " por " + propiedad.getPrecio() + "€.";
 //    }
-
     @Transactional
     private void pasarTurnoAlSiguiente(Long idActual) {
         List<Jugador> jugadores = jugadorRepositorio.findAll();
@@ -225,7 +226,6 @@ public class JugadorControlador {
 //            @RequestParam Long propiedadId) {
 //        return propiedadPartidaServicio.construirHotelEnPropiedad(jugadorId, propiedadId);
 //    }
-
     @GetMapping("/{jugadorId}/mis-propiedades")
     public List<Propiedad> obtenerPropiedadesJugador(@PathVariable Long jugadorId) {
         return propiedadRepositorio.findAll().stream()

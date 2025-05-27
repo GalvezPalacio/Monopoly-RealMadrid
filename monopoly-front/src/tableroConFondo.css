@@ -365,3 +365,26 @@ body {
 .boton-guardar:hover {
   background-color: #15803d;
 }
+.flash-salida {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: #fffde7;
+  color: #222;
+  padding: 20px 40px;
+  border: 2px solid gold;
+  border-radius: 15px;
+  font-size: 22px;
+  font-weight: bold;
+  z-index: 9999;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.4);
+  animation: aparecerDesaparecer 3s ease-in-out;
+}
+
+@keyframes aparecerDesaparecer {
+  0% { opacity: 0; transform: translate(-50%, -60%); }
+  10% { opacity: 1; transform: translate(-50%, -50%); }
+  90% { opacity: 1; transform: translate(-50%, -50%); }
+  100% { opacity: 0; transform: translate(-50%, -40%); }
+}

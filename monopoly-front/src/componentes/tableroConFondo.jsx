@@ -6,6 +6,7 @@ import TarjetaPropiedad from "../componentes/TarjetaPropiedad";
 import PanelTurno from "../componentes/panelTurno";
 import fichasImagenes from "../datos/fichasImagenes";
 import SelectorConstruccion from "../componentes/SelectorConstructor";
+import TarjetaMensaje from "./TarjetaMensaje"; // Ajusta la ruta si es necesario
 
 export default function TableroConFondo({
   partidaId,
@@ -30,6 +31,10 @@ export default function TableroConFondo({
   const [mostrarSelectorCasa, setMostrarSelectorCasa] = useState(false);
   const [propiedadesJugador, setPropiedadesJugador] = useState([]);
   const [mostrarSelectorHotel, setMostrarSelectorHotel] = useState(false);
+  const [mensajeEspecial, setMensajeEspecial] = useState(null);
+  const [tipoMensaje, setTipoMensaje] = useState(null);
+  const [mostrarTarjetaReal, setMostrarTarjetaReal] = useState(false);
+  const [mensajeSalida, setMensajeSalida] = useState(null);
 
   const jugadorActual = jugadores.find((j) => j.turno);
 
@@ -102,6 +107,45 @@ export default function TableroConFondo({
       const mensaje = await res.text();
       console.log("🎲", mensaje);
 
+      // ✅ Mostrar notificación si pasa por la casilla de salida
+      if (mensaje.includes("casilla de salida")) {
+        setMensajeSalida(
+          "💸 Has pasado por la casilla de salida. ¡Cobras 200€!"
+        );
+        setTimeout(() => setMensajeSalida(null), 3000); // desaparecer tras 3s
+      }
+
+      // ✅ Eliminar la parte del mensaje de salida antes de mostrarlo en el popup
+      const mensajeSinSalida = mensaje.replace(
+        "Has pasado por la casilla de salida. ¡Cobras 200€! ",
+        ""
+      );
+
+      // ✅ Guardar mensaje especial si es suerte o comunidad
+      if (
+        mensajeSinSalida.includes("Caja de Comunidad") ||
+        mensajeSinSalida.includes("Has caído en 'Caja de Comunidad'") ||
+        mensajeSinSalida.includes("Has caído en 'Suerte'")
+      ) {
+        // Limpieza del mensaje dinámico
+        const mensajeLimpio = mensajeSinSalida
+          .replace(/Has caído en.*?\.\s*/, "") // Elimina "Has caído en ..." hasta punto
+          .replace(/Roba una carta\.?\s*/, "") // Elimina "Roba una carta"
+          .trim();
+
+        if (mensajeSinSalida.includes("Comunidad")) {
+          setTipoMensaje("comunidad");
+        } else {
+          setTipoMensaje("suerte");
+        }
+
+        setMensajeEspecial(mensajeLimpio);
+        setMostrarTarjetaReal(false);
+      } else {
+        setTipoMensaje(null);
+        setMensajeEspecial(null);
+        setMostrarTarjetaReal(false);
+      }
       // Refresca estado de jugadores
       const nuevos = await fetch(
         `http://localhost:8081/api/partidas/${partidaId}/jugadores`
@@ -463,7 +507,15 @@ export default function TableroConFondo({
       {propiedadSeleccionada && (
         <TarjetaPropiedad
           propiedad={propiedadSeleccionada}
-          onClose={() => setPropiedadSeleccionada(null)}
+          tipoEspecial={tipoMensaje} // nuevo
+          onClose={() => {
+            setPropiedadSeleccionada(null);
+
+            // Si es tipo suerte o comunidad → mostrar la tarjeta real
+            if (tipoMensaje === "suerte" || tipoMensaje === "comunidad") {
+              setMostrarTarjetaReal(true);
+            }
+          }}
         />
       )}
       {mostrarSelectorCasa && (
@@ -492,6 +544,18 @@ export default function TableroConFondo({
           onCerrar={() => setMostrarSelectorHotel(false)}
         />
       )}
+      {mostrarTarjetaReal && mensajeEspecial && (
+        <TarjetaMensaje
+          mensaje={mensajeEspecial}
+          tipo={tipoMensaje}
+          onCerrar={() => {
+            setMostrarTarjetaReal(false);
+            setMensajeEspecial(null);
+            setTipoMensaje(null);
+          }}
+        />
+      )}
+      {mensajeSalida && <div className="flash-salida">{mensajeSalida}</div>}
     </div>
   );
 }
