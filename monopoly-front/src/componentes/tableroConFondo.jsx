@@ -99,7 +99,6 @@ export default function TableroConFondo({
     if (!jugadorActual) return;
 
     try {
-      // Mueve al jugador
       const res = await fetch(
         `http://localhost:8081/api/jugadores/${jugadorActual.id}/tirar`,
         { method: "POST" }
@@ -107,46 +106,87 @@ export default function TableroConFondo({
       const mensaje = await res.text();
       console.log("🎲", mensaje);
 
-      // ✅ Mostrar notificación si pasa por la casilla de salida
       if (mensaje.includes("casilla de salida")) {
         setMensajeSalida(
           "💸 Has pasado por la casilla de salida. ¡Cobras 200€!"
         );
-        setTimeout(() => setMensajeSalida(null), 3000); // desaparecer tras 3s
+        setTimeout(() => setMensajeSalida(null), 3000);
       }
 
-      // ✅ Eliminar la parte del mensaje de salida antes de mostrarlo en el popup
       const mensajeSinSalida = mensaje.replace(
         "Has pasado por la casilla de salida. ¡Cobras 200€! ",
         ""
       );
 
-      // ✅ Guardar mensaje especial si es suerte o comunidad
+      // Detectar tarjeta de COMUNIDAD
       if (
         mensajeSinSalida.includes("Caja de Comunidad") ||
-        mensajeSinSalida.includes("Has caído en 'Caja de Comunidad'") ||
-        mensajeSinSalida.includes("Has caído en 'Suerte'")
+        mensajeSinSalida.includes("Has caído en 'Caja de Comunidad'")
       ) {
-        // Limpieza del mensaje dinámico
-        const mensajeLimpio = mensajeSinSalida
-          .replace(/Has caído en.*?\.\s*/, "") // Elimina "Has caído en ..." hasta punto
-          .replace(/Roba una carta\.?\s*/, "") // Elimina "Roba una carta"
-          .trim();
+        try {
+          const resTarjeta = await fetch(
+            "http://localhost:8081/api/tarjetas/comunidad"
+          );
+          const tarjeta = await resTarjeta.json();
+          setTipoMensaje(tarjeta.tipo);
+          setMensajeEspecial(tarjeta.mensaje);
+          setMostrarTarjetaReal(false);
 
-        if (mensajeSinSalida.includes("Comunidad")) {
-          setTipoMensaje("comunidad");
-        } else {
-          setTipoMensaje("suerte");
+          // 🧠 Aplicar efecto automáticamente
+          await fetch("http://localhost:8081/api/tarjetas/aplicar", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              mensaje: tarjeta.mensaje,
+              jugadorId: jugadorActual.id,
+            }),
+          })
+            .then((r) => r.text())
+            .then((resultado) => {
+              console.log("📩 Efecto aplicado:", resultado);
+            });
+        } catch (e) {
+          console.error("❌ Error al obtener/aplicar tarjeta de comunidad:", e);
         }
 
-        setMensajeEspecial(mensajeLimpio);
-        setMostrarTarjetaReal(false);
+        // Detectar tarjeta de SUERTE
+      } else if (mensajeSinSalida.includes("Has caído en 'Suerte'")) {
+        try {
+          const resTarjeta = await fetch(
+            "http://localhost:8081/api/tarjetas/suerte"
+          );
+          const tarjeta = await resTarjeta.json();
+          setTipoMensaje(tarjeta.tipo);
+          setMensajeEspecial(tarjeta.mensaje);
+          setMostrarTarjetaReal(false);
+
+          // 🧠 Aplicar efecto automáticamente
+          await fetch("http://localhost:8081/api/tarjetas/aplicar", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/x-www-form-urlencoded",
+            },
+            body: new URLSearchParams({
+              mensaje: tarjeta.mensaje,
+              jugadorId: jugadorActual.id,
+            }),
+          })
+            .then((r) => r.text())
+            .then((resultado) => {
+              console.log("📩 Efecto aplicado:", resultado);
+            });
+        } catch (e) {
+          console.error("❌ Error al obtener/aplicar tarjeta de suerte:", e);
+        }
       } else {
         setTipoMensaje(null);
         setMensajeEspecial(null);
         setMostrarTarjetaReal(false);
       }
-      // Refresca estado de jugadores
+
+      // Refrescar estado general
       const nuevos = await fetch(
         `http://localhost:8081/api/partidas/${partidaId}/jugadores`
       ).then((r) => r.json());
@@ -162,7 +202,7 @@ export default function TableroConFondo({
         `http://localhost:8081/api/propiedadPartida/opciones-construccion?jugadorId=${jugadorActual.id}`
       );
       const opciones = await opcionesRes.json();
-      setOpcionesConstruccion(opciones); // guarda los grupos con permiso de construir
+      setOpcionesConstruccion(opciones);
 
       const propsRes = await fetch(
         `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
@@ -171,9 +211,8 @@ export default function TableroConFondo({
       setPropiedadesJugador(props);
 
       const casilla = casillasInfo[nuevaPos];
-      setPropiedadSeleccionada(casilla); // popup se muestra igual 🎉
+      setPropiedadSeleccionada(casilla);
 
-      // Si la casilla es de tipo dinámico, consulta el estado real desde el backend
       if (["propiedad", "compania", "estacion"].includes(casilla.tipo)) {
         const propiedadPartidaRes = await fetch(
           `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
