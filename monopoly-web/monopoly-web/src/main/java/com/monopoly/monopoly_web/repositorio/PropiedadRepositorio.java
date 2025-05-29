@@ -11,6 +11,7 @@ package com.monopoly.monopoly_web.repositorio;
 import com.monopoly.monopoly_web.modelo.Propiedad;
 import org.springframework.data.jpa.repository.JpaRepository;
 import java.util.List;
+import java.util.Optional;
 
 public interface PropiedadRepositorio extends JpaRepository<Propiedad, Long> {
 
@@ -23,4 +24,6 @@ public interface PropiedadRepositorio extends JpaRepository<Propiedad, Long> {
     List<Propiedad> findByDuenoId(Long duenoId);
 
     List<Propiedad> findByPartida_Id(Long partidaId);
+
+    Optional<Propiedad> findByNombre(String nombre);
 }

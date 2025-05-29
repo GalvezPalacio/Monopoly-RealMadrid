@@ -41,7 +41,7 @@ public class GeneradorMensajesSuerte {
         mensajesNegativos.add("🎮 Pierdes un torneo de FIFA contra un culé. Pierdes 70€.");
         mensajesNegativos.add("🏃‍♂️ Te pasaste la puerta por la que entras al Bernabeu!!! Retrocede 3 casillas.");
         mensajesNegativos.add("🔁 Pierdes un turno animando en la grada fan. ¡Hala Madrid!");
-        mensajesNegativos.add("🚔 Te han pillado haciendo reventa de entradas en los aledaños del bernabeu Ve directamente a la cárcel. No pases por la salida.");
+        mensajesNegativos.add("🚔 Te han pillado haciendo reventa de entradas en los aledaños del bernabeu. Ve directamente a la cárcel. No pases por la salida.");
     }
 
     public static String obtenerMensajeAleatorio(boolean positivo) {

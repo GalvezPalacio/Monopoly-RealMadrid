@@ -9,15 +9,22 @@ package com.monopoly.monopoly_web.servicio;
  * @author gabri
  */
 import com.monopoly.monopoly_web.modelo.Jugador;
+import com.monopoly.monopoly_web.modelo.Propiedad;
 import com.monopoly.monopoly_web.modelo.Tarjeta;
+import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
 import com.monopoly.monopoly_web.servicio.util.GeneradorMensajesComunidad;
 import com.monopoly.monopoly_web.servicio.util.GeneradorMensajesSuerte;
+import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 
 @Service
 public class TarjetaServicio {
+
+    @Autowired
+    private PropiedadRepositorio propiedadRepositorio;
 
     public Tarjeta obtenerTarjetaAleatoria(String tipo) {
         String mensaje;
@@ -32,7 +39,6 @@ public class TarjetaServicio {
 
         Tarjeta tarjeta = new Tarjeta(tipo, mensaje);
 
-        // Análisis del mensaje para funcionalidad
         if (mensaje.contains("Ganas")) {
             tarjeta.setCantidad(extraerCantidad(mensaje));
         } else if (mensaje.contains("Pierdes") || mensaje.contains("Multa")) {
@@ -76,13 +82,35 @@ public class TarjetaServicio {
 
         if (mensaje.contains("Retrocede")) {
             int casillas = extraerCantidad(mensaje);
-            jugador.setPosicion(Math.max(0, jugador.getPosicion() - casillas));
+            int nuevaPosicion = jugador.getPosicion() - casillas;
+            if (nuevaPosicion < 0) {
+                nuevaPosicion += 40; // tablero de 40 casillas (0 a 39)
+            }
+            jugador.setPosicion(nuevaPosicion);
             return "🔙 Retrocedes " + casillas + " casillas.";
+        }
+
+        if (mensaje.contains("Avanza a")) {
+            String destino = extraerDestinoPorNombre(mensaje);
+            int posicionDestino = buscarPosicionPorNombre(destino);
+            if (posicionDestino != -1) {
+                int posicionInicial = jugador.getPosicion();
+
+                // Si cruza la salida (posición 0)
+                if (posicionDestino < posicionInicial) {
+                    jugador.setDinero(jugador.getDinero() + 200); // o lo que pagues por pasar salida
+                }
+
+                jugador.setPosicion(posicionDestino);
+                return "🚀 Avanzas a " + destino + (posicionDestino < posicionInicial ? " y cobras 200€ por pasar por la salida." : ".");
+            } else {
+                return "⚠️ No se encontró la casilla destino: " + destino;
+            }
         }
 
         if (mensaje.contains("Vas a la grada") || mensaje.contains("Ve directamente a la cárcel")) {
             jugador.setPosicion(10); // cárcel
-            tarjeta.setPierdeTurno(true); // efecto opcional
+            tarjeta.setPierdeTurno(true);
             return "🚨 Has sido enviado a la grada. Pierdes el turno.";
         }
 
@@ -94,7 +122,6 @@ public class TarjetaServicio {
         return "ℹ️ La tarjeta no tiene efecto automático.";
     }
 
-    // 👇 Esta es la única versión que necesitas
     private int extraerCantidad(String mensaje) {
         Pattern pattern = Pattern.compile("(\\d+)[€]?");
         Matcher matcher = pattern.matcher(mensaje);
@@ -110,5 +137,18 @@ public class TarjetaServicio {
         } catch (Exception e) {
             return 0;
         }
+    }
+
+    private String extraerDestinoPorNombre(String mensaje) {
+        int indice = mensaje.indexOf("Avanza a");
+        if (indice != -1) {
+            return mensaje.substring(indice + 9).trim();
+        }
+        return "";
+    }
+
+    private int buscarPosicionPorNombre(String nombreCasilla) {
+        Optional<Propiedad> propiedad = propiedadRepositorio.findByNombre(nombreCasilla);
+        return propiedad.map(Propiedad::getPosicion).orElse(-1);
     }
 }

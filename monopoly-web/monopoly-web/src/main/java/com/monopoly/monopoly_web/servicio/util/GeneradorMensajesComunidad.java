@@ -33,7 +33,7 @@ public class GeneradorMensajesComunidad {
 
         // Negativos
         mensajesNegativos.add("🏫 Tu hijo entra en la escuela del Real Madrid. Pierdes matrícula: 150€.");
-        mensajesNegativos.add("🚶‍♂️ Te mandan a “Vas a la grada”. Ve allí directamente.");
+        mensajesNegativos.add("🚶‍♂️ Te han expulsado por protestar y te mandan a “Vas a la grada”. Avanza allí directamente.");
         mensajesNegativos.add("💸 Te roban fuera del estadio. Pierdes 100€.");
         mensajesNegativos.add("📉 Inviertes en cromos falsos de leyendas. Pierdes 200€.");
         mensajesNegativos.add("🔄 Devuelve una propiedad al banco (la que elijas si tienes y que no tenga construcción).");

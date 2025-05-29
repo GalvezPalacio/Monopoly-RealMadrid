@@ -4,6 +4,7 @@
  */
 package com.monopoly.monopoly_web.controlador;
 
+import com.monopoly.monopoly_web.dto.DatosTarjeta;
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Tarjeta;
 import com.monopoly.monopoly_web.servicio.TarjetaServicio;
@@ -15,6 +16,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestParam;
 import org.springframework.web.bind.annotation.RestController;
 import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
+import org.springframework.web.bind.annotation.RequestBody;
 
 /**
  *
@@ -39,12 +41,14 @@ public class TarjetaControlador {
     }
 
     @PostMapping("/aplicar")
-    public ResponseEntity<String> aplicarEfecto(@RequestParam String mensaje, @RequestParam Long jugadorId) {
-        Jugador jugador = jugadorRepositorio.findById(jugadorId).orElseThrow();
-        Tarjeta tarjeta = new Tarjeta("temporal", mensaje); // Tipo "temporal" porque no es relevante aquí
+    public ResponseEntity<String> aplicarEfecto(@RequestBody DatosTarjeta datos) {
+        Jugador jugador = jugadorRepositorio.findById(datos.getJugadorId())
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
-        String resultado = tarjetaServicio.aplicarEfectoTarjeta(mensaje, jugador, tarjeta);
-        jugadorRepositorio.save(jugador); // Guardamos los cambios (dinero, posición...)
+        Tarjeta tarjeta = new Tarjeta("temporal", datos.getMensaje());
+
+        String resultado = tarjetaServicio.aplicarEfectoTarjeta(datos.getMensaje(), jugador, tarjeta);
+        jugadorRepositorio.save(jugador);
 
         return ResponseEntity.ok(resultado);
     }
