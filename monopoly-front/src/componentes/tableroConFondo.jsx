@@ -38,6 +38,7 @@ export default function TableroConFondo({
   const [mensajeSalida, setMensajeSalida] = useState(null);
   const [propiedadAdjudicada, setPropiedadAdjudicada] = useState(null);
   const [mostrarAdjudicacion, setMostrarAdjudicacion] = useState(false);
+  const [mostrarTarjetaCarcel, setMostrarTarjetaCarcel] = useState(false);
 
   const jugadorActual = jugadores.find((j) => j.turno);
 
@@ -113,7 +114,7 @@ export default function TableroConFondo({
         setMensajeSalida(
           "💸 Has pasado por la casilla de salida. ¡Cobras 200€!"
         );
-        setTimeout(() => setMensajeSalida(null), 3000);
+        setTimeout(() => setMensajeSalida(null), 2000);
       }
 
       const mensajeSinSalida = mensaje.replace(
@@ -563,6 +564,10 @@ export default function TableroConFondo({
             setMensajeEspecial(null);
             setTipoMensaje(null);
 
+            if (mensajeEspecial.toLowerCase().includes("te libras de la cárcel")) {
+              setMostrarTarjetaCarcel(true);
+            }
+
             // ✅ APLICAR EL EFECTO AL CERRAR
             try {
               const res = await fetch(
@@ -630,25 +635,40 @@ export default function TableroConFondo({
         />
       )}
       {mostrarAdjudicacion && propiedadAdjudicada && (
-  <div className="popup-adjudicacion-final">
-    <div className="texto-adjudicacion">
-      🎁 Te han adjudicado <strong>{propiedadAdjudicada.nombre}</strong>
-    </div>
+        <div className="popup-adjudicacion-final">
+          <div className="texto-adjudicacion">
+            🎁 Te han adjudicado <strong>{propiedadAdjudicada.nombre}</strong>
+          </div>
 
-    {/* Mini tarjeta estilo propiedad como componente */}
-    <MiniTarjetaPropiedad propiedad={propiedadAdjudicada} />
+          {/* Mini tarjeta estilo propiedad como componente */}
+          <MiniTarjetaPropiedad propiedad={propiedadAdjudicada} />
 
-    <button
-      className="boton-cerrar-adjudicacion"
-      onClick={() => {
-        setMostrarAdjudicacion(false);
-        setPropiedadAdjudicada(null);
-      }}
-    >
-      Cerrar
-    </button>
-  </div>
-)}
+          <button
+            className="boton-cerrar-adjudicacion"
+            onClick={() => {
+              setMostrarAdjudicacion(false);
+              setPropiedadAdjudicada(null);
+            }}
+          >
+            Cerrar
+          </button>
+        </div>
+      )}
+      {mostrarTarjetaCarcel && (
+        <div className="popup-tarjeta-carcel">
+          <img
+            src="/public/imagenes-minitarjetas/libras-carcel.png"
+            alt="Tarjeta librarse de la cárcel"
+            className="imagen-tarjeta-carcel"
+          />
+          <button
+            className="boton-cerrar-adjudicacion"
+            onClick={() => setMostrarTarjetaCarcel(false)}
+          >
+            Cerrar
+          </button>
+        </div>
+      )}
       {mensajeSalida && <div className="flash-salida">{mensajeSalida}</div>}
     </div>
   );

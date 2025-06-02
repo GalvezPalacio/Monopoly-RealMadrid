@@ -23,7 +23,7 @@ public class GeneradorMensajesComunidad {
 //        mensajesPositivos.add("🎓 Has ganado una beca de la Fundación Real Madrid. Ganas 100€.");
 //        mensajesPositivos.add("👕 Un aficionado rico compra toda tu colección de camisetas. Ganas 200€.");
 //        mensajesPositivos.add("📸 Te tomas una foto con Ancelotti. Te viralizas y Ganas 150€.");
-        mensajesPositivos.add("👥 El alcalde de Madrid te ha recalificado unos terrenos!!! Recibes una propiedad aleatoria sin dueño..");
+//        mensajesPositivos.add("👥 El alcalde de Madrid te ha recalificado unos terrenos!!! Recibes una propiedad aleatoria sin dueño..");
 //        mensajesPositivos.add("🏅 El club te nombra 'socio del año'. Ganas Premio de 300€.");
 //        mensajesPositivos.add("📝 Participaste en una encuesta de socios. Ganas 90€.");
 //        mensajesPositivos.add("🧾 Recibes un vale de exención. En tu próxima multa, no pagas.");
