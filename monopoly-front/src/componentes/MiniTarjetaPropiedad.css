@@ -1,0 +1,40 @@
+.mini-tarjeta {
+  width: 220px;
+  background-color: white;
+  border-radius: 1rem;
+  box-shadow: 0 0 10px #00000055;
+  overflow: hidden;
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}
+
+.cabecera {
+  padding: 0.5rem;
+  font-weight: bold;
+  color: white;
+  text-align: center;
+}
+
+.cabecera.marrón { background-color: #8B4513; }
+.cabecera.amarillo { background-color: #f1c40f; }
+.cabecera.rojo { background-color: #e74c3c; }
+.cabecera.rosa { background-color: #e91e63; }
+.cabecera.verde { background-color: #27ae60; }
+.cabecera.azul { background-color: #2980b9; }
+.cabecera.celeste { background-color: #00bcd4; }
+.cabecera.estación,
+.cabecera.compañía,
+.cabecera.especial {
+  background-color: #555;
+}
+
+.imagen-mini {
+  width: 100%;
+  height: 360px;
+  background-size: cover;
+  background-position: center;
+}
+
+.texto-mini {
+  padding: 0.6rem;
+}

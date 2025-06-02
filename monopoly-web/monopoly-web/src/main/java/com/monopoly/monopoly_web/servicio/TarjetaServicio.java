@@ -10,11 +10,16 @@ package com.monopoly.monopoly_web.servicio;
  */
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Propiedad;
+import com.monopoly.monopoly_web.modelo.PropiedadPartida;
 import com.monopoly.monopoly_web.modelo.Tarjeta;
+import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
 import com.monopoly.monopoly_web.servicio.util.GeneradorMensajesComunidad;
 import com.monopoly.monopoly_web.servicio.util.GeneradorMensajesSuerte;
+import java.text.Normalizer;
+import java.util.List;
 import java.util.Optional;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -25,6 +30,9 @@ public class TarjetaServicio {
 
     @Autowired
     private PropiedadRepositorio propiedadRepositorio;
+
+    @Autowired
+    private PropiedadPartidaRepositorio propiedadPartidaRepositorio;
 
     public Tarjeta obtenerTarjetaAleatoria(String tipo) {
         String mensaje;
@@ -96,9 +104,8 @@ public class TarjetaServicio {
             if (posicionDestino != -1) {
                 int posicionInicial = jugador.getPosicion();
 
-                // Si cruza la salida (posición 0)
                 if (posicionDestino < posicionInicial) {
-                    jugador.setDinero(jugador.getDinero() + 200); // o lo que pagues por pasar salida
+                    jugador.setDinero(jugador.getDinero() + 200); // pasar por salida
                 }
 
                 jugador.setPosicion(posicionDestino);
@@ -117,6 +124,33 @@ public class TarjetaServicio {
         if (mensaje.contains("Pierdes un turno")) {
             tarjeta.setPierdeTurno(true);
             return "⛔ Pierdes un turno.";
+        }
+
+        if (mensaje.toLowerCase().contains("recibes una propiedad aleatoria")) {
+            Long partidaId = jugador.getPartida().getId();
+            System.out.println("🧩 ID de la partida del jugador: " + partidaId);
+
+            List<PropiedadPartida> sinDueno = propiedadPartidaRepositorio
+                    .findByPartidaIdAndDuenoIsNull(partidaId);
+
+            System.out.println("🔍 Número de propiedades sin dueño encontradas: " + sinDueno.size());
+
+            for (PropiedadPartida p : sinDueno) {
+                System.out.println("➡️ Propiedad sin dueño - ID: " + p.getId()
+                        + ", Propiedad ID: " + p.getPropiedad().getId()
+                        + ", Nombre: " + p.getPropiedad().getNombre());
+            }
+
+            if (!sinDueno.isEmpty()) {
+                PropiedadPartida propiedad = sinDueno.get(new Random().nextInt(sinDueno.size()));
+                propiedad.setDueno(jugador);
+                propiedadPartidaRepositorio.save(propiedad);
+                return "🎁 Te han adjudicado " + propiedad.getPropiedad().getNombre()
+                        + " [ID:" + propiedad.getPropiedad().getId() + "]";
+            } else {
+                System.out.println("⚠️ Lista vacía: no hay propiedades sin dueño.");
+                return "⚠️ No quedan propiedades sin dueño.";
+            }
         }
 
         return "ℹ️ La tarjeta no tiene efecto automático.";
@@ -147,8 +181,26 @@ public class TarjetaServicio {
         return "";
     }
 
-    private int buscarPosicionPorNombre(String nombreCasilla) {
-        Optional<Propiedad> propiedad = propiedadRepositorio.findByNombre(nombreCasilla);
-        return propiedad.map(Propiedad::getPosicion).orElse(-1);
+    private int buscarPosicionPorNombre(String mensaje) {
+        // Normalizar mensaje: quitar tildes, comillas, pasar a minúsculas
+        String normalizadoMensaje = Normalizer.normalize(mensaje, Normalizer.Form.NFD)
+                .replaceAll("\\p{M}", "")
+                .toLowerCase()
+                .replaceAll("[“”\"']", "") // quitar comillas raras
+                .replaceAll("[^a-z0-9áéíóúüñ ]", ""); // eliminar signos de puntuación
+
+        List<Propiedad> propiedades = propiedadRepositorio.findAll();
+        for (Propiedad propiedad : propiedades) {
+            String normalizadoNombre = Normalizer.normalize(propiedad.getNombre(), Normalizer.Form.NFD)
+                    .replaceAll("\\p{M}", "")
+                    .toLowerCase()
+                    .replaceAll("[^a-z0-9áéíóúüñ ]", "");
+
+            if (normalizadoMensaje.contains(normalizadoNombre)) {
+                return propiedad.getPosicion();
+            }
+        }
+
+        return -1;
     }
 }

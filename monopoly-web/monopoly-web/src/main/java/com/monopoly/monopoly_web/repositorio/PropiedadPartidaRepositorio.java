@@ -28,4 +28,6 @@ public interface PropiedadPartidaRepositorio extends JpaRepository<PropiedadPart
 
     List<PropiedadPartida> findByDueno_Id(Long jugadorId);
 
+    List<PropiedadPartida> findByPartidaIdAndDuenoIsNull(Long partidaId);
+
 }

@@ -7,6 +7,7 @@ import PanelTurno from "../componentes/panelTurno";
 import fichasImagenes from "../datos/fichasImagenes";
 import SelectorConstruccion from "../componentes/SelectorConstructor";
 import TarjetaMensaje from "./TarjetaMensaje"; // Ajusta la ruta si es necesario
+import MiniTarjetaPropiedad from "./MiniTarjetaPropiedad";
 
 export default function TableroConFondo({
   partidaId,
@@ -35,6 +36,8 @@ export default function TableroConFondo({
   const [tipoMensaje, setTipoMensaje] = useState(null);
   const [mostrarTarjetaReal, setMostrarTarjetaReal] = useState(false);
   const [mensajeSalida, setMensajeSalida] = useState(null);
+  const [propiedadAdjudicada, setPropiedadAdjudicada] = useState(null);
+  const [mostrarAdjudicacion, setMostrarAdjudicacion] = useState(false);
 
   const jugadorActual = jugadores.find((j) => j.turno);
 
@@ -69,7 +72,7 @@ export default function TableroConFondo({
 
         const timeout = setTimeout(() => {
           setMostrarBienvenida(false);
-        }, 3000);
+        }, 2000);
 
         return () => clearTimeout(timeout);
       }
@@ -88,7 +91,7 @@ export default function TableroConFondo({
       const timeout = setTimeout(() => {
         setMostrarBienvenida(false);
         setTurnoRecienCambiado(false);
-      }, 3000);
+      }, 2000);
 
       return () => clearTimeout(timeout);
     }
@@ -131,22 +134,6 @@ export default function TableroConFondo({
           setTipoMensaje(tarjeta.tipo);
           setMensajeEspecial(tarjeta.mensaje);
           setMostrarTarjetaReal(false);
-
-          // 🧠 Aplicar efecto automáticamente
-          await fetch("http://localhost:8081/api/tarjetas/aplicar", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              mensaje: tarjeta.mensaje,
-              jugadorId: jugadorActual.id,
-            }),
-          })
-            .then((r) => r.text())
-            .then((resultado) => {
-              console.log("📩 Efecto aplicado:", resultado);
-            });
         } catch (e) {
           console.error("❌ Error al obtener/aplicar tarjeta de comunidad:", e);
         }
@@ -161,22 +148,6 @@ export default function TableroConFondo({
           setTipoMensaje(tarjeta.tipo);
           setMensajeEspecial(tarjeta.mensaje);
           setMostrarTarjetaReal(false);
-
-          // 🧠 Aplicar efecto automáticamente
-          await fetch("http://localhost:8081/api/tarjetas/aplicar", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/x-www-form-urlencoded",
-            },
-            body: new URLSearchParams({
-              mensaje: tarjeta.mensaje,
-              jugadorId: jugadorActual.id,
-            }),
-          })
-            .then((r) => r.text())
-            .then((resultado) => {
-              console.log("📩 Efecto aplicado:", resultado);
-            });
         } catch (e) {
           console.error("❌ Error al obtener/aplicar tarjeta de suerte:", e);
         }
@@ -587,13 +558,97 @@ export default function TableroConFondo({
         <TarjetaMensaje
           mensaje={mensajeEspecial}
           tipo={tipoMensaje}
-          onCerrar={() => {
+          onCerrar={async () => {
             setMostrarTarjetaReal(false);
             setMensajeEspecial(null);
             setTipoMensaje(null);
+
+            // ✅ APLICAR EL EFECTO AL CERRAR
+            try {
+              const res = await fetch(
+                "http://localhost:8081/api/tarjetas/aplicar",
+                {
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({
+                    mensaje: mensajeEspecial,
+                    jugadorId: jugadorActual.id,
+                  }),
+                }
+              );
+              const resultado = await res.text();
+              console.log("📩 Efecto aplicado:", resultado);
+              // Detectar si es una adjudicación con ID
+              if (resultado.startsWith("🎁 Te han adjudicado")) {
+                const idMatch = resultado.match(/\[ID:(\d+)\]/); // buscar ID entre corchetes
+
+                if (idMatch) {
+                  const id = parseInt(idMatch[1], 10);
+                  const casilla = casillasInfo.find((c) => c.id === id);
+
+                  if (casilla) {
+                    console.log(
+                      "✅ Casilla adjudicada encontrada:",
+                      casilla.nombre
+                    );
+                    setPropiedadAdjudicada(casilla);
+                    setMostrarAdjudicacion(true);
+                  } else {
+                    console.error("❌ No se encontró casilla con id:", id);
+                  }
+                } else {
+                  console.warn(
+                    "⚠️ No se encontró ID en el mensaje:",
+                    resultado
+                  );
+                }
+              }
+
+              // 🔁 Actualizar jugadores después de aplicar efecto
+              const nuevos = await fetch(
+                `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+              ).then((r) => r.json());
+              setJugadores(nuevos);
+
+              const jugadorActualizado = nuevos.find(
+                (j) => j.id === jugadorActual.id
+              );
+              const nuevaPos = jugadorActualizado?.posicion ?? 0;
+              setPosicionJugador(nuevaPos);
+
+              // Revisar la nueva casilla y abrir su popup si es necesario
+              const nuevaCasilla = casillasInfo[nuevaPos];
+              if (!["suerte", "comunidad"].includes(nuevaCasilla.tipo)) {
+                setPropiedadSeleccionada(nuevaCasilla);
+              }
+            } catch (err) {
+              console.error("❌ Error al aplicar efecto de tarjeta:", err);
+            }
           }}
         />
       )}
+      {mostrarAdjudicacion && propiedadAdjudicada && (
+  <div className="popup-adjudicacion-final">
+    <div className="texto-adjudicacion">
+      🎁 Te han adjudicado <strong>{propiedadAdjudicada.nombre}</strong>
+    </div>
+
+    {/* Mini tarjeta estilo propiedad como componente */}
+    <MiniTarjetaPropiedad propiedad={propiedadAdjudicada} />
+
+    <button
+      className="boton-cerrar-adjudicacion"
+      onClick={() => {
+        setMostrarAdjudicacion(false);
+        setPropiedadAdjudicada(null);
+      }}
+    >
+      Cerrar
+    </button>
+  </div>
+)}
       {mensajeSalida && <div className="flash-salida">{mensajeSalida}</div>}
     </div>
   );
