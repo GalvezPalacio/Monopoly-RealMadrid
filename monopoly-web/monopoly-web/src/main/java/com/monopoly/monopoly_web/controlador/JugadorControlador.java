@@ -74,21 +74,24 @@ public class JugadorControlador {
     }
 
     @PostMapping("/{id}/tirar")
-    public String tirarDado(@PathVariable Long id) {
+    public ResponseEntity<Map<String, Object>> tirarDado(@PathVariable Long id) {
         Jugador jugador = jugadorRepositorio.findById(id)
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
         if (!jugador.isTurno()) {
-            return "No es tu turno. Espera al siguiente.";
+            return ResponseEntity.badRequest().body(Map.of("mensaje", "No es tu turno. Espera al siguiente."));
         }
 
-        int dado = (int) (Math.random() * 6) + 1;
+        int dado1 = (int) (Math.random() * 6) + 1;
+        int dado2 = (int) (Math.random() * 6) + 1;
+        int suma = dado1 + dado2;
+
         int posicionActual = jugador.getPosicion();
-        int nuevaPosicion = (posicionActual + dado) % 40;
+        int nuevaPosicion = (posicionActual + suma) % 40;
 
         String mensajeExtra = "";
 
-        if (posicionActual + dado >= 40) {
+        if (posicionActual + suma >= 40) {
             jugador.setDinero(jugador.getDinero() + 200);
             mensajeExtra = "Has pasado por la casilla de salida. ¡Cobras 200€!\n";
         }
@@ -96,7 +99,7 @@ public class JugadorControlador {
         jugador.setPosicion(nuevaPosicion);
 
         if (nuevaPosicion == 30) {
-            return "CARCEL_DIRECTA"; // Solo eso. Nada de mover aún.
+            return ResponseEntity.ok(Map.of("mensaje", "CARCEL_DIRECTA"));
         }
 
         if (nuevaPosicion == 4 || nuevaPosicion == 38) {
@@ -145,7 +148,13 @@ public class JugadorControlador {
 
         jugadorRepositorio.save(jugador);
 
-        return mensajeExtra;
+        Map<String, Object> resultado = new HashMap<>();
+        resultado.put("dado1", dado1);
+        resultado.put("dado2", dado2);
+        resultado.put("suma", suma);
+        resultado.put("mensaje", "Has sacado un " + dado1 + " y un " + dado2 + ". Total: " + suma + ".\n" + mensajeExtra);
+
+        return ResponseEntity.ok(resultado);
     }
 
 //    @PostMapping("/{id}/comprar")
@@ -325,5 +334,83 @@ public class JugadorControlador {
         jugadorRepositorio.save(jugador);
         pasarTurnoAlSiguiente(jugador.getId());
         return "Has sido enviado a la grada. Turno del siguiente jugador.";
+    }
+
+    @PostMapping("/{id}/tirarDesdeCarcel")
+    public ResponseEntity<Map<String, Object>> tirarDesdeCarcel(@PathVariable Long id) {
+        Jugador jugador = jugadorRepositorio.findById(id)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+
+        if (!jugador.isTurno() || !jugador.isEnCarcel()) {
+            return ResponseEntity.badRequest().body(Map.of("mensaje", "No puedes tirar desde la cárcel."));
+        }
+
+        int dado1 = (int) (Math.random() * 6) + 1;
+        int dado2 = (int) (Math.random() * 6) + 1;
+        int suma = dado1 + dado2;
+
+        String mensaje = "Has sacado un " + dado1 + " y un " + dado2 + ". Total: " + suma + ".\n";
+
+        if (dado1 == dado2) {
+            jugador.setEnCarcel(false);
+            jugador.setTurnosEnCarcel(0);
+            int nuevaPos = (jugador.getPosicion() + suma) % 40;
+            jugador.setPosicion(nuevaPos);
+            // 👇 ¡NO quites el turno aquí!
+            // jugador.setTurno(false);
+            // pasarTurnoAlSiguiente(jugador.getId());
+
+            jugadorRepositorio.save(jugador);
+
+            mensaje += "🎉 Has sacado dobles y sales de la grada. Avanzas " + suma + " casillas.";
+
+            return ResponseEntity.ok(Map.of(
+                    "dado1", dado1,
+                    "dado2", dado2,
+                    "suma", suma,
+                    "mensaje", mensaje,
+                    "salio", true
+            ));
+        } else {
+            // 😕 No saca dobles: acumular turnos
+            int nuevosTurnos = jugador.getTurnosEnCarcel() + 1;
+            jugador.setTurnosEnCarcel(nuevosTurnos);
+            mensaje += "No has sacado dobles. Turnos encerrado: " + nuevosTurnos + ".\n";
+
+            if (nuevosTurnos >= 3) {
+                // 😤 Tercer turno → pagar, salir y mover
+                jugador.setDinero(jugador.getDinero() - 50);
+                jugador.setEnCarcel(false);
+                jugador.setTurnosEnCarcel(0);
+                int nuevaPos = (jugador.getPosicion() + suma) % 40;
+                jugador.setPosicion(nuevaPos);
+                jugador.setTurno(false);
+                jugadorRepositorio.save(jugador);
+                pasarTurnoAlSiguiente(jugador.getId());
+
+                mensaje += "😤 Has cumplido 3 turnos. Pagas 50€ y sales. Avanzas " + suma + " casillas.";
+
+                return ResponseEntity.ok(Map.of(
+                        "dado1", dado1,
+                        "dado2", dado2,
+                        "suma", suma,
+                        "mensaje", mensaje,
+                        "salio", true
+                ));
+            } else {
+                // 😐 Sigue en la cárcel, no se mueve
+                jugador.setTurno(false);
+                jugadorRepositorio.save(jugador);
+                pasarTurnoAlSiguiente(jugador.getId());
+
+                return ResponseEntity.ok(Map.of(
+                        "dado1", dado1,
+                        "dado2", dado2,
+                        "suma", suma,
+                        "mensaje", mensaje,
+                        "salio", false
+                ));
+            }
+        }
     }
 }

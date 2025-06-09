@@ -8,10 +8,37 @@ export default function PanelTurno({
   onComprar,
   opcionesConstruccion,
   onConstruirCasa,
-  onConstruirHotel
+  onConstruirHotel,
+  onTirarDesdeCarcel,
+  onPagarCarcel,
+  onUsarTarjetaCarcel
 }) {
   if (!tieneElTurno) return null;
 
+  // 🔒 Mostrar panel especial si el jugador está en la cárcel
+  if (tieneElTurno.enCarcel) {
+    return (
+      <div className="panel-turno panel-carcel">
+        <h2>⚠️ Estás en la grada</h2>
+        <p>Elige cómo quieres intentar salir:</p>
+        <div className="botones-turno">
+          <button className="boton-dado" onClick={onTirarDesdeCarcel}>
+            🎲 Tirar dado
+          </button>
+          <button className="boton-pagar" onClick={onPagarCarcel}>
+            💰 Pagar 50€
+          </button>
+          {tieneElTurno.tieneTarjetaSalirCarcel && (
+            <button className="boton-tarjeta" onClick={onUsarTarjetaCarcel}>
+              🎴 Usar tarjeta
+            </button>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // 🔁 Panel normal si no está en la cárcel
   return (
     <div className="panel-turno">
       <div className="botones-turno">
@@ -48,7 +75,14 @@ export default function PanelTurno({
 
       {resultado !== null && (
         <div className="info-turno">
-          <p><strong>Has sacado:</strong> {resultado}</p>
+          {typeof resultado === "object" && resultado.dado1 !== undefined ? (
+            <p>
+              <strong>Has sacado:</strong> {resultado.dado1} y {resultado.dado2} → Total: {resultado.suma}
+            </p>
+          ) : (
+            <p><strong>Has sacado:</strong> {resultado}</p>
+          )}
+
           <p><strong>Casilla:</strong> {casilla.nombre}</p>
           <p><strong>Tipo:</strong> {casilla.tipo}</p>
 

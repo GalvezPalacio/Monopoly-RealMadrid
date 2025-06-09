@@ -40,8 +40,76 @@ export default function TableroConFondo({
   const [mostrarAdjudicacion, setMostrarAdjudicacion] = useState(false);
   const [mostrarTarjetaCarcel, setMostrarTarjetaCarcel] = useState(false);
   const [mostrarPopupGrada, setMostrarPopupGrada] = useState(false);
-
+  const pagarSalidaCarcel = () => console.log("💰 Pagando salida");
+  const usarTarjetaCarcel = () => console.log("🎴 Usando tarjeta");
   const jugadorActual = jugadores.find((j) => j.turno);
+
+  const tirarDesdeCarcel = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/jugadores/${jugadorActual.id}/tirarDesdeCarcel`,
+        { method: "POST" }
+      );
+
+      const data = await res.json();
+      const { dado1, dado2, suma, mensaje, salio } = data;
+
+      console.log("🎲 Dados cárcel:", dado1, dado2, "→", suma);
+      alert(mensaje);
+
+      // 🔁 Refrescar jugadores
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+
+      setJugadores(nuevos);
+
+      const actualizado = nuevos.find((j) => j.id === jugadorActual.id);
+      setResultadoDado({ dado1, dado2, suma });
+      setPosicionJugador(actualizado?.posicion ?? 0);
+
+      // ✅ Mostrar mensaje de cambio de turno si ha cambiado
+      const siguiente = nuevos.find((j) => j.turno);
+      if (siguiente && siguiente.id !== jugadorActual.id) {
+        const mensaje = `Ahora le toca a ${siguiente.nombre}`;
+        setMensajeBienvenida(mensaje);
+        setMostrarBienvenida(true);
+        setTimeout(() => {
+          setMostrarBienvenida(false);
+        }, 2000);
+      }
+
+      const casilla = casillasInfo[actualizado.posicion];
+
+      if (
+        salio &&
+        ["propiedad", "compania", "estacion"].includes(casilla.tipo)
+      ) {
+        const propiedadPartidaRes = await fetch(
+          `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
+        );
+
+        if (propiedadPartidaRes.ok) {
+          const propiedadPartida = await propiedadPartidaRes.json();
+
+          if (!propiedadPartida.duenio) {
+            setAccionesDisponibles(["Comprar"]);
+          } else if (propiedadPartida.duenio.id === jugadorActual.id) {
+            setAccionesDisponibles(["Hipotecar"]);
+          } else {
+            setAccionesDisponibles(["Pagar alquiler"]);
+          }
+
+          setPropiedadSeleccionada(casilla); // ✅ Mostrar popup de propiedad
+        }
+      } else {
+        setAccionesDisponibles([]);
+        setPropiedadSeleccionada(null);
+      }
+    } catch (error) {
+      console.error("❌ Error al tirar desde la cárcel:", error);
+    }
+  };
 
   useEffect(() => {
     if (!partidaId) return;
@@ -108,13 +176,17 @@ export default function TableroConFondo({
         `http://localhost:8081/api/jugadores/${jugadorActual.id}/tirar`,
         { method: "POST" }
       );
-      const mensaje = await res.text();
-      console.log("🎲", mensaje);
+
+      const data = await res.json(); // ✅ ahora esperamos un JSON
+      const { dado1, dado2, suma, mensaje } = data;
+
+      console.log("🎲 Dados:", dado1, dado2, "→ total:", suma);
+      console.log("📩 Mensaje:", mensaje);
 
       // 👇 Detectar cárcel directa
       if (mensaje === "CARCEL_DIRECTA") {
-        setMostrarPopupGrada(true); // Mostrar el popup personalizado
-        return; // Detener el flujo, esperar a que el jugador cierre el popup
+        setMostrarPopupGrada(true);
+        return;
       }
 
       if (mensaje.includes("casilla de salida")) {
@@ -129,7 +201,7 @@ export default function TableroConFondo({
         ""
       );
 
-      // Detectar tarjeta de COMUNIDAD
+      // Tarjeta de COMUNIDAD
       if (
         mensajeSinSalida.includes("Caja de Comunidad") ||
         mensajeSinSalida.includes("Has caído en 'Caja de Comunidad'")
@@ -145,8 +217,6 @@ export default function TableroConFondo({
         } catch (e) {
           console.error("❌ Error al obtener/aplicar tarjeta de comunidad:", e);
         }
-
-        // Detectar tarjeta de SUERTE
       } else if (mensajeSinSalida.includes("Has caído en 'Suerte'")) {
         try {
           const resTarjeta = await fetch(
@@ -165,7 +235,7 @@ export default function TableroConFondo({
         setMostrarTarjetaReal(false);
       }
 
-      // Refrescar estado general
+      // Actualizar estado general
       const nuevos = await fetch(
         `http://localhost:8081/api/partidas/${partidaId}/jugadores`
       ).then((r) => r.json());
@@ -174,7 +244,8 @@ export default function TableroConFondo({
       const jugadorActualizado = nuevos.find((j) => j.id === jugadorActual.id);
       const nuevaPos = jugadorActualizado?.posicion ?? 0;
 
-      setResultadoDado(jugadorActualizado.ultimoDado || 0);
+      // ✅ Guardamos los dados completos en el estado
+      setResultadoDado({ dado1, dado2, suma });
       setPosicionJugador(nuevaPos);
 
       const opcionesRes = await fetch(
@@ -218,7 +289,6 @@ export default function TableroConFondo({
       console.error("❌ Error al tirar el dado:", err);
     }
   };
-
   const enviarACarcel = async () => {
     setMostrarPopupGrada(false); // Cierra el popup
 
@@ -551,6 +621,9 @@ export default function TableroConFondo({
         opcionesConstruccion={opcionesConstruccion}
         onConstruirCasa={() => setMostrarSelectorCasa(true)}
         onConstruirHotel={() => setMostrarSelectorHotel(true)}
+        onTirarDesdeCarcel={tirarDesdeCarcel}
+        onPagarCarcel={pagarSalidaCarcel}
+        onUsarTarjetaCarcel={usarTarjetaCarcel}
       />
 
       {propiedadSeleccionada && (

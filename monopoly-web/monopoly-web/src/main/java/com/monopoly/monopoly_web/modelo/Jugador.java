@@ -35,6 +35,9 @@ public class Jugador {
     @JoinColumn(name = "partida_id")
     private Partida partida;
 
+    @Column(name = "turnos_en_carcel")
+    private int turnosEnCarcel = 0;
+
     // Getters y setters
     public Long getId() {
         return id;
@@ -107,6 +110,13 @@ public class Jugador {
     public void setPartida(Partida partida) {
         this.partida = partida;
     }
-    
+
+    public int getTurnosEnCarcel() {
+        return turnosEnCarcel;
+    }
+
+    public void setTurnosEnCarcel(int turnosEnCarcel) {
+        this.turnosEnCarcel = turnosEnCarcel;
+    }
 
 }
