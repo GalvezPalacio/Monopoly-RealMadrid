@@ -96,12 +96,7 @@ public class JugadorControlador {
         jugador.setPosicion(nuevaPosicion);
 
         if (nuevaPosicion == 30) {
-            jugador.setPosicion(10);
-            jugador.setEnCarcel(true);
-            jugador.setTurno(false);
-            pasarTurnoAlSiguiente(jugador.getId());
-            jugadorRepositorio.save(jugador);
-            return mensajeExtra + "Has caído en 'Ir a la cárcel'. Vas directo a la casilla 10.";
+            return "CARCEL_DIRECTA"; // Solo eso. Nada de mover aún.
         }
 
         if (nuevaPosicion == 4 || nuevaPosicion == 38) {
@@ -184,18 +179,31 @@ public class JugadorControlador {
 //    }
     @Transactional
     private void pasarTurnoAlSiguiente(Long idActual) {
-        List<Jugador> jugadores = jugadorRepositorio.findAll();
-        jugadores.sort(Comparator.comparingLong(Jugador::getId));
+        Jugador jugadorActual = jugadorRepositorio.findById(idActual)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+        Long partidaId = jugadorActual.getPartida().getId();
 
+        List<Jugador> jugadores = jugadorRepositorio.findByPartidaIdOrderById(partidaId);
+
+        // Quitar turno a todos
+        for (Jugador j : jugadores) {
+            j.setTurno(false);
+        }
+
+        // Buscar índice del jugador actual
+        int actualIndex = -1;
         for (int i = 0; i < jugadores.size(); i++) {
             if (jugadores.get(i).getId().equals(idActual)) {
-                int siguiente = (i + 1) % jugadores.size();
-                Jugador siguienteJugador = jugadores.get(siguiente);
-                siguienteJugador.setTurno(true);
-                jugadorRepositorio.save(siguienteJugador);
+                actualIndex = i;
                 break;
             }
         }
+
+        // Asignar turno al siguiente jugador (incluso si está en la cárcel)
+        int siguiente = (actualIndex + 1) % jugadores.size();
+        jugadores.get(siguiente).setTurno(true);
+
+        jugadorRepositorio.saveAll(jugadores);
     }
 
 //    @PostMapping("/{jugadorId}/construir-grupo")
@@ -307,4 +315,15 @@ public class JugadorControlador {
 //                .map(ResponseEntity::ok)
 //                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PropiedadPartida no encontrada"));
 //    }
+    @PostMapping("/{id}/enviarACarcel")
+    public String enviarACarcel(@PathVariable Long id) {
+        System.out.println("🔔 Llamada a enviarACarcel para jugador " + id);
+        Jugador jugador = jugadorRepositorio.findById(id).get();
+        jugador.setPosicion(10);
+        jugador.setEnCarcel(true);
+        jugador.setTurno(false);
+        jugadorRepositorio.save(jugador);
+        pasarTurnoAlSiguiente(jugador.getId());
+        return "Has sido enviado a la grada. Turno del siguiente jugador.";
+    }
 }

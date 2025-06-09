@@ -39,6 +39,7 @@ export default function TableroConFondo({
   const [propiedadAdjudicada, setPropiedadAdjudicada] = useState(null);
   const [mostrarAdjudicacion, setMostrarAdjudicacion] = useState(false);
   const [mostrarTarjetaCarcel, setMostrarTarjetaCarcel] = useState(false);
+  const [mostrarPopupGrada, setMostrarPopupGrada] = useState(false);
 
   const jugadorActual = jugadores.find((j) => j.turno);
 
@@ -109,6 +110,12 @@ export default function TableroConFondo({
       );
       const mensaje = await res.text();
       console.log("🎲", mensaje);
+
+      // 👇 Detectar cárcel directa
+      if (mensaje === "CARCEL_DIRECTA") {
+        setMostrarPopupGrada(true); // Mostrar el popup personalizado
+        return; // Detener el flujo, esperar a que el jugador cierre el popup
+      }
 
       if (mensaje.includes("casilla de salida")) {
         setMensajeSalida(
@@ -211,6 +218,37 @@ export default function TableroConFondo({
       console.error("❌ Error al tirar el dado:", err);
     }
   };
+
+  const enviarACarcel = async () => {
+    setMostrarPopupGrada(false); // Cierra el popup
+
+    await fetch(
+      `http://localhost:8081/api/jugadores/${jugadorActual.id}/enviarACarcel`,
+      { method: "POST" }
+    );
+
+    const nuevos = await fetch(
+      `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+    ).then((r) => r.json());
+
+    setJugadores(nuevos);
+
+    // ✅ Mostrar mensaje de turno al nuevo jugador
+    const siguiente = nuevos.find((j) => j.turno);
+    if (siguiente) {
+      const mensaje = `Ahora le toca a ${siguiente.nombre}`;
+      setMensajeBienvenida(mensaje);
+      setMostrarBienvenida(true);
+      setTimeout(() => {
+        setMostrarBienvenida(false);
+      }, 2000);
+    }
+
+    setResultadoDado(null);
+    setPropiedadSeleccionada(null);
+  };
+
+  window.enviarACarcel = enviarACarcel;
 
   const terminarTurno = async () => {
     if (!jugadorActual) return;
@@ -564,7 +602,9 @@ export default function TableroConFondo({
             setMensajeEspecial(null);
             setTipoMensaje(null);
 
-            if (mensajeEspecial.toLowerCase().includes("te libras de la cárcel")) {
+            if (
+              mensajeEspecial.toLowerCase().includes("te libras de la cárcel")
+            ) {
               setMostrarTarjetaCarcel(true);
             }
 
@@ -667,6 +707,20 @@ export default function TableroConFondo({
           >
             Cerrar
           </button>
+        </div>
+      )}
+      {mostrarPopupGrada && (
+        <div className="popup-esquina">
+          <div className="tarjeta-esquina">
+            <img
+              src="/vas-a-la-grada.png"
+              alt="Vas a la grada"
+              className="imagen-esquina"
+            />
+            <button className="boton-cerrar-esquina" onClick={enviarACarcel}>
+              Cerrar
+            </button>
+          </div>
         </div>
       )}
       {mensajeSalida && <div className="flash-salida">{mensajeSalida}</div>}

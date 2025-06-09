@@ -22,7 +22,37 @@ export default function TarjetaPropiedad({ propiedad, onClose, tipoEspecial }) {
       alt: "Vas a la grada",
     },
   };
-  if (esquinas[propiedad.tipo]) {
+
+  // ✅ Si es "vas a la grada", SEPARARLO del resto
+  if (propiedad.tipo === "vas-grada") {
+    return (
+      <div className="popup-esquina">
+        <div className="tarjeta-esquina">
+          <img
+            src={esquinas["vas-grada"].imagen}
+            alt={esquinas["vas-grada"].alt}
+            className="imagen-esquina"
+          />
+          {/* 👇 Este botón ejecuta una función que viene desde el componente padre */}
+          <button
+            className="boton-cerrar-esquina"
+            onClick={() => {
+              if (typeof window.enviarACarcel === "function") {
+                window.enviarACarcel(); // función definida globalmente en TableroConFondo
+              } else {
+                console.warn("⚠️ Falta definir window.enviarACarcel");
+              }
+            }}
+          >
+            Cerrar
+          </button>
+        </div>
+      </div>
+    );
+  }
+
+  // ✅ Resto de esquinas normales
+  if (propiedad.tipo !== "vas-grada" && esquinas[propiedad.tipo]) {
     const { imagen, alt } = esquinas[propiedad.tipo];
     return (
       <div className="popup-esquina">

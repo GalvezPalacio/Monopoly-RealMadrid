@@ -19,6 +19,7 @@ import java.util.List;
 public interface JugadorRepositorio extends JpaRepository<Jugador, Long> {
 
     List<Jugador> findByPartidaId(Long partidaId);
+    List<Jugador> findByPartidaIdOrderById(Long partidaId);
 
     @Modifying
     @Transactional
