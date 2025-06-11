@@ -40,9 +40,71 @@ export default function TableroConFondo({
   const [mostrarAdjudicacion, setMostrarAdjudicacion] = useState(false);
   const [mostrarTarjetaCarcel, setMostrarTarjetaCarcel] = useState(false);
   const [mostrarPopupGrada, setMostrarPopupGrada] = useState(false);
-  const pagarSalidaCarcel = () => console.log("💰 Pagando salida");
-  const usarTarjetaCarcel = () => console.log("🎴 Usando tarjeta");
   const jugadorActual = jugadores.find((j) => j.turno);
+
+  const pagarSalidaCarcel = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/jugadores/${jugadorActual.id}/salirPagando`,
+        { method: "POST" }
+      );
+
+      const data = await res.json();
+      const { dado1, dado2, suma, mensaje, salio } = data;
+
+      alert(mensaje); // Puedes personalizarlo con un modal
+
+      // 🔁 Refrescar jugadores
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+
+      setJugadores(nuevos);
+
+      const actualizado = nuevos.find((j) => j.id === jugadorActual.id);
+      setResultadoDado({ dado1, dado2, suma });
+      setPosicionJugador(actualizado?.posicion ?? 0);
+
+      // Mostrar mensaje de cambio de turno
+      const siguiente = nuevos.find((j) => j.turno);
+      if (siguiente && siguiente.id !== jugadorActual.id) {
+        const mensaje = `Ahora le toca a ${siguiente.nombre}`;
+        setMensajeBienvenida(mensaje);
+        setMostrarBienvenida(true);
+        setTimeout(() => setMostrarBienvenida(false), 2000);
+      }
+
+      const casilla = casillasInfo[actualizado.posicion];
+
+      if (
+        salio &&
+        ["propiedad", "compania", "estacion"].includes(casilla.tipo)
+      ) {
+        const propiedadPartidaRes = await fetch(
+          `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
+        );
+
+        if (propiedadPartidaRes.ok) {
+          const propiedadPartida = await propiedadPartidaRes.json();
+
+          if (!propiedadPartida.duenio) {
+            setAccionesDisponibles(["Comprar"]);
+          } else if (propiedadPartida.duenio.id === jugadorActual.id) {
+            setAccionesDisponibles(["Hipotecar"]);
+          } else {
+            setAccionesDisponibles(["Pagar alquiler"]);
+          }
+
+          setPropiedadSeleccionada(casilla);
+        }
+      } else {
+        setAccionesDisponibles([]);
+        setPropiedadSeleccionada(null);
+      }
+    } catch (error) {
+      console.error("❌ Error al pagar salida:", error);
+    }
+  };
 
   const tirarDesdeCarcel = async () => {
     try {
@@ -108,6 +170,48 @@ export default function TableroConFondo({
       }
     } catch (error) {
       console.error("❌ Error al tirar desde la cárcel:", error);
+    }
+  };
+  const guardarTarjeta = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/jugadores/${jugadorActual.id}/guardarTarjetaSalirCarcel`,
+        { method: "POST" }
+      );
+
+      if (res.ok) {
+        console.log("✅ Tarjeta guardada correctamente.");
+      } else {
+        console.warn("❌ Error al guardar tarjeta.");
+      }
+
+      setMostrarTarjetaReal(false); // cerrar popup
+      setMensajeEspecial(null); // borrar mensaje
+      setTipoMensaje(null); // borrar tipo
+    } catch (error) {
+      console.error("❌ Error guardando tarjeta:", error);
+    }
+  };
+
+  const usarTarjetaCarcel = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/jugadores/${jugadorActual.id}/usarTarjetaSalirCarcel`,
+        { method: "POST" }
+      );
+
+      const mensaje = await res.text();
+      alert(mensaje); // puedes reemplazar por modal elegante
+
+      // Refrescar jugadores y permitir tirar dado
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+
+      setJugadores(nuevos);
+      setResultadoDado(null); // permitir nueva tirada
+    } catch (error) {
+      console.error("❌ Error al usar tarjeta:", error);
     }
   };
 
@@ -745,6 +849,7 @@ export default function TableroConFondo({
               console.error("❌ Error al aplicar efecto de tarjeta:", err);
             }
           }}
+          onGuardar={guardarTarjeta} // ✅ añadido aquí correctamente
         />
       )}
       {mostrarAdjudicacion && propiedadAdjudicada && (

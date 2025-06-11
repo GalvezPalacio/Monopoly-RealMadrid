@@ -38,6 +38,9 @@ public class Jugador {
     @Column(name = "turnos_en_carcel")
     private int turnosEnCarcel = 0;
 
+    @Column(name = "tiene_tarjeta_salir_carcel")
+    private boolean tieneTarjetaSalirCarcel = false;;
+
     // Getters y setters
     public Long getId() {
         return id;
@@ -118,5 +121,14 @@ public class Jugador {
     public void setTurnosEnCarcel(int turnosEnCarcel) {
         this.turnosEnCarcel = turnosEnCarcel;
     }
+
+    public boolean isTieneTarjetaSalirCarcel() {
+        return tieneTarjetaSalirCarcel;
+    }
+
+    public void setTieneTarjetaSalirCarcel(boolean tieneTarjetaSalirCarcel) {
+        this.tieneTarjetaSalirCarcel = tieneTarjetaSalirCarcel;
+    }
+    
 
 }

@@ -1,7 +1,7 @@
 import React from "react";
 import "./TarjetaMensaje.css";
 
-const TarjetaMensaje = ({ mensaje, tipo, onCerrar }) => {
+const TarjetaMensaje = ({ mensaje, tipo, onCerrar, onGuardar }) => {
   const imagenFondo =
     tipo === "comunidad"
       ? "/tarjeta-comunidad-popup.png"
@@ -13,9 +13,15 @@ const TarjetaMensaje = ({ mensaje, tipo, onCerrar }) => {
         <img src={imagenFondo} alt="Tarjeta" className="tarjeta-fondo-img" />
         <div className="tarjeta-mensaje-texto">{mensaje}</div>
 
-        <button className="boton-cerrar-mensaje" onClick={onCerrar}>
-          Cerrar
-        </button>
+        {mensaje === "🎁 Te libras de la cárcel. Guarda esta tarjeta." ? (
+          <button className="boton-cerrar-mensaje" onClick={onGuardar}>
+            Guardar
+          </button>
+        ) : (
+          <button className="boton-cerrar-mensaje" onClick={onCerrar}>
+            Cerrar
+          </button>
+        )}
       </div>
     </div>
   );
