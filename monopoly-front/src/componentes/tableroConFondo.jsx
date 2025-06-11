@@ -980,22 +980,43 @@ export default function TableroConFondo({
 </div>
 
     <div className="lista-propiedades-horizontal">
-  {propiedadesJugador
-  .filter((p) => p.casas === 0 && p.hotel === false)
-  .map((p) => {
-    const casilla = casillasInfo.find((c) => c.id === p.propiedad.id);
-    const colorTexto = casilla?.color || "gris"; // por ejemplo: "marron", "rojo", etc.
+  {
+    // 🧠 Agrupación y filtrado inteligente
+    (() => {
+      const propiedadesPorGrupo = {};
+      for (const p of propiedadesJugador) {
+        const grupo = p.propiedad.grupoColor;
+        if (!propiedadesPorGrupo[grupo]) {
+          propiedadesPorGrupo[grupo] = [];
+        }
+        propiedadesPorGrupo[grupo].push(p);
+      }
 
-    return (
-      <div
-        key={p.propiedad.id}
-        className={`tarjeta-propiedad-construccion color-${colorTexto}`}
-       onClick={() => devolverPropiedad(p.id)}
-      >
-        <h5>{p.propiedad.nombre}</h5>
-      </div>
-    );
-  })}
+      const gruposConConstruccion = Object.entries(propiedadesPorGrupo)
+        .filter(([, props]) => props.some(p => p.casas > 0 || p.hotel))
+        .map(([grupo]) => grupo);
+
+      return propiedadesJugador
+        .filter(p =>
+          p.casas === 0 &&
+          p.hotel === false &&
+          !gruposConConstruccion.includes(p.propiedad.grupoColor)
+        )
+        .map((p) => {
+          const casilla = casillasInfo.find((c) => c.id === p.propiedad.id);
+          const colorTexto = casilla?.color || "gris";
+          return (
+            <div
+              key={p.propiedad.id}
+              className={`tarjeta-propiedad-construccion color-${colorTexto}`}
+              onClick={() => devolverPropiedad(p.id)}
+            >
+              <h5>{p.propiedad.nombre}</h5>
+            </div>
+          );
+        });
+    })()
+  }
 </div>
   </div>
 )}
