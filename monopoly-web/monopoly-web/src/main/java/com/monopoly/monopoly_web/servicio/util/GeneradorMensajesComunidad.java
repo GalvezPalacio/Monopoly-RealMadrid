@@ -30,17 +30,17 @@ public class GeneradorMensajesComunidad {
 //        mensajesPositivos.add("💼 Trabajas en la tienda del Bernabéu. Ganas 110€.");
 //        mensajesPositivos.add("🎉 Avanza a Palco VIP. Disfruta del espectáculo.");
 //        mensajesPositivos.add("📖 Escribes un artículo sobre el Madrid y te lo publican. Ganas 130€.");
-        mensajesPositivos.add("🔄 Devuelve una propiedad al banco (la que elijas si tienes y que no tenga construcción).");
+        mensajesPositivos.add("⛔ Pierdes un turno por sanción del club. Mal comportamiento.");
 
         // Negativos
 //        mensajesNegativos.add("🏫 Tu hijo entra en la escuela del Real Madrid. Pierdes matrícula: 150€.");
 //        mensajesNegativos.add("🚶‍♂️ Te han expulsado por protestar y te mandan a “Vas a la grada”. Avanza allí directamente.");
 //        mensajesNegativos.add("💸 Te roban fuera del estadio. Pierdes 100€.");
 //        mensajesNegativos.add("📉 Inviertes en cromos falsos de leyendas. Pierdes 200€.");
-        mensajesNegativos.add("🔄 Devuelve una propiedad al banco (la que elijas si tienes y que no tenga construcción).");
+//        mensajesNegativos.add("🔄 Devuelve una propiedad al banco (la que elijas si tienes y que no tenga construcción).");
 //        mensajesNegativos.add("🚗 Dejas el coche mal aparcado en Chamartín. Pierdes 80€.");
 //        mensajesNegativos.add("⚽ Fallas un penalti en la presentación de peñas. Pierdes 70€.");
-//        mensajesNegativos.add("⛔ Pierdes un turno por sanción del club. Mal comportamiento.");
+        mensajesNegativos.add("⛔ Pierdes un turno por sanción del club. Mal comportamiento.");
 //        mensajesNegativos.add("🧾 Pagas cuota anual de socio. Pierdes 160€.");
 //        mensajesNegativos.add("🎆 Sanción por encender bengalas en el estadio. Pierdes 140€.");
     }

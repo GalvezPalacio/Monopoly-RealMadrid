@@ -30,10 +30,10 @@ public class GeneradorMensajesSuerte {
 //        mensajesPositivos.add("🏆 Te reparten parte del premio de la Champions. Ganas 300€.");
 //        mensajesPositivos.add("🛍️ Abres una tienda oficial en Chamartín. Ganas 200€.");
 //        mensajesPositivos.add("🎁 Te libras de la cárcel. Guarda esta tarjeta.");
-        mensajesPositivos.add("🔄 Devuelve una propiedad al banco (la que elijas si tienes y que no tenga construcción).");
+        mensajesPositivos.add("⛔ Pierdes un turno por sanción del club. Mal comportamiento.");
 
         // Mensajes negativos (pierdes dinero)
-        mensajesNegativos.add("🔄 Devuelve una propiedad al banco (la que elijas si tienes y que no tenga construcción).");
+        mensajesNegativos.add("⛔ Pierdes un turno por sanción del club. Mal comportamiento.");
 //        mensajesNegativos.add("🚑 Bellingham se lesiona. Pierdes 150€ en médicos.");
 //        mensajesNegativos.add("📉 Inviertes mal en NFTs del Madrid. Pierdes 200€.");
 //        mensajesNegativos.add("🥶 Te colaste en un palco sin entrada. Pierdes 100€.");
@@ -43,7 +43,7 @@ public class GeneradorMensajesSuerte {
 //        mensajesNegativos.add("🎮 Pierdes un torneo de FIFA contra un culé. Pierdes 70€.");
 //        mensajesNegativos.add("🏃‍♂️ Te pasaste la puerta por la que entras al Bernabeu!!! Retrocede 3 casillas.");
 //        mensajesNegativos.add("🔁 Pierdes un turno animando en la grada fan. ¡Hala Madrid!");
-//        mensajesNegativos.add("🚔 Te han pillado haciendo reventa de entradas en los aledaños del bernabeu. Ve directamente a la cárcel. No pases por la salida.");
+//        mensajesNegativos.add("🚔 Te han pillado haciendo reventa de entradas en los aledaños del bernabeu. Proximo partido vas a la grada. No pases por la salida.");
     }
 
     public static String obtenerMensajeAleatorio(boolean positivo) {

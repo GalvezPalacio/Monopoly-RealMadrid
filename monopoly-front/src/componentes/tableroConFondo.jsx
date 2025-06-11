@@ -45,15 +45,15 @@ export default function TableroConFondo({
   const [propiedadesDevueltas, setPropiedadesDevueltas] = useState([]);
 
   const colorTextoDesdeHex = {
-  "#8B4513": "marron",
-  "#87CEEB": "azul-claro",
-  "#FF69B4": "rosa",
-  "#FFA500": "naranja",
-  "#DC143C": "rojo",
-  "#FFD700": "amarillo",
-  "#228B22": "verde",
-  "#00008B": "azul-oscuro"
-};
+    "#8B4513": "marron",
+    "#87CEEB": "azul-claro",
+    "#FF69B4": "rosa",
+    "#FFA500": "naranja",
+    "#DC143C": "rojo",
+    "#FFD700": "amarillo",
+    "#228B22": "verde",
+    "#00008B": "azul-oscuro",
+  };
 
   const pagarSalidaCarcel = async () => {
     try {
@@ -829,6 +829,15 @@ export default function TableroConFondo({
             setMensajeEspecial(null);
             setTipoMensaje(null);
 
+            if (mensajeEspecial.toLowerCase().includes("pierdes un turno")) {
+              await fetch(
+                `http://localhost:8081/api/jugadores/${jugadorActual.id}/perder-turno`,
+                {
+                  method: "POST",
+                }
+              );
+            }
+
             if (
               mensajeEspecial.toLowerCase().includes("te libras de la cárcel")
             ) {
@@ -965,61 +974,68 @@ export default function TableroConFondo({
           </div>
         </div>
       )}
-   {mostrarSelectorDevolver && (
-  <div className="popup-selector-dev">
-    <div
-  style={{
-    textAlign: "center",
-    marginBottom: "1.2rem",
-    fontSize: "1.4rem",
-    fontWeight: "bold",
-    color: "#222"
-  }}
->
-  ¿Qué propiedad quieres devolver?
-</div>
+      {mostrarSelectorDevolver && (
+        <div className="popup-selector-dev">
+          <div
+            style={{
+              textAlign: "center",
+              marginBottom: "1.2rem",
+              fontSize: "1.4rem",
+              fontWeight: "bold",
+              color: "#222",
+            }}
+          >
+            ¿Qué propiedad quieres devolver?
+          </div>
 
-    <div className="lista-propiedades-horizontal">
-  {
-    // 🧠 Agrupación y filtrado inteligente
-    (() => {
-      const propiedadesPorGrupo = {};
-      for (const p of propiedadesJugador) {
-        const grupo = p.propiedad.grupoColor;
-        if (!propiedadesPorGrupo[grupo]) {
-          propiedadesPorGrupo[grupo] = [];
-        }
-        propiedadesPorGrupo[grupo].push(p);
-      }
+          <div className="lista-propiedades-horizontal">
+            {
+              // 🧠 Agrupación y filtrado inteligente
+              (() => {
+                const propiedadesPorGrupo = {};
+                for (const p of propiedadesJugador) {
+                  const grupo = p.propiedad.grupoColor;
+                  if (!propiedadesPorGrupo[grupo]) {
+                    propiedadesPorGrupo[grupo] = [];
+                  }
+                  propiedadesPorGrupo[grupo].push(p);
+                }
 
-      const gruposConConstruccion = Object.entries(propiedadesPorGrupo)
-        .filter(([, props]) => props.some(p => p.casas > 0 || p.hotel))
-        .map(([grupo]) => grupo);
+                const gruposConConstruccion = Object.entries(
+                  propiedadesPorGrupo
+                )
+                  .filter(([, props]) =>
+                    props.some((p) => p.casas > 0 || p.hotel)
+                  )
+                  .map(([grupo]) => grupo);
 
-      return propiedadesJugador
-        .filter(p =>
-          p.casas === 0 &&
-          p.hotel === false &&
-          !gruposConConstruccion.includes(p.propiedad.grupoColor)
-        )
-        .map((p) => {
-          const casilla = casillasInfo.find((c) => c.id === p.propiedad.id);
-          const colorTexto = casilla?.color || "gris";
-          return (
-            <div
-              key={p.propiedad.id}
-              className={`tarjeta-propiedad-construccion color-${colorTexto}`}
-              onClick={() => devolverPropiedad(p.id)}
-            >
-              <h5>{p.propiedad.nombre}</h5>
-            </div>
-          );
-        });
-    })()
-  }
-</div>
-  </div>
-)}
+                return propiedadesJugador
+                  .filter(
+                    (p) =>
+                      p.casas === 0 &&
+                      p.hotel === false &&
+                      !gruposConConstruccion.includes(p.propiedad.grupoColor)
+                  )
+                  .map((p) => {
+                    const casilla = casillasInfo.find(
+                      (c) => c.id === p.propiedad.id
+                    );
+                    const colorTexto = casilla?.color || "gris";
+                    return (
+                      <div
+                        key={p.propiedad.id}
+                        className={`tarjeta-propiedad-construccion color-${colorTexto}`}
+                        onClick={() => devolverPropiedad(p.id)}
+                      >
+                        <h5>{p.propiedad.nombre}</h5>
+                      </div>
+                    );
+                  });
+              })()
+            }
+          </div>
+        </div>
+      )}
       {mensajeSalida && <div className="flash-salida">{mensajeSalida}</div>}
     </div>
   );

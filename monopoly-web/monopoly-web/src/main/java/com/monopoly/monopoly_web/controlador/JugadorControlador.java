@@ -208,10 +208,21 @@ public class JugadorControlador {
             }
         }
 
-        // Asignar turno al siguiente jugador (incluso si está en la cárcel)
+        // Asignar turno al siguiente jugador
         int siguiente = (actualIndex + 1) % jugadores.size();
-        jugadores.get(siguiente).setTurno(true);
+        Jugador jugadorSiguiente = jugadores.get(siguiente);
 
+// 🔁 Saltar jugadores que pierden turno
+        while (jugadorSiguiente.isPierdeTurno()) {
+            jugadorSiguiente.setPierdeTurno(false); // quitar penalización
+            siguiente = (siguiente + 1) % jugadores.size();
+            jugadorSiguiente = jugadores.get(siguiente);
+        }
+
+// ✅ Asignar turno solo al jugador válido
+        jugadorSiguiente.setTurno(true);
+
+// 💾 Guardar todo
         jugadorRepositorio.saveAll(jugadores);
     }
 
@@ -281,33 +292,9 @@ public class JugadorControlador {
     }
 
     @PostMapping("/{id}/terminar-turno")
-    public void terminarTurno(@PathVariable Long id) {
-        Jugador jugador = jugadorRepositorio.findById(id)
-                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
-
-        jugador.setTurno(false);
-        jugadorRepositorio.save(jugador);
-
-        Long partidaId = jugador.getPartida().getId();
-
-        // Obtener jugadores de la misma partida
-        List<Jugador> jugadores = jugadorRepositorio.findByPartidaId(partidaId);
-        jugadores.sort(Comparator.comparing(Jugador::getId)); // Asegura orden
-
-        // Buscar índice actual
-        int actualIndex = -1;
-        for (int i = 0; i < jugadores.size(); i++) {
-            if (jugadores.get(i).getId().equals(id)) {
-                actualIndex = i;
-                break;
-            }
-        }
-
-        // Calcular el siguiente jugador
-        int siguienteIndex = (actualIndex + 1) % jugadores.size();
-        Jugador siguiente = jugadores.get(siguienteIndex);
-        siguiente.setTurno(true);
-        jugadorRepositorio.save(siguiente);
+    public ResponseEntity<String> terminarTurno(@PathVariable Long id) {
+        pasarTurnoAlSiguiente(id); // ✅ Llama al método bueno directamente
+        return ResponseEntity.ok("Turno terminado correctamente.");
     }
 
 //    @GetMapping("/partida/{partidaId}/posicion/{posicion}")
@@ -480,5 +467,15 @@ public class JugadorControlador {
         jugadorRepositorio.save(jugador);
 
         return ResponseEntity.ok("Has usado tu tarjeta y salido de la cárcel.");
+    }
+
+    @PostMapping("/{jugadorId}/perder-turno")
+    public ResponseEntity<String> perderTurno(@PathVariable Long jugadorId) {
+        Jugador jugador = jugadorRepositorio.findById(jugadorId)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+
+        jugador.setPierdeTurno(true);
+        jugadorRepositorio.save(jugador);
+        return ResponseEntity.ok("🔁 El jugador perderá su próximo turno.");
     }
 }
