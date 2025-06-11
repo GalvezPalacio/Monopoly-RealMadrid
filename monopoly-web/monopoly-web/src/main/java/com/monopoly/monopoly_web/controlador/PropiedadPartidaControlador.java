@@ -137,4 +137,13 @@ public class PropiedadPartidaControlador {
         return propiedadPartidaRepositorio.findByDuenoId(jugadorId);
     }
 
+    @PostMapping("/devolver")
+    public ResponseEntity<String> devolverPropiedad(@RequestBody Map<String, Long> datos) {
+        Long jugadorId = datos.get("jugadorId");
+        Long propiedadId = datos.get("propiedadId");
+
+        propiedadPartidaServicio.devolverPropiedad(jugadorId, propiedadId);
+        return ResponseEntity.ok("Propiedad devuelta correctamente.");
+    }
+
 }

@@ -29,9 +29,11 @@ public class GeneradorMensajesSuerte {
 //        mensajesPositivos.add("🧣 Vendiste bufandas en el Clásico. Ganas 180€.");
 //        mensajesPositivos.add("🏆 Te reparten parte del premio de la Champions. Ganas 300€.");
 //        mensajesPositivos.add("🛍️ Abres una tienda oficial en Chamartín. Ganas 200€.");
-          mensajesPositivos.add("🎁 Te libras de la cárcel. Guarda esta tarjeta.");
+//        mensajesPositivos.add("🎁 Te libras de la cárcel. Guarda esta tarjeta.");
+        mensajesPositivos.add("🔄 Devuelve una propiedad al banco (la que elijas si tienes y que no tenga construcción).");
 
         // Mensajes negativos (pierdes dinero)
+        mensajesNegativos.add("🔄 Devuelve una propiedad al banco (la que elijas si tienes y que no tenga construcción).");
 //        mensajesNegativos.add("🚑 Bellingham se lesiona. Pierdes 150€ en médicos.");
 //        mensajesNegativos.add("📉 Inviertes mal en NFTs del Madrid. Pierdes 200€.");
 //        mensajesNegativos.add("🥶 Te colaste en un palco sin entrada. Pierdes 100€.");

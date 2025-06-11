@@ -319,4 +319,20 @@ public class PropiedadPartidaServicio {
         resultado.put("gruposConHotel", gruposConHotel);
         return resultado;
     }
+
+    public void devolverPropiedad(Long jugadorId, Long propiedadId) {
+        PropiedadPartida propiedad = propiedadPartidaRepositorio.findById(propiedadId)
+                .orElseThrow(() -> new RuntimeException("Propiedad no encontrada"));
+
+        if (!jugadorId.equals(propiedad.getDueno().getId())) {
+            throw new RuntimeException("Esa propiedad no es tuya");
+        }
+
+        propiedad.setDueno(null);
+        propiedad.setCasas(0);
+        propiedad.setHotel(false);
+        propiedad.setHipotecada(false);
+
+        propiedadPartidaRepositorio.save(propiedad);
+    }
 }

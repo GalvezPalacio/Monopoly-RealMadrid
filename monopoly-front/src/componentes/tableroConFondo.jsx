@@ -41,6 +41,19 @@ export default function TableroConFondo({
   const [mostrarTarjetaCarcel, setMostrarTarjetaCarcel] = useState(false);
   const [mostrarPopupGrada, setMostrarPopupGrada] = useState(false);
   const jugadorActual = jugadores.find((j) => j.turno);
+  const [mostrarSelectorDevolver, setMostrarSelectorDevolver] = useState(false);
+  const [propiedadesDevueltas, setPropiedadesDevueltas] = useState([]);
+
+  const colorTextoDesdeHex = {
+  "#8B4513": "marron",
+  "#87CEEB": "azul-claro",
+  "#FF69B4": "rosa",
+  "#FFA500": "naranja",
+  "#DC143C": "rojo",
+  "#FFD700": "amarillo",
+  "#228B22": "verde",
+  "#00008B": "azul-oscuro"
+};
 
   const pagarSalidaCarcel = async () => {
     try {
@@ -190,6 +203,43 @@ export default function TableroConFondo({
       setTipoMensaje(null); // borrar tipo
     } catch (error) {
       console.error("❌ Error guardando tarjeta:", error);
+    }
+  };
+
+  const devolverPropiedad = async (propiedadId) => {
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/propiedadPartida/devolver`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jugadorId: jugadorActual.id,
+            propiedadId,
+          }),
+        }
+      );
+
+      const texto = await res.text();
+      alert(texto);
+
+      // Refrescar jugadores y propiedades tras devolver
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+      setJugadores(nuevos);
+
+      const propsRes = await fetch(
+        `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+      );
+      const props = await propsRes.json();
+      setPropiedadesJugador(props);
+
+      setMostrarSelectorDevolver(false);
+      setPropiedadesDevueltas([]);
+    } catch (error) {
+      console.error("❌ Error al devolver propiedad:", error);
+      alert("Error al devolver la propiedad");
     }
   };
 
@@ -783,6 +833,20 @@ export default function TableroConFondo({
               mensajeEspecial.toLowerCase().includes("te libras de la cárcel")
             ) {
               setMostrarTarjetaCarcel(true);
+            } else if (
+              mensajeEspecial
+                .toLowerCase()
+                .includes("devuelve una propiedad al banco")
+            ) {
+              setMostrarSelectorDevolver(true); // 🔁 abriremos popup nuevo
+              const props = await fetch(
+                `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+              ).then((r) => r.json());
+
+              const sinConstruccion = props.filter(
+                (p) => p.casas === 0 && p.hotel === false
+              );
+              setPropiedadesDevueltas(sinConstruccion);
             }
 
             // ✅ APLICAR EL EFECTO AL CERRAR
@@ -901,6 +965,40 @@ export default function TableroConFondo({
           </div>
         </div>
       )}
+   {mostrarSelectorDevolver && (
+  <div className="popup-selector-dev">
+    <div
+  style={{
+    textAlign: "center",
+    marginBottom: "1.2rem",
+    fontSize: "1.4rem",
+    fontWeight: "bold",
+    color: "#222"
+  }}
+>
+  ¿Qué propiedad quieres devolver?
+</div>
+
+    <div className="lista-propiedades-horizontal">
+  {propiedadesJugador
+  .filter((p) => p.casas === 0 && p.hotel === false)
+  .map((p) => {
+    const casilla = casillasInfo.find((c) => c.id === p.propiedad.id);
+    const colorTexto = casilla?.color || "gris"; // por ejemplo: "marron", "rojo", etc.
+
+    return (
+      <div
+        key={p.propiedad.id}
+        className={`tarjeta-propiedad-construccion color-${colorTexto}`}
+       onClick={() => devolverPropiedad(p.id)}
+      >
+        <h5>{p.propiedad.nombre}</h5>
+      </div>
+    );
+  })}
+</div>
+  </div>
+)}
       {mensajeSalida && <div className="flash-salida">{mensajeSalida}</div>}
     </div>
   );
