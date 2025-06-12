@@ -20,30 +20,28 @@ public class GeneradorMensajesSuerte {
 
     static {
         // Mensajes positivos (ganas dinero)
-//        mensajesPositivos.add("💰 Has vendido camisetas de Bellingham. Ganas 200€.");
-//        mensajesPositivos.add("👮 Te libras de pagar impuestos la proxima vez que caigas. Disfruta tu inmunidad.");
-//        mensajesPositivos.add("🚂 Avanza a Estación de Chamartín. Si está libre, puedes comprarla.");
-//        mensajesPositivos.add("🏟️ Entradas revendidas en el Bernabéu. Ganas 250€.");
-//        mensajesPositivos.add("📺 Has firmado un contrato con Real Madrid TV. Ganas 120€.");
-//        mensajesPositivos.add("⚽ Ganas una apuesta por gol de Modrić. Ganas 80€.");
-//        mensajesPositivos.add("🧣 Vendiste bufandas en el Clásico. Ganas 180€.");
-//        mensajesPositivos.add("🏆 Te reparten parte del premio de la Champions. Ganas 300€.");
-//        mensajesPositivos.add("🛍️ Abres una tienda oficial en Chamartín. Ganas 200€.");
-//        mensajesPositivos.add("🎁 Te libras de la cárcel. Guarda esta tarjeta.");
-        mensajesPositivos.add("⛔ Pierdes un turno por sanción del club. Mal comportamiento.");
-
+        mensajesPositivos.add("💰 Has vendido camisetas de Bellingham. Ganas 200€.");
+        mensajesPositivos.add("👮 Has ganado el balón de oro. Ganas 350€.");
+        mensajesPositivos.add("🚂 Coges el metro para ir a un partido. Avanza a Estación de Chamartín. Si está libre, puedes comprarla.");
+        mensajesPositivos.add("🏟️ Entradas revendidas en el Bernabéu. Ganas 250€.");
+        mensajesPositivos.add("📺 Has firmado un contrato con Real Madrid TV. Ganas 120€.");
+        mensajesPositivos.add("⚽ Ganas una apuesta por gol de Modrić. Ganas 80€.");
+        mensajesPositivos.add("🧣 Vendiste bufandas en el Clásico. Ganas 180€.");
+        mensajesPositivos.add("🏆 Te dan las primas por ganar la Champions. Ganas 300€.");
+        mensajesPositivos.add("🛍️ Abres una tienda oficial en Chamartín. Ganas 200€.");
+        mensajesPositivos.add("🎁 Te libras de la cárcel. Guarda esta tarjeta.");
+        
         // Mensajes negativos (pierdes dinero)
-        mensajesNegativos.add("⛔ Pierdes un turno por sanción del club. Mal comportamiento.");
-//        mensajesNegativos.add("🚑 Bellingham se lesiona. Pierdes 150€ en médicos.");
-//        mensajesNegativos.add("📉 Inviertes mal en NFTs del Madrid. Pierdes 200€.");
-//        mensajesNegativos.add("🥶 Te colaste en un palco sin entrada. Pierdes 100€.");
-//        mensajesNegativos.add("⚖️ Pierdes una demanda de marca. Pierdes 120€.");
-//        mensajesNegativos.add("💸 Compras entradas falsas del Clásico. Pierdes 180€.");
-//        mensajesNegativos.add("🏴‍☠️ Has comprado una camiseta pirata. Pierdes 90€.");
-//        mensajesNegativos.add("🎮 Pierdes un torneo de FIFA contra un culé. Pierdes 70€.");
-//        mensajesNegativos.add("🏃‍♂️ Te pasaste la puerta por la que entras al Bernabeu!!! Retrocede 3 casillas.");
-//        mensajesNegativos.add("🔁 Pierdes un turno animando en la grada fan. ¡Hala Madrid!");
-//        mensajesNegativos.add("🚔 Te han pillado haciendo reventa de entradas en los aledaños del bernabeu. Proximo partido vas a la grada. No pases por la salida.");
+        mensajesNegativos.add("🚑 Bellingham se lesiona. Pierdes 150€ en médicos.");
+        mensajesNegativos.add("📉 Inviertes mal en NFTs del Madrid. Pierdes 200€.");
+        mensajesNegativos.add("🥶 Te colaste en un palco sin entrada. Pierdes 100€.");
+        mensajesNegativos.add("⚖️ Pierdes una demanda de marca. Pierdes 120€.");
+        mensajesNegativos.add("💸 Compras entradas falsas del Clásico. Pierdes 180€.");
+        mensajesNegativos.add("🏴‍☠️ Has comprado una camiseta pirata. Pierdes 90€.");
+        mensajesNegativos.add("🎮 Pierdes un torneo de FIFA contra un culé. Pierdes 70€.");
+        mensajesNegativos.add("🏃‍♂️ Te pasaste la puerta por la que entras al Bernabeu!!! Retrocede 3 casillas.");
+        mensajesNegativos.add("🔁 Pierdes un turno animando en la grada fan. ¡Hala Madrid!");
+        mensajesNegativos.add("🚔 Te han pillado haciendo reventa de entradas en los aledaños del bernabeu. Proximo partido vas a la grada. No pases por la salida.");
     }
 
     public static String obtenerMensajeAleatorio(boolean positivo) {

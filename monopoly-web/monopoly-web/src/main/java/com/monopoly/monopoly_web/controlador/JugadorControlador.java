@@ -407,36 +407,20 @@ public class JugadorControlador {
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
         if (!jugador.isTurno() || !jugador.isEnCarcel()) {
-            return ResponseEntity.badRequest().body(Map.of("mensaje", "No puedes usar esta opción ahora."));
+            return ResponseEntity.badRequest().body(Map.of("mensaje", "❌ No puedes usar esta opción ahora."));
         }
 
         if (jugador.getDinero() < 50) {
-            return ResponseEntity.badRequest().body(Map.of("mensaje", "No tienes suficiente dinero para pagar."));
+            return ResponseEntity.badRequest().body(Map.of("mensaje", "❌ No tienes suficiente dinero para pagar."));
         }
 
         jugador.setDinero(jugador.getDinero() - 50);
         jugador.setEnCarcel(false);
         jugador.setTurnosEnCarcel(0);
-
-        int dado1 = (int) (Math.random() * 6) + 1;
-        int dado2 = (int) (Math.random() * 6) + 1;
-        int suma = dado1 + dado2;
-
-        int nuevaPos = (jugador.getPosicion() + suma) % 40;
-        jugador.setPosicion(nuevaPos);
-        jugador.setTurno(false);
-
         jugadorRepositorio.save(jugador);
-        pasarTurnoAlSiguiente(jugador.getId());
-
-        String mensaje = "💰 Has pagado 50€ para salir de la grada.\n"
-                + "Has sacado un " + dado1 + " y un " + dado2 + ". Total: " + suma + ".";
 
         return ResponseEntity.ok(Map.of(
-                "dado1", dado1,
-                "dado2", dado2,
-                "suma", suma,
-                "mensaje", mensaje,
+                "mensaje", "💰 Has pagado 50€ para salir de la grada.",
                 "salio", true
         ));
     }

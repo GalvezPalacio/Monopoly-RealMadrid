@@ -55,69 +55,39 @@ export default function TableroConFondo({
     "#00008B": "azul-oscuro",
   };
 
-  const pagarSalidaCarcel = async () => {
-    try {
-      const res = await fetch(
-        `http://localhost:8081/api/jugadores/${jugadorActual.id}/salirPagando`,
-        { method: "POST" }
-      );
+const pagarSalidaCarcel = async () => {
+  try {
+    const res = await fetch(
+      `http://localhost:8081/api/jugadores/${jugadorActual.id}/salirPagando`,
+      { method: "POST" }
+    );
 
-      const data = await res.json();
-      const { dado1, dado2, suma, mensaje, salio } = data;
+    const data = await res.json();
+    const { mensaje } = data;
 
-      alert(mensaje); // Puedes personalizarlo con un modal
+    alert(mensaje); // Puedes usar un modal si lo prefieres
 
-      // 🔁 Refrescar jugadores
-      const nuevos = await fetch(
-        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
-      ).then((r) => r.json());
+    // 🔁 Refrescar jugadores
+    const nuevos = await fetch(
+      `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+    ).then((r) => r.json());
 
-      setJugadores(nuevos);
+    setJugadores(nuevos);
 
-      const actualizado = nuevos.find((j) => j.id === jugadorActual.id);
-      setResultadoDado({ dado1, dado2, suma });
-      setPosicionJugador(actualizado?.posicion ?? 0);
+    // ✅ Mostrar botón de tirar dado manualmente
+    setMostrarBotonTirar(true);
 
-      // Mostrar mensaje de cambio de turno
-      const siguiente = nuevos.find((j) => j.turno);
-      if (siguiente && siguiente.id !== jugadorActual.id) {
-        const mensaje = `Ahora le toca a ${siguiente.nombre}`;
-        setMensajeBienvenida(mensaje);
-        setMostrarBienvenida(true);
-        setTimeout(() => setMostrarBienvenida(false), 2000);
-      }
+    // Limpiar cualquier estado anterior para evitar errores
+    setResultadoDado(null);
+    setPropiedadSeleccionada(null);
+    setAccionesDisponibles([]);
+    setMensajeBienvenida(null);
+    setMostrarBienvenida(false);
+  } catch (error) {
+    console.error("❌ Error al pagar salida:", error);
+  }
+};
 
-      const casilla = casillasInfo[actualizado.posicion];
-
-      if (
-        salio &&
-        ["propiedad", "compania", "estacion"].includes(casilla.tipo)
-      ) {
-        const propiedadPartidaRes = await fetch(
-          `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
-        );
-
-        if (propiedadPartidaRes.ok) {
-          const propiedadPartida = await propiedadPartidaRes.json();
-
-          if (!propiedadPartida.duenio) {
-            setAccionesDisponibles(["Comprar"]);
-          } else if (propiedadPartida.duenio.id === jugadorActual.id) {
-            setAccionesDisponibles(["Hipotecar"]);
-          } else {
-            setAccionesDisponibles(["Pagar alquiler"]);
-          }
-
-          setPropiedadSeleccionada(casilla);
-        }
-      } else {
-        setAccionesDisponibles([]);
-        setPropiedadSeleccionada(null);
-      }
-    } catch (error) {
-      console.error("❌ Error al pagar salida:", error);
-    }
-  };
 
   const tirarDesdeCarcel = async () => {
     try {
