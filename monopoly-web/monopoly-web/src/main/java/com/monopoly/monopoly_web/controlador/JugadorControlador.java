@@ -82,9 +82,31 @@ public class JugadorControlador {
             return ResponseEntity.badRequest().body(Map.of("mensaje", "No es tu turno. Espera al siguiente."));
         }
 
-        int dado1 = (int) (Math.random() * 6) + 1;
-        int dado2 = (int) (Math.random() * 6) + 1;
+        int dado1 = 4;
+        int dado2 = 4; // Fuerza dobles
         int suma = dado1 + dado2;
+
+        // 🧮 Control de dobles consecutivos
+        if (dado1 == dado2) {
+            jugador.setDoblesSeguidos(jugador.getDoblesSeguidos() + 1);
+        } else {
+            jugador.setDoblesSeguidos(0);
+        }
+
+        // 🚨 Si saca dobles 3 veces, va a la cárcel
+        if (jugador.getDoblesSeguidos() >= 3) {
+            jugador.setEnCarcel(true);
+            jugador.setTurnosEnCarcel(0);
+            jugador.setPosicion(10); // casilla de la grada
+            jugador.setDoblesSeguidos(0);
+            jugador.setTurno(false);
+            jugadorRepositorio.save(jugador);
+
+            return ResponseEntity.ok(Map.of(
+                    "mensaje", "🎲 Has sacado dobles 3 veces seguidas. Vas directo a la grada.",
+                    "carcel", true
+            ));
+        }
 
         int posicionActual = jugador.getPosicion();
         int nuevaPosicion = (posicionActual + suma) % 40;
@@ -146,7 +168,22 @@ public class JugadorControlador {
             }
         }
 
-        jugadorRepositorio.save(jugador);
+        boolean haSacadoDobles = dado1 == dado2;
+
+        // ⚠️ Control de turno
+        if (!haSacadoDobles) {
+            jugador.setTurno(false);
+            jugadorRepositorio.save(jugador);
+            pasarTurnoAlSiguiente(jugador.getId());
+        } else {
+            // Guarda sin pasar turno
+            jugadorRepositorio.save(jugador);
+        }
+
+        // ✉️ Mensaje con info adicional si repite turno
+        if (haSacadoDobles) {
+            mensajeExtra += "🎲 Has sacado dobles. Vuelves a tirar.";
+        }
 
         Map<String, Object> resultado = new HashMap<>();
         resultado.put("dado1", dado1);

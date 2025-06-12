@@ -42,6 +42,8 @@ export default function TableroConFondo({
   const [mostrarPopupGrada, setMostrarPopupGrada] = useState(false);
   const jugadorActual = jugadores.find((j) => j.turno);
   const [mostrarSelectorDevolver, setMostrarSelectorDevolver] = useState(false);
+  const [alertaSuperior, setAlertaSuperior] = useState(null);
+  const [mostrarBotonTirar, setMostrarBotonTirar] = useState(false);
   const [propiedadesDevueltas, setPropiedadesDevueltas] = useState([]);
 
   const colorTextoDesdeHex = {
@@ -55,39 +57,38 @@ export default function TableroConFondo({
     "#00008B": "azul-oscuro",
   };
 
-const pagarSalidaCarcel = async () => {
-  try {
-    const res = await fetch(
-      `http://localhost:8081/api/jugadores/${jugadorActual.id}/salirPagando`,
-      { method: "POST" }
-    );
+  const pagarSalidaCarcel = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/jugadores/${jugadorActual.id}/salirPagando`,
+        { method: "POST" }
+      );
 
-    const data = await res.json();
-    const { mensaje } = data;
+      const data = await res.json();
+      const { mensaje } = data;
 
-    alert(mensaje); // Puedes usar un modal si lo prefieres
+      alert(mensaje); // Puedes usar un modal si lo prefieres
 
-    // 🔁 Refrescar jugadores
-    const nuevos = await fetch(
-      `http://localhost:8081/api/partidas/${partidaId}/jugadores`
-    ).then((r) => r.json());
+      // 🔁 Refrescar jugadores
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
 
-    setJugadores(nuevos);
+      setJugadores(nuevos);
 
-    // ✅ Mostrar botón de tirar dado manualmente
-    setMostrarBotonTirar(true);
+      // ✅ Mostrar botón de tirar dado manualmente
+      setMostrarBotonTirar(true);
 
-    // Limpiar cualquier estado anterior para evitar errores
-    setResultadoDado(null);
-    setPropiedadSeleccionada(null);
-    setAccionesDisponibles([]);
-    setMensajeBienvenida(null);
-    setMostrarBienvenida(false);
-  } catch (error) {
-    console.error("❌ Error al pagar salida:", error);
-  }
-};
-
+      // Limpiar cualquier estado anterior para evitar errores
+      setResultadoDado(null);
+      setPropiedadSeleccionada(null);
+      setAccionesDisponibles([]);
+      setMensajeBienvenida(null);
+      setMostrarBienvenida(false);
+    } catch (error) {
+      console.error("❌ Error al pagar salida:", error);
+    }
+  };
 
   const tirarDesdeCarcel = async () => {
     try {
@@ -302,10 +303,20 @@ const pagarSalidaCarcel = async () => {
       );
 
       const data = await res.json(); // ✅ ahora esperamos un JSON
-      const { dado1, dado2, suma, mensaje } = data;
+      const { dado1, dado2, suma, mensaje, carcel } = data;
 
       console.log("🎲 Dados:", dado1, dado2, "→ total:", suma);
       console.log("📩 Mensaje:", mensaje);
+
+      // 🚨 Detectar si ha sacado 3 veces dobles
+      if (carcel) {
+        alert("⚠️ Has sacado dobles 3 veces seguidas. Vas directo a la grada.");
+        setMostrarPopupGrada(true);
+        setResultadoDado(null);
+        setAccionesDisponibles([]);
+        setPropiedadSeleccionada(null);
+        return;
+      }
 
       // 👇 Detectar cárcel directa
       if (mensaje === "CARCEL_DIRECTA") {
@@ -359,7 +370,7 @@ const pagarSalidaCarcel = async () => {
         setMostrarTarjetaReal(false);
       }
 
-      // Actualizar estado general
+      // 🔁 Actualizar estado general
       const nuevos = await fetch(
         `http://localhost:8081/api/partidas/${partidaId}/jugadores`
       ).then((r) => r.json());
@@ -409,10 +420,28 @@ const pagarSalidaCarcel = async () => {
       } else {
         setAccionesDisponibles([]);
       }
+
+      // ✅ Mostrar mensaje de turno solo si NO vuelve a tirar
+      if (mensaje.includes("Vuelves a tirar")) {
+        setMostrarBotonTirar(true);
+        setAlertaSuperior(
+          "🎲 Has sacado dobles. Realiza las acciones que quieras y vuelve a tirar al pulsar 'Terminar turno'."
+        );
+        setTimeout(() => setAlertaSuperior(false), 2000);
+      } else {
+        const siguiente = nuevos.find((j) => j.turno);
+        if (siguiente && siguiente.id !== jugadorActual.id) {
+          const mensajeTurno = `Ahora le toca a ${siguiente.nombre}`;
+          setMensajeBienvenida(mensajeTurno);
+          setMostrarBienvenida(true);
+          setTimeout(() => setMostrarBienvenida(false), 2000);
+        }
+      }
     } catch (err) {
       console.error("❌ Error al tirar el dado:", err);
     }
   };
+
   const enviarACarcel = async () => {
     setMostrarPopupGrada(false); // Cierra el popup
 
@@ -442,11 +471,23 @@ const pagarSalidaCarcel = async () => {
     setPropiedadSeleccionada(null);
   };
 
+  // ✅ no lo toques, es necesario para que el popup funcione
   window.enviarACarcel = enviarACarcel;
 
   const terminarTurno = async () => {
     if (!jugadorActual) return;
 
+    // ⚠️ Si sacó dobles → NO llamar al backend
+    if (resultadoDado?.dado1 === resultadoDado?.dado2) {
+      // 🔁 Repetir turno para el mismo jugador
+      setMostrarBotonTirar(true); // Mostrar el botón para tirar
+      setAccionesDisponibles([]); // Limpiar acciones
+      setPropiedadSeleccionada(null); // Limpiar casilla
+      setResultadoDado(null); // Limpiar dados
+      return;
+    }
+
+    // ✅ Si NO sacó dobles → pasar turno como siempre
     try {
       await fetch(
         `http://localhost:8081/api/jugadores/${jugadorActual.id}/terminar-turno`,
@@ -461,9 +502,15 @@ const pagarSalidaCarcel = async () => {
       setResultadoDado(null);
       setPropiedadSeleccionada(null);
 
-      setTimeout(() => {
-        setTurnoRecienCambiado(true);
-      }, 100);
+      const siguiente = nuevos.find((j) => j.turno);
+      if (siguiente) {
+        const mensaje = `Ahora le toca a ${siguiente.nombre}`;
+        setMensajeBienvenida(mensaje);
+        setMostrarBienvenida(true);
+        setTimeout(() => {
+          setMostrarBienvenida(false);
+        }, 2000);
+      }
     } catch (err) {
       console.error("❌ Error al terminar el turno:", err);
     }
@@ -1007,6 +1054,9 @@ const pagarSalidaCarcel = async () => {
         </div>
       )}
       {mensajeSalida && <div className="flash-salida">{mensajeSalida}</div>}
+      {alertaSuperior && (
+        <div className="alerta-superior">{alertaSuperior}</div>
+      )}
     </div>
   );
 }

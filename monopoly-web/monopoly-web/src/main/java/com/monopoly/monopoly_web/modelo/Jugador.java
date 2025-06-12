@@ -42,6 +42,8 @@ public class Jugador {
     private boolean tieneTarjetaSalirCarcel = false;;
     
     private boolean pierdeTurno = false;
+    
+    private int doblesSeguidos = 0;
 
     // Getters y setters
     public Long getId() {
@@ -138,6 +140,14 @@ public class Jugador {
 
     public void setPierdeTurno(boolean pierdeTurno) {
         this.pierdeTurno = pierdeTurno;
+    }
+
+    public int getDoblesSeguidos() {
+        return doblesSeguidos;
+    }
+
+    public void setDoblesSeguidos(int doblesSeguidos) {
+        this.doblesSeguidos = doblesSeguidos;
     }
     
     
