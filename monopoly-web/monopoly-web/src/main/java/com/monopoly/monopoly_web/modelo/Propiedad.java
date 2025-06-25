@@ -15,6 +15,7 @@ import jakarta.persistence.Id;
 import jakarta.persistence.JoinColumn;
 import jakarta.persistence.ManyToOne;
 import jakarta.persistence.MapKeyColumn;
+import jakarta.persistence.OneToOne;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -43,11 +44,9 @@ public class Propiedad {
     private int costeCasa;
     private int costeHotel;
 
-    @ElementCollection
-    @CollectionTable(name = "alquileres", joinColumns = @JoinColumn(name = "propiedad_id"))
-    @MapKeyColumn(name = "tipo")
-    @Column(name = "cantidad")
-    private Map<String, Integer> alquiler = new HashMap<>();
+    @OneToOne
+    @JoinColumn(name = "id", referencedColumnName = "propiedad_id")
+    private Alquiler alquiler;
 
     @ManyToOne
     @JoinColumn(name = "jugador_id")
@@ -172,13 +171,14 @@ public class Propiedad {
         this.costeHotel = costeHotel;
     }
 
-    public Map<String, Integer> getAlquiler() {
+    public Alquiler getAlquiler() {
         return alquiler;
     }
 
-    public void setAlquiler(Map<String, Integer> alquiler) {
+    public void setAlquiler(Alquiler alquiler) {
         this.alquiler = alquiler;
     }
+    
     
 
 }

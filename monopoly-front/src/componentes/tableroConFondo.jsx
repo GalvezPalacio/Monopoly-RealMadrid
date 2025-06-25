@@ -43,6 +43,7 @@ export default function TableroConFondo({
   const jugadorActual = jugadores.find((j) => j.turno);
   const [mostrarSelectorDevolver, setMostrarSelectorDevolver] = useState(false);
   const [alertaSuperior, setAlertaSuperior] = useState(null);
+  const [mensajeLateral, setMensajeLateral] = useState(null);
   const [mostrarBotonTirar, setMostrarBotonTirar] = useState(false);
   const [propiedadesDevueltas, setPropiedadesDevueltas] = useState([]);
 
@@ -399,16 +400,67 @@ export default function TableroConFondo({
       setPropiedadSeleccionada(casilla);
 
       if (["propiedad", "compania", "estacion"].includes(casilla.tipo)) {
-        const propiedadPartidaRes = await fetch(
-          `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
-        );
+  const propiedadPartidaRes = await fetch(
+    `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
+  );
 
-        if (propiedadPartidaRes.ok) {
-          const propiedadPartida = await propiedadPartidaRes.json();
+  if (propiedadPartidaRes.ok) {
+    const propiedadPartida = await propiedadPartidaRes.json();
 
-          if (!propiedadPartida.duenio) {
+    if (!propiedadPartida.dueno) {
+      setMensajeLateral(
+        `Has caído en ${casilla.nombre}. No tiene dueño, puedes comprarla.`
+      );
+    } else if (propiedadPartida.dueno.id === jugadorActual.id) {
+      setMensajeLateral(
+        `Has caído en ${casilla.nombre}. Es tuya.`
+      );
+    } else {
+      const alquileres = propiedadPartida.propiedad.alquiler;
+let alquiler = alquileres?.base || 0;
+
+if (propiedadPartida.hotel) {
+  alquiler = alquileres?.hotel || alquiler;
+} else if (propiedadPartida.casas > 0) {
+  switch (propiedadPartida.casas) {
+    case 1:
+      alquiler = alquileres?.con1 || alquiler;
+      break;
+    case 2:
+      alquiler = alquileres?.con2 || alquiler;
+      break;
+    case 3:
+      alquiler = alquileres?.con3 || alquiler;
+      break;
+    case 4:
+      alquiler = alquileres?.con4 || alquiler;
+      break;
+    default:
+      break;
+  }
+}
+
+      const casas = propiedadPartida.casas;
+      const hotel = propiedadPartida.hotel;
+
+      let motivo = '';
+      if (hotel) {
+        motivo = 'porque tiene un hotel';
+      } else if (casas > 0) {
+        motivo = `porque tiene ${casas} casa${casas > 1 ? 's' : ''}`;
+      } else {
+        motivo = 'por el alquiler base';
+      }
+
+      setMensajeLateral(
+        `Has caído en ${casilla.nombre}, propiedad de ${propiedadPartida.dueno.nombre}. Le pagas ${alquiler}€ ${motivo}.`
+      );
+    }
+
+          // POR ESTO:
+          if (!propiedadPartida.dueno) {
             setAccionesDisponibles(["Comprar"]);
-          } else if (propiedadPartida.duenio.id === jugadorActual.id) {
+          } else if (propiedadPartida.dueno.id === jugadorActual.id) {
             setAccionesDisponibles(["Hipotecar"]);
           } else {
             setAccionesDisponibles(["Pagar alquiler"]);
@@ -501,6 +553,7 @@ export default function TableroConFondo({
       setJugadores(nuevos);
       setResultadoDado(null);
       setPropiedadSeleccionada(null);
+      setMensajeLateral(null);
 
       const siguiente = nuevos.find((j) => j.turno);
       if (siguiente) {
@@ -649,6 +702,9 @@ export default function TableroConFondo({
   };
   return (
     <div className="tablero-fondo">
+      {mensajeLateral && (
+        <div className="mensaje-lateral">{mensajeLateral}</div>
+      )}
       {mostrarBienvenida && (
         <div className="modal-bienvenida">
           <div className="contenido-modal">

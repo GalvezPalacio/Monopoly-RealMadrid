@@ -1,45 +1,45 @@
 const casillasInfo = [
     { id: 0, nombre: "SALIDA", tipo: "salida", direccion: "abajo" },
     {
-      id: 1,
-      nombre: "Calle de Caminando a Chamartín",
-      tipo: "propiedad",
-      color: "marron",
-      direccion: "abajo",
-      precio: 60,
-      alquiler: {
-        base: 2,
-        casa1: 10,
-        casa2: 30,
-        casa3: 90,
-        casa4: 160,
-        hotel: 250
-      },
-      hipoteca: 30,
-      costeCasa: 50,
-      costeHotel: 50,
-      fondo: "/public/fondos-calles/caminando-chamartin.jpg"
+        id: 1,
+        nombre: "Calle de Caminando a Chamartín",
+        tipo: "propiedad",
+        color: "marron",
+        direccion: "abajo",
+        precio: 60,
+        alquiler: {
+            base: 2,
+            casa1: 10,
+            casa2: 30,
+            casa3: 90,
+            casa4: 160,
+            hotel: 250
+        },
+        hipoteca: 30,
+        costeCasa: 50,
+        costeHotel: 50,
+        fondo: "/public/fondos-calles/caminando-chamartin.jpg"
     },
     { id: 2, nombre: "Caja de Comunidad", tipo: "comunidad", direccion: "abajo" },
     {
-      id: 3,
-      nombre: "Calle de De Las Remontadas",
-      tipo: "propiedad",
-      color: "marron",
-      direccion: "abajo",
-      precio: 60,
-      alquiler: {
-        base: 4,
-        casa1: 20,
-        casa2: 60,
-        casa3: 180,
-        casa4: 320,
-        hotel: 450
-      },
-      hipoteca: 30,
-      costeCasa: 50,
-      costeHotel: 50,
-      fondo: "/public/fondos-calles/remontadas.jpg"
+        id: 3,
+        nombre: "Calle de De Las Remontadas",
+        tipo: "propiedad",
+        color: "marron",
+        direccion: "abajo",
+        precio: 60,
+        alquiler: {
+            base: 4,
+            casa1: 20,
+            casa2: 60,
+            casa3: 180,
+            casa4: 320,
+            hotel: 450
+        },
+        hipoteca: 30,
+        costeCasa: 50,
+        costeHotel: 50,
+        fondo: "/public/fondos-calles/remontadas.jpg"
     },
     { id: 4, nombre: "Impuesto de lujo", tipo: "impuesto", direccion: "abajo" },
     {
@@ -49,73 +49,73 @@ const casillasInfo = [
         precio: 200,
         alquiler: {
             base: 50,
-            2: 100,
-            3: 200,
-            4: 400
+            casa1: 100,
+            casa2: 200,
+            casa3: 400
         },
         hipoteca: 100
-        ,imagen: "/estacion-padre-damian.png"
+        , imagen: "/estacion-padre-damian.png"
     },
     {
-      id: 6,
-      nombre: "Calle de D. Francisco Gento",
-      tipo: "propiedad",
-      color: "azul-claro",
-      direccion: "abajo",
-      precio: 100,
-      alquiler: {
-        base: 6,
-        casa1: 30,
-        casa2: 90,
-        casa3: 270,
-        casa4: 400,
-        hotel: 550
-      },
-      hipoteca: 50,
-      costeCasa: 50,
-      costeHotel: 50,
-      fondo: "/public/fondos-calles/francisco-gento.jpg"
+        id: 6,
+        nombre: "Calle de D. Francisco Gento",
+        tipo: "propiedad",
+        color: "azul-claro",
+        direccion: "abajo",
+        precio: 100,
+        alquiler: {
+            base: 6,
+            casa1: 30,
+            casa2: 90,
+            casa3: 270,
+            casa4: 400,
+            hotel: 550
+        },
+        hipoteca: 50,
+        costeCasa: 50,
+        costeHotel: 50,
+        fondo: "/public/fondos-calles/francisco-gento.jpg"
     },
     { id: 7, nombre: "Suerte", tipo: "suerte", direccion: "abajo" },
     {
-      id: 8,
-      nombre: "Calle De La CMK",
-      tipo: "propiedad",
-      color: "azul-claro",
-      direccion: "abajo",
-      precio: 100,
-      alquiler: {
-        base: 6,
-        casa1: 30,
-        casa2: 90,
-        casa3: 270,
-        casa4: 400,
-        hotel: 550
-      },
-      hipoteca: 50,
-      costeCasa: 50,
-      costeHotel: 50,
-      fondo: "/public/fondos-calles/cmk2.jpg"
+        id: 8,
+        nombre: "Calle De La CMK",
+        tipo: "propiedad",
+        color: "azul-claro",
+        direccion: "abajo",
+        precio: 100,
+        alquiler: {
+            base: 6,
+            casa1: 30,
+            casa2: 90,
+            casa3: 270,
+            casa4: 400,
+            hotel: 550
+        },
+        hipoteca: 50,
+        costeCasa: 50,
+        costeHotel: 50,
+        fondo: "/public/fondos-calles/cmk2.jpg"
     },
     {
-      id: 9,
-      nombre: "Calle de De La Quinta Del Buitre",
-      tipo: "propiedad",
-      color: "azul-claro",
-      direccion: "abajo",
-      precio: 120,
-      alquiler: {
-        base: 8,
-        casa1: 40,
-        casa2: 100,
-        casa3: 300,
-        casa4: 450,
-        hotel: 600
-      },
-      hipoteca: 60,
-      costeCasa: 50,
-      costeHotel: 50,
-      fondo: "/public/fondos-calles/quinta-buitre.jpg"
+        id: 9,
+        nombre: "Calle de De La Quinta Del Buitre",
+        tipo: "propiedad",
+        color: "azul-claro",
+        direccion: "abajo",
+        precio: 120,
+        alquiler: {
+            base: 8,
+            casa1: 40,
+            casa2: 100,
+            casa3: 300,
+            casa4: 450,
+            hotel: 600
+        },
+        hipoteca: 60,
+        costeCasa: 50,
+        costeHotel: 50,
+        fondo: "/public/fondos-calles/quinta-buitre.jpg"
     },
     { id: 10, nombre: "Visita a la cárcel", tipo: "visita-carcel", direccion: "izquierda" },
     {
@@ -143,7 +143,7 @@ const casillasInfo = [
         tipo: "compania",
         precio: 150,
         imagen: "/public/compañia-bernabeu.png"
-      },
+    },
     {
         id: 13,
         nombre: "Calle de D. Sergio Ramos",
@@ -189,12 +189,12 @@ const casillasInfo = [
         precio: 200,
         alquiler: {
             base: 50,
-            2: 100,
-            3: 200,
-            4: 400
+            casa1: 100,
+            casa2: 200,
+            casa3: 400
         },
         hipoteca: 100
-        ,imagen: "/estacion-la-castellana.png"
+        , imagen: "/estacion-la-castellana.png"
     },
     {
         id: 16,
@@ -332,12 +332,12 @@ const casillasInfo = [
         precio: 200,
         alquiler: {
             base: 50,
-            2: 100,
-            3: 200,
-            4: 400
+            casa1: 100,
+            casa2: 200,
+            casa3: 400
         },
         hipoteca: 100
-        ,imagen: "/estacion-concha-espina.png"
+        , imagen: "/estacion-concha-espina.png"
     },
     {
         id: 26,
@@ -383,7 +383,7 @@ const casillasInfo = [
         tipo: "compania",
         precio: 150,
         imagen: "/public/compañia-florentino.png"
-      },
+    },
     {
         id: 29,
         nombre: "Calle de D. Cristiano Ronaldo",
@@ -477,12 +477,12 @@ const casillasInfo = [
         precio: 200,
         alquiler: {
             base: 50,
-            2: 100,
-            3: 200,
-            4: 400
+            casa1: 100,
+            casa2: 200,
+            casa3: 400
         },
         hipoteca: 100
-        ,imagen: "/estacion-chamartin.png"
+        , imagen: "/estacion-chamartin.png"
     },
     {
         id: 36,

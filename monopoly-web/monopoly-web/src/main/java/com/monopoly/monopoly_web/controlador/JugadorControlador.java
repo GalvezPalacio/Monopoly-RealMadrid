@@ -8,12 +8,14 @@ package com.monopoly.monopoly_web.controlador;
  *
  * @author gabri
  */
+import com.monopoly.monopoly_web.modelo.Alquiler;
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Partida;
 import com.monopoly.monopoly_web.modelo.Propiedad;
 import com.monopoly.monopoly_web.modelo.PropiedadPartida;
 import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
 import com.monopoly.monopoly_web.repositorio.PartidaRepositorio;
+import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
 import com.monopoly.monopoly_web.servicio.PropiedadPartidaServicio;
 import jakarta.transaction.Transactional;
@@ -37,6 +39,9 @@ public class JugadorControlador {
 
     @Autowired
     private PropiedadRepositorio propiedadRepositorio;
+
+    @Autowired
+    private PropiedadPartidaRepositorio propiedadPartidaRepositorio;
 
     @Autowired
     private PropiedadPartidaServicio propiedadPartidaServicio;
@@ -82,8 +87,8 @@ public class JugadorControlador {
             return ResponseEntity.badRequest().body(Map.of("mensaje", "No es tu turno. Espera al siguiente."));
         }
 
-        int dado1 = 4;
-        int dado2 = 4; // Fuerza dobles
+        int dado1 = (int) (Math.random() * 6) + 1;
+        int dado2 = (int) (Math.random() * 6) + 1;
         int suma = dado1 + dado2;
 
         // 🧮 Control de dobles consecutivos
@@ -151,34 +156,70 @@ public class JugadorControlador {
             mensajeExtra += "Estás de visita en la cárcel.\n";
         }
 
+        Long partidaId = jugador.getPartida().getId();
         Propiedad propiedad = propiedadRepositorio.findByPosicion(nuevaPosicion);
-        if (propiedad != null) {
-            if (propiedad.getDueno() == null) {
-                mensajeExtra += "Cayó en " + propiedad.getNombre() + ". Puede comprarla por " + propiedad.getPrecio() + "€.";
-            } else if (!propiedad.getDueno().getId().equals(jugador.getId())) {
-                Map<String, Integer> alquileres = propiedad.getAlquiler();
-                int alquiler = alquileres.getOrDefault("base", 0);
+
+        Optional<PropiedadPartida> opt = propiedadPartidaRepositorio
+                .findByPartidaIdAndPropiedad_Id(partidaId, propiedad.getId());
+
+        if (opt.isPresent()) {
+            PropiedadPartida propiedadPartida = opt.get();
+            Jugador dueno = propiedadPartida.getDueno();
+
+            if (dueno != null && !dueno.getId().equals(jugador.getId()) && !propiedadPartida.isHipotecada()) {
+                Alquiler datosAlquiler = propiedadPartida.getPropiedad().getAlquiler();
+                int alquiler = 0;
+                String detalleConstruccion = "";
+
+                if (datosAlquiler != null) {
+                    if (propiedadPartida.isHotel()) {
+                        alquiler = datosAlquiler.getHotel();
+                        detalleConstruccion = " porque tiene un hotel";
+                    } else if (propiedadPartida.getCasas() > 0) {
+                        switch (propiedadPartida.getCasas()) {
+                            case 1 -> {
+                                alquiler = datosAlquiler.getCasa1();
+                                detalleConstruccion = " porque tiene 1 casa";
+                            }
+                            case 2 -> {
+                                alquiler = datosAlquiler.getCasa2();
+                                detalleConstruccion = " porque tiene 2 casas";
+                            }
+                            case 3 -> {
+                                alquiler = datosAlquiler.getCasa3();
+                                detalleConstruccion = " porque tiene 3 casas";
+                            }
+                            case 4 -> {
+                                alquiler = datosAlquiler.getCasa4();
+                                detalleConstruccion = " porque tiene 4 casas";
+                            }
+                            default -> {
+                                alquiler = datosAlquiler.getBase();
+                                detalleConstruccion = " sin construcciones";
+                            }
+                        }
+                    } else {
+                        alquiler = datosAlquiler.getBase();
+                        detalleConstruccion = " sin construcciones";
+                    }
+                }
+
                 jugador.setDinero(jugador.getDinero() - alquiler);
-                Jugador dueno = propiedad.getDueno();
                 dueno.setDinero(dueno.getDinero() + alquiler);
+
+                jugadorRepositorio.save(jugador);
                 jugadorRepositorio.save(dueno);
-                mensajeExtra += "Cayó en " + propiedad.getNombre() + " y ha pagado " + alquiler + "€ al jugador " + dueno.getNombre() + ".";
-            } else {
-                mensajeExtra += "Cayó en " + propiedad.getNombre() + ", que ya es suya.";
+
+                mensajeExtra += "Has caído en " + propiedadPartida.getPropiedad().getNombre()
+                        + ", propiedad de " + dueno.getNombre()
+                        + ". Le pagas " + alquiler + "€" + detalleConstruccion + ".\n";
             }
         }
 
         boolean haSacadoDobles = dado1 == dado2;
 
         // ⚠️ Control de turno
-        if (!haSacadoDobles) {
-            jugador.setTurno(false);
-            jugadorRepositorio.save(jugador);
-            pasarTurnoAlSiguiente(jugador.getId());
-        } else {
-            // Guarda sin pasar turno
-            jugadorRepositorio.save(jugador);
-        }
+        jugadorRepositorio.save(jugador);
 
         // ✉️ Mensaje con info adicional si repite turno
         if (haSacadoDobles) {
