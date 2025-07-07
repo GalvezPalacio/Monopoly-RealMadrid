@@ -27,6 +27,9 @@ public class Partida {
     @Column(nullable = false)
     private boolean guardada = false; // Por defecto no guardada
 
+    private int ultimaTiradaDado1;
+    private int ultimaTiradaDado2;
+
     // Constructor vacío
     public Partida() {
     }
@@ -71,6 +74,22 @@ public class Partida {
     public void setGuardada(boolean guardada) {
         this.guardada = guardada;
     }
+
+    public int getUltimaTiradaDado1() {
+        return ultimaTiradaDado1;
+    }
+
+    public void setUltimaTiradaDado1(int ultimaTiradaDado1) {
+        this.ultimaTiradaDado1 = ultimaTiradaDado1;
+    }
+
+    public int getUltimaTiradaDado2() {
+        return ultimaTiradaDado2;
+    }
+
+    public void setUltimaTiradaDado2(int ultimaTiradaDado2) {
+        this.ultimaTiradaDado2 = ultimaTiradaDado2;
+    }
     
-    
+
 }

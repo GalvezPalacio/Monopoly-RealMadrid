@@ -12,6 +12,8 @@ import com.monopoly.monopoly_web.modelo.Partida;
 import com.monopoly.monopoly_web.modelo.Propiedad;
 import com.monopoly.monopoly_web.modelo.PropiedadPartida;
 import org.springframework.data.jpa.repository.JpaRepository;
+import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 
 import java.util.List;
 import java.util.Optional;
@@ -30,4 +32,17 @@ public interface PropiedadPartidaRepositorio extends JpaRepository<PropiedadPart
 
     List<PropiedadPartida> findByPartidaIdAndDuenoIsNull(Long partidaId);
 
+    @Query("SELECT COUNT(p) FROM PropiedadPartida p WHERE p.dueno.id = :duenoId AND p.partida.id = :partidaId AND p.propiedad.tipo = :tipo")
+    int contarPorDuenoYTipo(
+            @Param("duenoId") Long duenoId,
+            @Param("partidaId") Long partidaId,
+            @Param("tipo") String tipo
+    );
+
+    // 🔧 Método adicional para buscar por posición correctamente
+    @Query("SELECT pp FROM PropiedadPartida pp WHERE pp.partida.id = :partidaId AND pp.propiedad.posicion = :posicion")
+    Optional<PropiedadPartida> findByPartidaIdAndPropiedadPosicion(
+            @Param("partidaId") Long partidaId,
+            @Param("posicion") int posicion
+    );
 }

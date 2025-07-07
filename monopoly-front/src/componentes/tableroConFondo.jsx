@@ -303,13 +303,12 @@ export default function TableroConFondo({
         { method: "POST" }
       );
 
-      const data = await res.json(); // ✅ ahora esperamos un JSON
+      const data = await res.json();
       const { dado1, dado2, suma, mensaje, carcel } = data;
 
       console.log("🎲 Dados:", dado1, dado2, "→ total:", suma);
       console.log("📩 Mensaje:", mensaje);
 
-      // 🚨 Detectar si ha sacado 3 veces dobles
       if (carcel) {
         alert("⚠️ Has sacado dobles 3 veces seguidas. Vas directo a la grada.");
         setMostrarPopupGrada(true);
@@ -319,7 +318,6 @@ export default function TableroConFondo({
         return;
       }
 
-      // 👇 Detectar cárcel directa
       if (mensaje === "CARCEL_DIRECTA") {
         setMostrarPopupGrada(true);
         return;
@@ -337,7 +335,9 @@ export default function TableroConFondo({
         ""
       );
 
-      // Tarjeta de COMUNIDAD
+      // Tarjeta de COMUNIDAD o SUERTE
+      let fueTarjeta = false;
+
       if (
         mensajeSinSalida.includes("Caja de Comunidad") ||
         mensajeSinSalida.includes("Has caído en 'Caja de Comunidad'")
@@ -350,6 +350,7 @@ export default function TableroConFondo({
           setTipoMensaje(tarjeta.tipo);
           setMensajeEspecial(tarjeta.mensaje);
           setMostrarTarjetaReal(false);
+          fueTarjeta = true;
         } catch (e) {
           console.error("❌ Error al obtener/aplicar tarjeta de comunidad:", e);
         }
@@ -362,13 +363,34 @@ export default function TableroConFondo({
           setTipoMensaje(tarjeta.tipo);
           setMensajeEspecial(tarjeta.mensaje);
           setMostrarTarjetaReal(false);
+          fueTarjeta = true;
         } catch (e) {
           console.error("❌ Error al obtener/aplicar tarjeta de suerte:", e);
         }
-      } else {
-        setTipoMensaje(null);
-        setMensajeEspecial(null);
-        setMostrarTarjetaReal(false);
+      }
+
+      // ⚠️ SOLO limpiamos si no fue tarjeta y no fue casilla especial
+      const casillaTemp = casillasInfo.find((c) =>
+        mensajeSinSalida.includes(c.nombre)
+      );
+      const tipoCasillaTemp = casillaTemp?.tipo;
+
+      if (!fueTarjeta && tipoCasillaTemp) {
+        const casillasConPopup = [
+          "suerte",
+          "comunidad",
+          "impuesto",
+          "palco-vip",
+          "vas-grada",
+          "visita-carcel",
+          "salida",
+        ];
+
+        if (!casillasConPopup.includes(tipoCasillaTemp)) {
+          setTipoMensaje(null);
+          setMensajeEspecial(null);
+          setMostrarTarjetaReal(false);
+        }
       }
 
       // 🔁 Actualizar estado general
@@ -380,7 +402,6 @@ export default function TableroConFondo({
       const jugadorActualizado = nuevos.find((j) => j.id === jugadorActual.id);
       const nuevaPos = jugadorActualizado?.posicion ?? 0;
 
-      // ✅ Guardamos los dados completos en el estado
       setResultadoDado({ dado1, dado2, suma });
       setPosicionJugador(nuevaPos);
 
@@ -399,70 +420,66 @@ export default function TableroConFondo({
       const casilla = casillasInfo[nuevaPos];
       setPropiedadSeleccionada(casilla);
 
-      if (["propiedad", "compania", "estacion"].includes(casilla.tipo)) {
-  const propiedadPartidaRes = await fetch(
-    `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
-  );
-
-  if (propiedadPartidaRes.ok) {
-    const propiedadPartida = await propiedadPartidaRes.json();
-
-    if (!propiedadPartida.dueno) {
-      setMensajeLateral(
-        `Has caído en ${casilla.nombre}. No tiene dueño, puedes comprarla.`
-      );
-    } else if (propiedadPartida.dueno.id === jugadorActual.id) {
-      setMensajeLateral(
-        `Has caído en ${casilla.nombre}. Es tuya.`
-      );
-    } else {
-      const alquileres = propiedadPartida.propiedad.alquiler;
-let alquiler = alquileres?.base || 0;
-
-if (propiedadPartida.hotel) {
-  alquiler = alquileres?.hotel || alquiler;
-} else if (propiedadPartida.casas > 0) {
-  switch (propiedadPartida.casas) {
-    case 1:
-      alquiler = alquileres?.con1 || alquiler;
-      break;
-    case 2:
-      alquiler = alquileres?.con2 || alquiler;
-      break;
-    case 3:
-      alquiler = alquileres?.con3 || alquiler;
-      break;
-    case 4:
-      alquiler = alquileres?.con4 || alquiler;
-      break;
-    default:
-      break;
-  }
-}
-
-      const casas = propiedadPartida.casas;
-      const hotel = propiedadPartida.hotel;
-
-      let motivo = '';
-      if (hotel) {
-        motivo = 'porque tiene un hotel';
-      } else if (casas > 0) {
-        motivo = `porque tiene ${casas} casa${casas > 1 ? 's' : ''}`;
-      } else {
-        motivo = 'por el alquiler base';
+      if (
+        [
+          "suerte",
+          "comunidad",
+          "impuesto",
+          "palco-vip",
+          "visita-carcel",
+          "vas-grada",
+          "salida",
+        ].includes(casilla.tipo)
+      ) {
+        setMostrarTarjetaReal(true);
       }
 
-      setMensajeLateral(
-        `Has caído en ${casilla.nombre}, propiedad de ${propiedadPartida.dueno.nombre}. Le pagas ${alquiler}€ ${motivo}.`
-      );
-    }
+      if (["propiedad", "compania", "estacion"].includes(casilla.tipo)) {
+        const propiedadPartidaRes = await fetch(
+          `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
+        );
 
-          // POR ESTO:
+        if (propiedadPartidaRes.ok) {
+          const datos = await propiedadPartidaRes.json();
+          const propiedadPartida = datos.propiedadPartida;
+          const estaciones = datos.estacionesDelDueno || 1;
+          const companias = datos.companiasDelDueno || 1;
+          const sumaDados = datos.sumaDados || 0;
+          const tipo = casilla.tipo;
+          let motivo = "";
+
           if (!propiedadPartida.dueno) {
+            setMensajeLateral(
+              `Has caído en ${casilla.nombre}. No tiene dueño, puedes comprarla.`
+            );
             setAccionesDisponibles(["Comprar"]);
           } else if (propiedadPartida.dueno.id === jugadorActual.id) {
+            setMensajeLateral(`Has caído en ${casilla.nombre}. Es tuya.`);
             setAccionesDisponibles(["Hipotecar"]);
           } else {
+            if (tipo === "propiedad") {
+              if (propiedadPartida.hotel) {
+                motivo = "porque tiene un hotel";
+              } else if (propiedadPartida.casas > 0) {
+                motivo = `porque tiene ${propiedadPartida.casas} casa(s)`;
+              } else {
+                motivo = "por el alquiler base";
+              }
+            } else if (tipo === "estacion") {
+              motivo = `porque tiene ${estaciones} estación${
+                estaciones > 1 ? "es" : ""
+              }`;
+            } else if (tipo === "compania") {
+              motivo = `porque tiene ${companias} compañía${
+                companias > 1 ? "s" : ""
+              } y sacaste ${sumaDados}`;
+            }
+
+            const alquiler = datos.alquilerCalculado ?? 0;
+
+            setMensajeLateral(
+              `Has caído en ${casilla.nombre}, propiedad de ${propiedadPartida.dueno.nombre}. Le pagas ${alquiler}€ ${motivo}.`
+            );
             setAccionesDisponibles(["Pagar alquiler"]);
           }
         } else {
@@ -471,9 +488,9 @@ if (propiedadPartida.hotel) {
         }
       } else {
         setAccionesDisponibles([]);
+        setPropiedadSeleccionada(casilla);
       }
 
-      // ✅ Mostrar mensaje de turno solo si NO vuelve a tirar
       if (mensaje.includes("Vuelves a tirar")) {
         setMostrarBotonTirar(true);
         setAlertaSuperior(
@@ -481,13 +498,7 @@ if (propiedadPartida.hotel) {
         );
         setTimeout(() => setAlertaSuperior(false), 2000);
       } else {
-        const siguiente = nuevos.find((j) => j.turno);
-        if (siguiente && siguiente.id !== jugadorActual.id) {
-          const mensajeTurno = `Ahora le toca a ${siguiente.nombre}`;
-          setMensajeBienvenida(mensajeTurno);
-          setMostrarBienvenida(true);
-          setTimeout(() => setMostrarBienvenida(false), 2000);
-        }
+        // No cambiamos el turno aquí. Lo hará el botón "Terminar turno".
       }
     } catch (err) {
       console.error("❌ Error al tirar el dado:", err);

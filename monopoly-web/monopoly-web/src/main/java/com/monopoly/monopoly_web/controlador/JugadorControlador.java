@@ -91,18 +91,21 @@ public class JugadorControlador {
         int dado2 = (int) (Math.random() * 6) + 1;
         int suma = dado1 + dado2;
 
-        // 🧮 Control de dobles consecutivos
+        Partida partida = jugador.getPartida();
+        partida.setUltimaTiradaDado1(dado1);
+        partida.setUltimaTiradaDado2(dado2);
+        partidaRepositorio.save(partida); // ✅ importante
+
         if (dado1 == dado2) {
             jugador.setDoblesSeguidos(jugador.getDoblesSeguidos() + 1);
         } else {
             jugador.setDoblesSeguidos(0);
         }
 
-        // 🚨 Si saca dobles 3 veces, va a la cárcel
         if (jugador.getDoblesSeguidos() >= 3) {
             jugador.setEnCarcel(true);
             jugador.setTurnosEnCarcel(0);
-            jugador.setPosicion(10); // casilla de la grada
+            jugador.setPosicion(10);
             jugador.setDoblesSeguidos(0);
             jugador.setTurno(false);
             jugadorRepositorio.save(jugador);
@@ -115,12 +118,13 @@ public class JugadorControlador {
 
         int posicionActual = jugador.getPosicion();
         int nuevaPosicion = (posicionActual + suma) % 40;
+        boolean pasoPorSalida = (posicionActual + suma) >= 40;
 
         String mensajeExtra = "";
 
-        if (posicionActual + suma >= 40) {
+        if (pasoPorSalida) {
             jugador.setDinero(jugador.getDinero() + 200);
-            mensajeExtra = "Has pasado por la casilla de salida. ¡Cobras 200€!\n";
+            mensajeExtra += "Has pasado por la casilla de salida. ¡Cobras 200€!\n";
         }
 
         jugador.setPosicion(nuevaPosicion);
@@ -159,71 +163,83 @@ public class JugadorControlador {
         Long partidaId = jugador.getPartida().getId();
         Propiedad propiedad = propiedadRepositorio.findByPosicion(nuevaPosicion);
 
-        Optional<PropiedadPartida> opt = propiedadPartidaRepositorio
-                .findByPartidaIdAndPropiedad_Id(partidaId, propiedad.getId());
+        if (propiedad != null) {
+            Optional<PropiedadPartida> opt = propiedadPartidaRepositorio
+                    .findByPartidaIdAndPropiedad_Id(partidaId, propiedad.getId());
 
-        if (opt.isPresent()) {
-            PropiedadPartida propiedadPartida = opt.get();
-            Jugador dueno = propiedadPartida.getDueno();
+            if (opt.isPresent()) {
+                PropiedadPartida propiedadPartida = opt.get();
+                Jugador dueno = propiedadPartida.getDueno();
 
-            if (dueno != null && !dueno.getId().equals(jugador.getId()) && !propiedadPartida.isHipotecada()) {
-                Alquiler datosAlquiler = propiedadPartida.getPropiedad().getAlquiler();
-                int alquiler = 0;
-                String detalleConstruccion = "";
+                if (dueno != null && !dueno.getId().equals(jugador.getId()) && !propiedadPartida.isHipotecada()) {
+                    int alquiler = propiedadPartidaServicio.calcularAlquiler(propiedadPartida, suma);
+                    String detalleConstruccion = "";
 
-                if (datosAlquiler != null) {
-                    if (propiedadPartida.isHotel()) {
-                        alquiler = datosAlquiler.getHotel();
-                        detalleConstruccion = " porque tiene un hotel";
-                    } else if (propiedadPartida.getCasas() > 0) {
-                        switch (propiedadPartida.getCasas()) {
-                            case 1 -> {
-                                alquiler = datosAlquiler.getCasa1();
-                                detalleConstruccion = " porque tiene 1 casa";
+                    String tipo = propiedadPartida.getPropiedad().getTipo();
+
+                    if (tipo.equals("propiedad")) {
+                        if (propiedadPartida.isHotel()) {
+                            detalleConstruccion = " porque tiene un hotel";
+                        } else if (propiedadPartida.getCasas() > 0) {
+                            switch (propiedadPartida.getCasas()) {
+                                case 1 ->
+                                    detalleConstruccion = " porque tiene 1 casa";
+                                case 2 ->
+                                    detalleConstruccion = " porque tiene 2 casas";
+                                case 3 ->
+                                    detalleConstruccion = " porque tiene 3 casas";
+                                case 4 ->
+                                    detalleConstruccion = " porque tiene 4 casas";
+                                default ->
+                                    detalleConstruccion = " sin construcciones";
                             }
-                            case 2 -> {
-                                alquiler = datosAlquiler.getCasa2();
-                                detalleConstruccion = " porque tiene 2 casas";
-                            }
-                            case 3 -> {
-                                alquiler = datosAlquiler.getCasa3();
-                                detalleConstruccion = " porque tiene 3 casas";
-                            }
-                            case 4 -> {
-                                alquiler = datosAlquiler.getCasa4();
-                                detalleConstruccion = " porque tiene 4 casas";
-                            }
-                            default -> {
-                                alquiler = datosAlquiler.getBase();
-                                detalleConstruccion = " sin construcciones";
-                            }
+                        } else {
+                            detalleConstruccion = " sin construcciones";
                         }
-                    } else {
-                        alquiler = datosAlquiler.getBase();
-                        detalleConstruccion = " sin construcciones";
+                    } else if (tipo.equals("estacion")) {
+                        int numEstaciones = propiedadPartidaRepositorio.contarPorDuenoYTipo(dueno.getId(), partidaId, "estacion");
+                        detalleConstruccion = " porque tiene " + numEstaciones + " estación" + (numEstaciones > 1 ? "es" : "");
+                    } else if (tipo.equals("compania")) {
+                        int numCompanias = propiedadPartidaRepositorio.contarPorDuenoYTipo(dueno.getId(), partidaId, "compania");
+                        detalleConstruccion = " porque tiene " + numCompanias + " compañía" + (numCompanias > 1 ? "s" : "") + " y sacaste " + suma;
                     }
+
+                    jugador.setDinero(jugador.getDinero() - alquiler);
+                    dueno.setDinero(dueno.getDinero() + alquiler);
+
+                    jugadorRepositorio.save(dueno);
+
+                    mensajeExtra += "Has caído en " + propiedadPartida.getPropiedad().getNombre()
+                            + ", propiedad de " + dueno.getNombre()
+                            + ". Le pagas " + alquiler + "€" + detalleConstruccion + ".\n";
                 }
-
-                jugador.setDinero(jugador.getDinero() - alquiler);
-                dueno.setDinero(dueno.getDinero() + alquiler);
-
-                jugadorRepositorio.save(jugador);
-                jugadorRepositorio.save(dueno);
-
-                mensajeExtra += "Has caído en " + propiedadPartida.getPropiedad().getNombre()
-                        + ", propiedad de " + dueno.getNombre()
-                        + ". Le pagas " + alquiler + "€" + detalleConstruccion + ".\n";
             }
         }
 
-        boolean haSacadoDobles = dado1 == dado2;
-
-        // ⚠️ Control de turno
+        // 💾 Guardar SIEMPRE el jugador al final, incluso si no cae en propiedad
         jugadorRepositorio.save(jugador);
 
-        // ✉️ Mensaje con info adicional si repite turno
-        if (haSacadoDobles) {
+        if (dado1 == dado2) {
             mensajeExtra += "🎲 Has sacado dobles. Vuelves a tirar.";
+        } else {
+            jugador.setTurno(false);
+            jugadorRepositorio.save(jugador);
+            List<Jugador> jugadores = jugadorRepositorio.findByPartidaIdOrderById(partidaId);
+            boolean siguiente = false;
+            for (Jugador j : jugadores) {
+                if (siguiente) {
+                    j.setTurno(true);
+                    jugadorRepositorio.save(j);
+                    break;
+                }
+                if (j.getId().equals(jugador.getId())) {
+                    siguiente = true;
+                }
+            }
+            if (siguiente && jugadores.stream().noneMatch(Jugador::isTurno)) {
+                jugadores.get(0).setTurno(true);
+                jugadorRepositorio.save(jugadores.get(0));
+            }
         }
 
         Map<String, Object> resultado = new HashMap<>();

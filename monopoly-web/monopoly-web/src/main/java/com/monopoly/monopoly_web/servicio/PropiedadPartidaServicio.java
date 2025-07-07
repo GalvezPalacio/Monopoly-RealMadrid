@@ -8,6 +8,7 @@ package com.monopoly.monopoly_web.servicio;
  *
  * @author gabri
  */
+import com.monopoly.monopoly_web.modelo.Alquiler;
 import com.monopoly.monopoly_web.modelo.CostesConstruccion;
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Partida;
@@ -334,5 +335,65 @@ public class PropiedadPartidaServicio {
         propiedad.setHipotecada(false);
 
         propiedadPartidaRepositorio.save(propiedad);
+    }
+
+    public int obtenerSumaDadosActual(Partida partida) {
+        return partida.getUltimaTiradaDado1() + partida.getUltimaTiradaDado2();
+    }
+
+    public int calcularAlquiler(PropiedadPartida propiedad, int sumaDados) {
+        String tipo = propiedad.getPropiedad().getTipo();
+
+        if (tipo.equals("compania")) {
+            int num = propiedadPartidaRepositorio.contarPorDuenoYTipo(
+                    propiedad.getDueno().getId(),
+                    propiedad.getPartida().getId(),
+                    "compania"
+            );
+            return sumaDados * (num == 2 ? 10 : 4);
+        }
+
+        if (tipo.equals("estacion")) {
+            int num = propiedadPartidaRepositorio.contarPorDuenoYTipo(
+                    propiedad.getDueno().getId(),
+                    propiedad.getPartida().getId(),
+                    "estacion"
+            );
+            switch (num) {
+                case 2:
+                    return 100;
+                case 3:
+                    return 200;
+                case 4:
+                    return 400;
+                default:
+                    return propiedad.getPropiedad().getAlquiler() != null
+                            ? propiedad.getPropiedad().getAlquiler().getBase()
+                            : 25;
+            }
+        }
+
+        // tipo "propiedad"
+        Alquiler alquiler = propiedad.getPropiedad().getAlquiler();
+        if (alquiler == null) {
+            return 0;
+        }
+
+        if (propiedad.isHotel()) {
+            return alquiler.getHotel();
+        }
+
+        return switch (propiedad.getCasas()) {
+            case 1 ->
+                alquiler.getCasa1();
+            case 2 ->
+                alquiler.getCasa2();
+            case 3 ->
+                alquiler.getCasa3();
+            case 4 ->
+                alquiler.getCasa4();
+            default ->
+                alquiler.getBase();
+        };
     }
 }
