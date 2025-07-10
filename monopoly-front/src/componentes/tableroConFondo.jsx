@@ -296,6 +296,7 @@ export default function TableroConFondo({
   const tirarDado = async () => {
     if (mostrarBienvenida) setMostrarBienvenida(false);
     if (!jugadorActual) return;
+    setMensajeLateral(null);
 
     try {
       const res = await fetch(
@@ -342,31 +343,15 @@ export default function TableroConFondo({
         mensajeSinSalida.includes("Caja de Comunidad") ||
         mensajeSinSalida.includes("Has caído en 'Caja de Comunidad'")
       ) {
-        try {
-          const resTarjeta = await fetch(
-            "http://localhost:8081/api/tarjetas/comunidad"
-          );
-          const tarjeta = await resTarjeta.json();
-          setTipoMensaje(tarjeta.tipo);
-          setMensajeEspecial(tarjeta.mensaje);
-          setMostrarTarjetaReal(false);
-          fueTarjeta = true;
-        } catch (e) {
-          console.error("❌ Error al obtener/aplicar tarjeta de comunidad:", e);
-        }
+        setTipoMensaje("comunidad");
+        setMensajeEspecial(null); // aún no hay carta
+        setMostrarTarjetaReal(true); // mostramos el popup con botón "Roba una carta"
+        fueTarjeta = true;
       } else if (mensajeSinSalida.includes("Has caído en 'Suerte'")) {
-        try {
-          const resTarjeta = await fetch(
-            "http://localhost:8081/api/tarjetas/suerte"
-          );
-          const tarjeta = await resTarjeta.json();
-          setTipoMensaje(tarjeta.tipo);
-          setMensajeEspecial(tarjeta.mensaje);
-          setMostrarTarjetaReal(false);
-          fueTarjeta = true;
-        } catch (e) {
-          console.error("❌ Error al obtener/aplicar tarjeta de suerte:", e);
-        }
+        setTipoMensaje("suerte");
+        setMensajeEspecial(null); // aún no hay carta
+        setMostrarTarjetaReal(true); // mostramos el popup con botón "Roba una carta"
+        fueTarjeta = true;
       }
 
       // ⚠️ SOLO limpiamos si no fue tarjeta y no fue casilla especial
@@ -502,6 +487,20 @@ export default function TableroConFondo({
       }
     } catch (err) {
       console.error("❌ Error al tirar el dado:", err);
+    }
+  };
+
+  const robarCarta = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/tarjetas/${tipoMensaje}`
+      );
+      const tarjeta = await res.json();
+      console.log("📨 Carta robada:", tarjeta);
+      setMensajeEspecial(tarjeta.mensaje);
+      // setMostrarTarjetaReal(true); // NO lo pongas aquí, ya está activo
+    } catch (e) {
+      console.error("❌ Error al robar carta:", e);
     }
   };
 
@@ -876,6 +875,7 @@ export default function TableroConFondo({
               setMostrarTarjetaReal(true);
             }
           }}
+          robarCarta={robarCarta}
         />
       )}
       {mostrarSelectorCasa && (
@@ -903,6 +903,15 @@ export default function TableroConFondo({
           }}
           onCerrar={() => setMostrarSelectorHotel(false)}
         />
+      )}
+
+      {mostrarTarjetaReal && !mensajeEspecial && (
+        <div className="popup-robar-carta">
+          <h2>Roba una carta</h2>
+          <button onClick={robarCarta} className="boton-robar-carta">
+            Robar carta
+          </button>
+        </div>
       )}
       {mostrarTarjetaReal && mensajeEspecial && (
         <TarjetaMensaje

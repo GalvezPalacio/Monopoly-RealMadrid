@@ -1,6 +1,6 @@
 import "./TarjetaPropiedad.css";
 
-export default function TarjetaPropiedad({ propiedad, onClose, tipoEspecial }) {
+export default function TarjetaPropiedad({ propiedad, onClose, tipoEspecial, robarCarta }) {
   if (!propiedad) return null;
 
   // ================== TARJETAS DE ESQUINA ==================
@@ -80,9 +80,7 @@ export default function TarjetaPropiedad({ propiedad, onClose, tipoEspecial }) {
           className="cerrar-imagen"
           onClick={() => {
             onClose();
-            if (tipoEspecial === "comunidad") {
-              setTimeout(() => window.setMostrarTarjetaReal?.(true), 100);
-            }
+            robarCarta(); // ✅ llama directamente a la función
           }}
         >
           Roba una carta
@@ -120,12 +118,10 @@ export default function TarjetaPropiedad({ propiedad, onClose, tipoEspecial }) {
             Coge una tarjeta para descubrir tu destino...
           </p>
           <button
-            className="boton-cerrar-suerte"
+            className="cerrar-imagen"
             onClick={() => {
               onClose();
-              if (tipoEspecial === "suerte") {
-                setTimeout(() => window.setMostrarTarjetaReal?.(true), 100);
-              }
+              robarCarta(); // ✅ llama directamente a la función
             }}
           >
             Roba una carta

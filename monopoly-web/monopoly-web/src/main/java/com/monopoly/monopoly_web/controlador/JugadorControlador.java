@@ -87,8 +87,8 @@ public class JugadorControlador {
             return ResponseEntity.badRequest().body(Map.of("mensaje", "No es tu turno. Espera al siguiente."));
         }
 
-        int dado1 = (int) (Math.random() * 6) + 1;
-        int dado2 = (int) (Math.random() * 6) + 1;
+        int dado1 = 4;
+        int dado2 = 6;
         int suma = dado1 + dado2;
 
         Partida partida = jugador.getPartida();
@@ -221,7 +221,7 @@ public class JugadorControlador {
 
         if (dado1 == dado2) {
             mensajeExtra += "🎲 Has sacado dobles. Vuelves a tirar.";
-        } else {
+        } /* else {
             jugador.setTurno(false);
             jugadorRepositorio.save(jugador);
             List<Jugador> jugadores = jugadorRepositorio.findByPartidaIdOrderById(partidaId);
@@ -240,7 +240,7 @@ public class JugadorControlador {
                 jugadores.get(0).setTurno(true);
                 jugadorRepositorio.save(jugadores.get(0));
             }
-        }
+        } */
 
         Map<String, Object> resultado = new HashMap<>();
         resultado.put("dado1", dado1);
@@ -280,6 +280,7 @@ public class JugadorControlador {
 //
 //        return "Has comprado " + propiedad.getNombre() + " por " + propiedad.getPrecio() + "€.";
 //    }
+    
     @Transactional
     private void pasarTurnoAlSiguiente(Long idActual) {
         Jugador jugadorActual = jugadorRepositorio.findById(idActual)
