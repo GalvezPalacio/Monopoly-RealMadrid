@@ -11,7 +11,8 @@ export default function PanelTurno({
   onConstruirHotel,
   onTirarDesdeCarcel,
   onPagarCarcel,
-  onUsarTarjetaCarcel
+  onUsarTarjetaCarcel,
+  puedeConstruirCasa
 }) {
   if (!tieneElTurno) return null;
 
@@ -54,7 +55,7 @@ export default function PanelTurno({
               </button>
             )}
 
-            {opcionesConstruccion?.gruposConCasas?.length > 0 && (
+            {puedeConstruirCasa && (
               <button className="boton-construir-casa" onClick={onConstruirCasa}>
                 Construir casa
               </button>

@@ -710,6 +710,13 @@ export default function TableroConFondo({
       console.error("❌ Error al construir hotel:", err);
     }
   };
+  const hayPropiedadesParaConstruirCasa = propiedadesJugador.some(
+    (p) =>
+      p.propiedad.tipo === "propiedad" &&
+      opcionesConstruccion.gruposConCasas.includes(p.propiedad.grupoColor) &&
+      p.casas < 4 &&
+      !p.hotel
+  );
   return (
     <div className="tablero-fondo">
       {mensajeLateral && (
@@ -848,6 +855,7 @@ export default function TableroConFondo({
         </button>
       </div>
       <PanelTurno
+        puedeConstruirCasa={hayPropiedadesParaConstruirCasa}
         resultado={resultadoDado}
         casilla={casillasInfo[posicionJugador]}
         acciones={accionesDisponibles}
@@ -880,10 +888,14 @@ export default function TableroConFondo({
       )}
       {mostrarSelectorCasa && (
         <SelectorConstruccion
-          propiedades={propiedadesJugador.filter((p) =>
-            opcionesConstruccion.gruposConCasas.includes(p.propiedad.grupoColor)
+          propiedades={propiedadesJugador.filter(
+            (p) =>
+              p.propiedad.tipo === "propiedad" && // ✅ Solo calles normales
+              opcionesConstruccion.gruposConCasas.includes(
+                p.propiedad.grupoColor
+              )
           )}
-          tipo="casa" // ✅ NECESARIO para que se vean las casas
+          tipo="casa"
           onSeleccionar={async (propiedadId) => {
             await construirCasa(propiedadId);
             setMostrarSelectorCasa(false);
@@ -893,8 +905,12 @@ export default function TableroConFondo({
       )}
       {mostrarSelectorHotel && (
         <SelectorConstruccion
-          propiedades={propiedadesJugador.filter((p) =>
-            opcionesConstruccion.gruposConHotel.includes(p.propiedad.grupoColor)
+          propiedades={propiedadesJugador.filter(
+            (p) =>
+              p.propiedad.tipo === "propiedad" &&
+              opcionesConstruccion.gruposConHotel.includes(
+                p.propiedad.grupoColor
+              )
           )}
           tipo="hotel"
           onSeleccionar={(id) => {
