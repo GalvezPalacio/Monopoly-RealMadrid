@@ -242,7 +242,7 @@ body {
 
 .panel-turno {
   position: fixed;
-  bottom: 370px;
+  top: 80px;
   right: 40px;
   width: 260px;
   padding: 20px;
@@ -653,4 +653,48 @@ body {
   z-index: 1000;
   font-weight: bold;
   max-width: 300px;
+}
+.panel-inferior-jugador {
+  position: fixed;
+  bottom: 30px;
+  right: 40px;
+  width: 300px;
+  height: 300px;
+  background-image: url('/marcoMenuJugador.png'); /* fondo metálico */
+  background-size: cover;
+  background-position: center;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.5);
+  border: 3px solid rgba(255, 255, 255, 0.15);
+  padding: 20px;
+  color: #f3f3f3;
+  font-family: 'Segoe UI', sans-serif;
+  z-index: 1000;
+  backdrop-filter: blur(6px);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+}
+.panel-inferior-jugador .info-jugador h3 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #00ffe4;
+  text-shadow: 0 0 5px rgba(0, 255, 255, 0.5);
+}
+
+.panel-inferior-jugador .info-jugador p {
+  margin: 4px 0 0;
+  font-size: 1.2rem;
+  color: #ffd700;
+  font-weight: bold;
+}
+.panel-inferior-jugador .etiqueta {
+  font-size: 0.9rem;
+  font-weight: bold;
+  text-transform: uppercase;
+  color: #ccc;
+  margin-bottom: 2px;
+  margin-top: 10px;
+  letter-spacing: 1px;
 }

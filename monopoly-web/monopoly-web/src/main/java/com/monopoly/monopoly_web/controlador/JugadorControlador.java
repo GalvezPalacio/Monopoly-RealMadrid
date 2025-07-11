@@ -87,8 +87,8 @@ public class JugadorControlador {
             return ResponseEntity.badRequest().body(Map.of("mensaje", "No es tu turno. Espera al siguiente."));
         }
 
-        int dado1 = 1;
-        int dado2 = 1;
+        int dado1 = (int) (Math.random() * 6) + 1;
+        int dado2 = (int) (Math.random() * 6) + 1;
         int suma = dado1 + dado2;
 
         Partida partida = jugador.getPartida();

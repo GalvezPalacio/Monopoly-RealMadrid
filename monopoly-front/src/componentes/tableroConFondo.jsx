@@ -799,6 +799,16 @@ export default function TableroConFondo({
         </div>
       </div>
 
+      <div className="panel-inferior-jugador">
+        <div className="info-jugador">
+          <h4 className="etiqueta">NOMBRE JUGADOR</h4>
+          <h3>{jugadorActual?.nombre}</h3>
+
+          <h4 className="etiqueta">DINERO</h4>
+          <p>🪙 {jugadorActual?.dinero}€</p>
+        </div>
+      </div>
+
       <div className="botones-partida-container">
         <button
           className="boton-guardar"
