@@ -735,6 +735,7 @@ body {
 }
 
 .tarjeta-propiedad-mini {
+  cursor: pointer;
   border: 1px solid white;
   border-radius: 8px;
   padding: 6px 10px;
@@ -754,4 +755,48 @@ body {
 .color-compania {
   background-color: #f5f5dc; /* Beige clásico */
   color: #222;
+}
+.popup-acciones-propiedad {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+  z-index: 9999;
+  width: 300px;
+  text-align: center;
+  color: #222;
+}
+
+.botones-acciones-propiedad {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 1rem;
+}
+
+.botones-acciones-propiedad button {
+  padding: 10px;
+  font-size: 14px;
+  border-radius: 8px;
+  border: none;
+  background-color: #eee;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.botones-acciones-propiedad button:hover {
+  background-color: #ddd;
+}
+.titulo-propiedad {
+  padding: 8px 12px;
+  border-radius: 8px;
+  font-size: 1.2rem;
+  font-weight: bold;
+  margin-bottom: 1rem;
+  text-align: center;
+  color: white;
 }

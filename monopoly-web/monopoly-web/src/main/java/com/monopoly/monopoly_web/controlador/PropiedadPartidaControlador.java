@@ -4,6 +4,7 @@
  */
 package com.monopoly.monopoly_web.controlador;
 
+import com.monopoly.monopoly_web.dto.HipotecaDTO;
 import com.monopoly.monopoly_web.dto.PropiedadPartidaRespuestaDTO;
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Partida;
@@ -53,41 +54,41 @@ public class PropiedadPartidaControlador {
     private PropiedadPartidaRepositorio propiedadPartidaRepositorio;
 
     @GetMapping("/partida/{partidaId}/posicion/{posicion}")
-public ResponseEntity<PropiedadPartidaRespuestaDTO> obtenerPropiedadPartida(
-        @PathVariable Long partidaId,
-        @PathVariable int posicion) {
+    public ResponseEntity<PropiedadPartidaRespuestaDTO> obtenerPropiedadPartida(
+            @PathVariable Long partidaId,
+            @PathVariable int posicion) {
 
-    Partida partida = partidaRepositorio.findById(partidaId)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida no encontrada"));
+        Partida partida = partidaRepositorio.findById(partidaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida no encontrada"));
 
-    Propiedad propiedad = propiedadRepositorio.findByPosicion(posicion);
-    if (propiedad == null) {
-        throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada en esa posición");
+        Propiedad propiedad = propiedadRepositorio.findByPosicion(posicion);
+        if (propiedad == null) {
+            throw new ResponseStatusException(HttpStatus.NOT_FOUND, "Propiedad no encontrada en esa posición");
+        }
+
+        PropiedadPartida propiedadPartida = propiedadPartidaServicio.obtenerPorPartidaYPropiedad(partida, propiedad)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PropiedadPartida no encontrada"));
+
+        // Creamos y rellenamos el DTO
+        PropiedadPartidaRespuestaDTO dto = new PropiedadPartidaRespuestaDTO();
+        dto.setPropiedadPartida(propiedadPartida);
+
+        if (propiedadPartida.getDueno() != null) {
+            Long duenoId = propiedadPartida.getDueno().getId();
+
+            int estaciones = propiedadPartidaRepositorio.contarPorDuenoYTipo(duenoId, partidaId, "estacion");
+            int companias = propiedadPartidaRepositorio.contarPorDuenoYTipo(duenoId, partidaId, "compania");
+            int sumaDados = propiedadPartidaServicio.obtenerSumaDadosActual(partida);
+            int alquilerCalculado = propiedadPartidaServicio.calcularAlquiler(propiedadPartida, sumaDados);
+
+            dto.setEstacionesDelDueno(estaciones);
+            dto.setCompaniasDelDueno(companias);
+            dto.setSumaDados(sumaDados);
+            dto.setAlquilerCalculado(alquilerCalculado);
+        }
+
+        return ResponseEntity.ok(dto);
     }
-
-    PropiedadPartida propiedadPartida = propiedadPartidaServicio.obtenerPorPartidaYPropiedad(partida, propiedad)
-            .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "PropiedadPartida no encontrada"));
-
-    // Creamos y rellenamos el DTO
-    PropiedadPartidaRespuestaDTO dto = new PropiedadPartidaRespuestaDTO();
-    dto.setPropiedadPartida(propiedadPartida);
-
-    if (propiedadPartida.getDueno() != null) {
-        Long duenoId = propiedadPartida.getDueno().getId();
-
-        int estaciones = propiedadPartidaRepositorio.contarPorDuenoYTipo(duenoId, partidaId, "estacion");
-        int companias = propiedadPartidaRepositorio.contarPorDuenoYTipo(duenoId, partidaId, "compania");
-        int sumaDados = propiedadPartidaServicio.obtenerSumaDadosActual(partida);
-        int alquilerCalculado = propiedadPartidaServicio.calcularAlquiler(propiedadPartida, sumaDados);
-
-        dto.setEstacionesDelDueno(estaciones);
-        dto.setCompaniasDelDueno(companias);
-        dto.setSumaDados(sumaDados);
-        dto.setAlquilerCalculado(alquilerCalculado);
-    }
-
-    return ResponseEntity.ok(dto);
-}
 
     @PostMapping("/comprar")
     public ResponseEntity<String> comprarPropiedad(@RequestBody Map<String, Object> datos) {
@@ -166,4 +167,13 @@ public ResponseEntity<PropiedadPartidaRespuestaDTO> obtenerPropiedadPartida(
         return ResponseEntity.ok("Propiedad devuelta correctamente.");
     }
 
+    @PostMapping("/hipotecar")
+    public ResponseEntity<String> hipotecar(@RequestBody HipotecaDTO dto) {
+        try {
+            propiedadPartidaServicio.hipotecar(dto.getJugadorId(), dto.getPropiedadId());
+            return ResponseEntity.ok("✅ Propiedad hipotecada con éxito.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body("❌ " + e.getMessage());
+        }
+    }
 }

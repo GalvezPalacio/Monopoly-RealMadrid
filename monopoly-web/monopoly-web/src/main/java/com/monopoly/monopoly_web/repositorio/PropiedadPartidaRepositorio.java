@@ -21,6 +21,8 @@ import java.util.Optional;
 public interface PropiedadPartidaRepositorio extends JpaRepository<PropiedadPartida, Long> {
 
     List<PropiedadPartida> findByPartida(Partida partida);
+    
+    List<PropiedadPartida> findByPartidaIdAndPropiedad_GrupoColor(Long partidaId, String grupoColor);
 
     Optional<PropiedadPartida> findByPartidaAndPropiedad(Partida partida, Propiedad propiedad);
 

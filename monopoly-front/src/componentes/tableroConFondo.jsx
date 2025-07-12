@@ -18,6 +18,7 @@ export default function TableroConFondo({
   const jugadorInicial = location.state?.jugadorInicial || "Jugador 1";
 
   const [posicionJugador, setPosicionJugador] = useState(0);
+  const [propiedadEnAccion, setPropiedadEnAccion] = useState(null);
   const [resultadoDado, setResultadoDado] = useState(null);
   const [accionesDisponibles, setAccionesDisponibles] = useState([]);
   const [propiedadSeleccionada, setPropiedadSeleccionada] = useState(null);
@@ -181,6 +182,42 @@ export default function TableroConFondo({
       console.error("❌ Error al tirar desde la cárcel:", error);
     }
   };
+
+  const hipotecarPropiedad = async (prop) => {
+    try {
+      const res = await fetch(
+        "http://localhost:8081/api/propiedadPartida/hipotecar",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            jugadorId: jugadorActual.id,
+            propiedadId: prop.id,
+          }),
+        }
+      );
+
+      const resultado = await res.text();
+      alert(resultado);
+
+      // 🔁 Refrescar datos
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+      setJugadores(nuevos);
+
+      const props = await fetch(
+        `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+      ).then((r) => r.json());
+      setPropiedadesJugador(props);
+
+      setPropiedadEnAccion(null); // cerrar popup
+    } catch (err) {
+      console.error("❌ Error al hipotecar propiedad:", err);
+      alert("Error al intentar hipotecar");
+    }
+  };
+
   const guardarTarjeta = async () => {
     try {
       const res = await fetch(
@@ -741,6 +778,12 @@ export default function TableroConFondo({
       p.casas < 4 &&
       !p.hotel
   );
+
+  const casillaColor = propiedadEnAccion
+    ? casillasInfo.find((c) => c.id === propiedadEnAccion.propiedad.id)
+        ?.color || "gris"
+    : "gris";
+
   return (
     <div className="tablero-fondo">
       {mensajeLateral && (
@@ -855,6 +898,7 @@ export default function TableroConFondo({
                     <div
                       key={prop.id}
                       className={`tarjeta-propiedad-mini color-${casilla?.color}`}
+                      onClick={() => setPropiedadEnAccion(prop)}
                     >
                       {prop.propiedad.nombre}
                     </div>
@@ -868,7 +912,11 @@ export default function TableroConFondo({
               {propiedadesFiltradas
                 ?.filter((p) => p.propiedad.tipo === "estacion")
                 .map((prop) => (
-                  <div key={prop.id} className="tarjeta-propiedad-mini color-estacion">
+                  <div
+                    key={prop.id}
+                    className="tarjeta-propiedad-mini color-estacion"
+                    onClick={() => setPropiedadEnAccion(prop)}
+                  >
                     {prop.propiedad.nombre}
                   </div>
                 ))}
@@ -884,7 +932,11 @@ export default function TableroConFondo({
                     p.propiedad.tipo === "compania"
                 )
                 .map((prop) => (
-                  <div key={prop.id} className="tarjeta-propiedad-mini color-compania">
+                  <div
+                    key={prop.id}
+                    className="tarjeta-propiedad-mini color-compania"
+                    onClick={() => setPropiedadEnAccion(prop)}
+                  >
                     {prop.propiedad.nombre}
                   </div>
                 ))}
@@ -1190,6 +1242,27 @@ export default function TableroConFondo({
           </div>
         </div>
       )}
+
+      {propiedadEnAccion && (
+        <div className="popup-acciones-propiedad">
+          <h3 className={`titulo-propiedad color-${casillaColor}`}>
+            {propiedadEnAccion.propiedad.nombre}
+          </h3>
+          <div className="botones-acciones-propiedad">
+            <button onClick={() => hipotecarPropiedad(propiedadEnAccion)}>
+              🏦 Hipotecar
+            </button>
+            <button>🛎️ Subastar</button>
+            <button>🤝 Trueque</button>
+            <button>🏠 Vender casa</button>
+            <button>🏨 Vender hotel</button>
+            <button onClick={() => setPropiedadEnAccion(null)}>
+              ❌ Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
       {mostrarSelectorDevolver && (
         <div className="popup-selector-dev">
           <div

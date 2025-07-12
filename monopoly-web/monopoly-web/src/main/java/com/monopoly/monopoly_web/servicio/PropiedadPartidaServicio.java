@@ -396,4 +396,44 @@ public class PropiedadPartidaServicio {
                 alquiler.getBase();
         };
     }
+
+    public void hipotecar(Long jugadorId, Long propiedadId) {
+        PropiedadPartida propiedad = propiedadPartidaRepositorio.findById(propiedadId)
+                .orElseThrow(() -> new IllegalStateException("Propiedad no encontrada"));
+
+        if (!propiedad.getDueno().getId().equals(jugadorId)) {
+            throw new IllegalStateException("Esta propiedad no pertenece al jugador.");
+        }
+
+        if (propiedad.isHipotecada()) {
+            throw new IllegalStateException("Esta propiedad ya está hipotecada.");
+        }
+
+        if (propiedad.getCasas() > 0 || propiedad.isHotel()) {
+            throw new IllegalStateException("No se puede hipotecar una propiedad con casas u hotel.");
+        }
+
+        // Comprobación de grupo
+        String colorGrupo = propiedad.getPropiedad().getGrupoColor();
+        Long partidaId = propiedad.getPartida().getId();
+
+        List<PropiedadPartida> grupo = propiedadPartidaRepositorio
+                .findByPartidaIdAndPropiedad_GrupoColor(partidaId, colorGrupo);
+
+        boolean grupoConConstrucciones = grupo.stream()
+                .anyMatch(p -> p.getCasas() > 0 || p.isHotel());
+
+        if (grupoConConstrucciones) {
+            throw new IllegalStateException("No se puede hipotecar: hay construcciones en el grupo.");
+        }
+
+        propiedad.setHipotecada(true);
+        int dinero = propiedad.getPropiedad().getPrecio() / 2;
+
+        Jugador jugador = propiedad.getDueno();
+        jugador.setDinero(jugador.getDinero() + dinero);
+
+        jugadorRepositorio.save(jugador);
+        propiedadPartidaRepositorio.save(propiedad);
+    }
 }
