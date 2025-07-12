@@ -735,7 +735,6 @@ body {
 }
 
 .tarjeta-propiedad-mini {
-  background-color: rgba(255, 255, 255, 0.15);
   border: 1px solid white;
   border-radius: 8px;
   padding: 6px 10px;
@@ -746,4 +745,13 @@ body {
 .tarjeta-propiedad-mini.sin-carta {
   font-style: italic;
   color: #ccc;
+}
+.color-estacion {
+  background-color: #e0e0e0; /* Gris claro tipo andén */
+  color: #222;
+}
+
+.color-compania {
+  background-color: #f5f5dc; /* Beige clásico */
+  color: #222;
 }

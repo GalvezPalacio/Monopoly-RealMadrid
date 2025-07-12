@@ -847,11 +847,19 @@ export default function TableroConFondo({
               <h5>Calles</h5>
               {propiedadesFiltradas
                 ?.filter((p) => p.propiedad.tipo === "propiedad")
-                .map((prop) => (
-                  <div key={prop.id} className="tarjeta-propiedad-mini">
-                    {prop.propiedad.nombre}
-                  </div>
-                ))}
+                .map((prop) => {
+                  const casilla = casillasInfo.find(
+                    (c) => c.id === prop.propiedad.id
+                  );
+                  return (
+                    <div
+                      key={prop.id}
+                      className={`tarjeta-propiedad-mini color-${casilla?.color}`}
+                    >
+                      {prop.propiedad.nombre}
+                    </div>
+                  );
+                })}
             </div>
 
             {/* ESTACIONES */}
@@ -860,7 +868,7 @@ export default function TableroConFondo({
               {propiedadesFiltradas
                 ?.filter((p) => p.propiedad.tipo === "estacion")
                 .map((prop) => (
-                  <div key={prop.id} className="tarjeta-propiedad-mini">
+                  <div key={prop.id} className="tarjeta-propiedad-mini color-estacion">
                     {prop.propiedad.nombre}
                   </div>
                 ))}
@@ -876,7 +884,7 @@ export default function TableroConFondo({
                     p.propiedad.tipo === "compania"
                 )
                 .map((prop) => (
-                  <div key={prop.id} className="tarjeta-propiedad-mini">
+                  <div key={prop.id} className="tarjeta-propiedad-mini color-compania">
                     {prop.propiedad.nombre}
                   </div>
                 ))}
