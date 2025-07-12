@@ -26,6 +26,7 @@ export default function TableroConFondo({
   const [mensajeBienvenida, setMensajeBienvenida] = useState("");
   const [jugadores, setJugadores] = useState([]);
   const [turnoRecienCambiado, setTurnoRecienCambiado] = useState(false);
+  const [propiedadEnConfirmacion, setPropiedadEnConfirmacion] = useState(null);
   const [opcionesConstruccion, setOpcionesConstruccion] = useState({
     gruposConCasas: [],
     gruposConHotel: [],
@@ -1249,7 +1250,9 @@ export default function TableroConFondo({
             {propiedadEnAccion.propiedad.nombre}
           </h3>
           <div className="botones-acciones-propiedad">
-            <button onClick={() => hipotecarPropiedad(propiedadEnAccion)}>
+            <button
+              onClick={() => setPropiedadEnConfirmacion(propiedadEnAccion)}
+            >
               🏦 Hipotecar
             </button>
             <button>🛎️ Subastar</button>
@@ -1257,6 +1260,39 @@ export default function TableroConFondo({
             <button>🏠 Vender casa</button>
             <button>🏨 Vender hotel</button>
             <button onClick={() => setPropiedadEnAccion(null)}>
+              ❌ Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {propiedadEnConfirmacion && (
+        <div className="popup-acciones-propiedad">
+          <h3
+            className={`titulo-propiedad color-${
+              casillasInfo.find(
+                (c) => c.id === propiedadEnConfirmacion.propiedad.id
+              )?.color || "gris"
+            }`}
+          >
+            {propiedadEnConfirmacion.propiedad.nombre}
+          </h3>
+          <p>
+            ¿Estás seguro de que quieres hipotecar esta propiedad por{" "}
+            <strong>{`${propiedadEnConfirmacion.propiedad.precio / 2} €`}</strong>
+          </p>
+
+          <div className="botones-acciones-propiedad">
+            <button
+              onClick={() => {
+                hipotecarPropiedad(propiedadEnConfirmacion);
+                setPropiedadEnConfirmacion(null);
+                setPropiedadEnAccion(null);
+              }}
+            >
+              ✅ Sí, hipotecar
+            </button>
+            <button onClick={() => setPropiedadEnConfirmacion(null)}>
               ❌ Cancelar
             </button>
           </div>
