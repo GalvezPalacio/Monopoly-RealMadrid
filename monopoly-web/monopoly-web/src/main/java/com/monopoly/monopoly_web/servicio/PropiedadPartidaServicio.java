@@ -436,4 +436,30 @@ public class PropiedadPartidaServicio {
         jugadorRepositorio.save(jugador);
         propiedadPartidaRepositorio.save(propiedad);
     }
+
+    public void deshipotecar(Long jugadorId, Long propiedadId) {
+        PropiedadPartida propiedad = propiedadPartidaRepositorio.findById(propiedadId)
+                .orElseThrow(() -> new IllegalStateException("Propiedad no encontrada"));
+
+        if (!propiedad.getDueno().getId().equals(jugadorId)) {
+            throw new IllegalStateException("Esta propiedad no pertenece al jugador.");
+        }
+
+        if (!propiedad.isHipotecada()) {
+            throw new IllegalStateException("Esta propiedad no está hipotecada.");
+        }
+
+        int coste = (int) (propiedad.getPropiedad().getPrecio() * 0.55); // 10% extra por deshipotecar
+
+        Jugador jugador = propiedad.getDueno();
+        if (jugador.getDinero() < coste) {
+            throw new IllegalStateException("No tienes suficiente dinero para deshipotecar.");
+        }
+
+        jugador.setDinero(jugador.getDinero() - coste);
+        propiedad.setHipotecada(false);
+
+        jugadorRepositorio.save(jugador);
+        propiedadPartidaRepositorio.save(propiedad);
+    }
 }

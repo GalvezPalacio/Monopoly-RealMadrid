@@ -176,4 +176,14 @@ public class PropiedadPartidaControlador {
             return ResponseEntity.badRequest().body("❌ " + e.getMessage());
         }
     }
+
+    @PostMapping("/deshipotecar")
+    public ResponseEntity<String> deshipotecar(@RequestBody HipotecaDTO dto) {
+        try {
+            propiedadPartidaServicio.deshipotecar(dto.getJugadorId(), dto.getPropiedadId());
+            return ResponseEntity.ok("✅ Propiedad deshipotecada con éxito.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body("❌ " + e.getMessage());
+        }
+    }
 }

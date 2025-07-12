@@ -187,24 +187,25 @@ export default function TableroConFondo({
 
   const hipotecarPropiedad = async (prop) => {
     try {
-      setSuprimirMensajeTurno(true); // Evitar mensaje de turno
-      setTurnoRecienCambiado(false); // Asegura que no se dispare por error anterior
+      setSuprimirMensajeTurno(true);
 
-      const res = await fetch(
-        "http://localhost:8081/api/propiedadPartida/hipotecar",
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            jugadorId: jugadorActual.id,
-            propiedadId: prop.id,
-          }),
-        }
-      );
+      const url = prop.hipotecada
+        ? "http://localhost:8081/api/propiedadPartida/deshipotecar"
+        : "http://localhost:8081/api/propiedadPartida/hipotecar";
+
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          jugadorId: jugadorActual.id,
+          propiedadId: prop.id,
+        }),
+      });
 
       const resultado = await res.text();
       alert(resultado);
 
+      // Refrescar datos
       const nuevos = await fetch(
         `http://localhost:8081/api/partidas/${partidaId}/jugadores`
       ).then((r) => r.json());
@@ -217,10 +218,10 @@ export default function TableroConFondo({
 
       setPropiedadEnAccion(null);
     } catch (err) {
-      console.error("❌ Error al hipotecar propiedad:", err);
-      alert("Error al intentar hipotecar");
+      console.error("❌ Error al hipotecar/deshipotecar propiedad:", err);
+      alert("Error al intentar hipotecar o deshipotecar");
     } finally {
-      setSuprimirMensajeTurno(false); // Restaurar el mensaje
+      setTimeout(() => setSuprimirMensajeTurno(false), 200);
     }
   };
 
@@ -926,7 +927,18 @@ export default function TableroConFondo({
                     className="tarjeta-propiedad-mini color-estacion"
                     onClick={() => setPropiedadEnAccion(prop)}
                   >
-                    {prop.propiedad.nombre}
+                    <span>
+                      {prop.propiedad.nombre}
+                      {prop.hipotecada && (
+                        <span
+                          className="icono-hipoteca"
+                          title="Estación hipotecada"
+                        >
+                          {" "}
+                          🏠🔒
+                        </span>
+                      )}
+                    </span>
                   </div>
                 ))}
             </div>
@@ -946,7 +958,18 @@ export default function TableroConFondo({
                     className="tarjeta-propiedad-mini color-compania"
                     onClick={() => setPropiedadEnAccion(prop)}
                   >
-                    {prop.propiedad.nombre}
+                    <span>
+                      {prop.propiedad.nombre}
+                      {prop.hipotecada && (
+                        <span
+                          className="icono-hipoteca"
+                          title="Compañía hipotecada"
+                        >
+                          {" "}
+                          🏠🔒
+                        </span>
+                      )}
+                    </span>
                   </div>
                 ))}
             </div>
@@ -1259,9 +1282,16 @@ export default function TableroConFondo({
           </h3>
           <div className="botones-acciones-propiedad">
             <button
-              onClick={() => setPropiedadEnConfirmacion(propiedadEnAccion)}
+              onClick={() => {
+                setPropiedadEnConfirmacion(propiedadEnAccion);
+                setTipoAccion(
+                  propiedadEnAccion.hipotecada ? "deshipotecar" : "hipotecar"
+                );
+              }}
             >
-              🏦 Hipotecar
+              {propiedadEnAccion.hipotecada
+                ? "💰 Deshipotecar"
+                : "🏦 Hipotecar"}
             </button>
             <button>🛎️ Subastar</button>
             <button>🤝 Trueque</button>
@@ -1286,10 +1316,16 @@ export default function TableroConFondo({
             {propiedadEnConfirmacion.propiedad.nombre}
           </h3>
           <p>
-            ¿Estás seguro de que quieres hipotecar esta propiedad por{" "}
-            <strong>{`${
-              propiedadEnConfirmacion.propiedad.precio / 2
-            } €`}</strong>
+            ¿Estás seguro de que quieres{" "}
+            {propiedadEnConfirmacion.hipotecada ? "deshipotecar " : "hipotecar "}
+            esta propiedad por{" "}
+            <strong>
+              {propiedadEnConfirmacion.hipotecada
+                ? Math.floor(propiedadEnConfirmacion.propiedad.precio * 0.55)
+                : propiedadEnConfirmacion.propiedad.precio / 2}
+              €
+            </strong>
+            ?
           </p>
 
           <div className="botones-acciones-propiedad">
@@ -1300,7 +1336,7 @@ export default function TableroConFondo({
                 setPropiedadEnAccion(null);
               }}
             >
-              ✅ Sí, hipotecar
+              ✅ Sí, {propiedadEnConfirmacion.hipotecada ? "deshipotecar" : "hipotecar"}
             </button>
             <button onClick={() => setPropiedadEnConfirmacion(null)}>
               ❌ Cancelar
