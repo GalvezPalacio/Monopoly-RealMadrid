@@ -804,3 +804,24 @@ body {
   margin-left: 6px;
   font-size: 1rem;
 }
+.popup-subasta {
+  position: fixed;
+  top: 25%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 3px solid gold;
+  border-radius: 15px;
+  padding: 1.5rem;
+  z-index: 500;
+  width: 350px;
+  text-align: center;
+}
+.popup-subasta input {
+  width: 60%;
+  padding: 0.5rem;
+  margin: 1rem 0;
+  font-size: 1rem;
+  border-radius: 10px;
+  border: 2px solid #ccc;
+}

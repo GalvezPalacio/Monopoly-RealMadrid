@@ -67,6 +67,9 @@ export default function TableroConFondo({
   const [mostrarAdjudicacion, setMostrarAdjudicacion] = useState(false);
   const [mostrarTarjetaCarcel, setMostrarTarjetaCarcel] = useState(false);
   const [mostrarPopupGrada, setMostrarPopupGrada] = useState(false);
+  const [subastaActiva, setSubastaActiva] = useState(null); // guarda la propiedad
+  const [precioMinimo, setPrecioMinimo] = useState(""); // input de precio
+  const [subastaLanzada, setSubastaLanzada] = useState(null); // guarda {propiedad, minimo, ofertas}
 
   const [mostrarSelectorDevolver, setMostrarSelectorDevolver] = useState(false);
   const [alertaSuperior, setAlertaSuperior] = useState(null);
@@ -1293,7 +1296,14 @@ export default function TableroConFondo({
                 ? "💰 Deshipotecar"
                 : "🏦 Hipotecar"}
             </button>
-            <button>🛎️ Subastar</button>
+            <button
+              onClick={() => {
+                setSubastaActiva(propiedadEnAccion);
+                setPropiedadEnAccion(null);
+              }}
+            >
+              🛎️ Subastar
+            </button>
             <button>🤝 Trueque</button>
             <button>🏠 Vender casa</button>
             <button>🏨 Vender hotel</button>
@@ -1303,6 +1313,99 @@ export default function TableroConFondo({
           </div>
         </div>
       )}
+
+      {subastaActiva && (
+        <div className="popup-subasta">
+          <h3
+            className={`titulo-propiedad color-${
+              casillasInfo.find((c) => c.id === subastaActiva.propiedad.id)
+                ?.color || "gris"
+            }`}
+          >
+            Subastar: {subastaActiva.propiedad.nombre}
+          </h3>
+          <p>Introduce un precio mínimo para lanzar la subasta:</p>
+          <input
+            type="number"
+            min="1"
+            value={precioMinimo}
+            onChange={(e) => setPrecioMinimo(e.target.value)}
+            placeholder="Precio mínimo (€)"
+          />
+          <div className="botones-acciones-propiedad">
+            <button
+              onClick={() => {
+                setSubastaLanzada({
+                  propiedad: subastaActiva.propiedad,
+                  duenoId: subastaActiva.dueno.id, // Asume que subastaActiva tiene info del dueño
+                  minimo: parseInt(precioMinimo),
+                  ofertas: [],
+                });
+                setSubastaActiva(null);
+                setPrecioMinimo("");
+                setMensajeBienvenida(
+                  `🏁 Subasta lanzada: ${subastaActiva.propiedad.nombre} por mínimo ${precioMinimo}€`
+                );
+                setMostrarBienvenida(true);
+                setTimeout(() => setMostrarBienvenida(false), 3500);
+              }}
+            >
+              ✅ Lanzar subasta
+            </button>
+            <button
+              onClick={() => {
+                setSubastaActiva(null);
+                setPrecioMinimo("");
+              }}
+            >
+              ❌ Cancelar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {subastaLanzada &&
+        jugadorActual.id !== subastaLanzada.duenoId &&
+        !subastaLanzada.ofertas.some(
+          (oferta) => oferta.jugadorId === jugadorActual.id
+        ) && (
+          <div className="popup-subasta">
+            <h3
+              className={`titulo-propiedad color-${
+                casillasInfo.find((c) => c.id === subastaLanzada.propiedad.id)
+                  ?.color || "gris"
+              }`}
+            >
+              Subasta: {subastaLanzada.propiedad.nombre}
+            </h3>
+            <p>Precio mínimo: {subastaLanzada.minimo}€</p>
+            <input
+              type="number"
+              min={subastaLanzada.minimo + 1}
+              value={precioMinimo}
+              onChange={(e) => setPrecioMinimo(e.target.value)}
+              placeholder="Tu oferta (€)"
+            />
+            <div className="botones-acciones-propiedad">
+              <button
+                onClick={() => {
+                  const nuevaOferta = {
+                    jugadorId: jugadorActual.id,
+                    nombre: jugadorActual.nombre,
+                    cantidad: parseInt(precioMinimo),
+                  };
+                  setSubastaLanzada((prev) => ({
+                    ...prev,
+                    ofertas: [...prev.ofertas, nuevaOferta],
+                  }));
+                  setPrecioMinimo("");
+                }}
+              >
+                💶 Pujar
+              </button>
+            </div>
+          </div>
+        )}
 
       {propiedadEnConfirmacion && (
         <div className="popup-acciones-propiedad">
@@ -1317,7 +1420,9 @@ export default function TableroConFondo({
           </h3>
           <p>
             ¿Estás seguro de que quieres{" "}
-            {propiedadEnConfirmacion.hipotecada ? "deshipotecar " : "hipotecar "}
+            {propiedadEnConfirmacion.hipotecada
+              ? "deshipotecar "
+              : "hipotecar "}
             esta propiedad por{" "}
             <strong>
               {propiedadEnConfirmacion.hipotecada
@@ -1336,7 +1441,10 @@ export default function TableroConFondo({
                 setPropiedadEnAccion(null);
               }}
             >
-              ✅ Sí, {propiedadEnConfirmacion.hipotecada ? "deshipotecar" : "hipotecar"}
+              ✅ Sí,{" "}
+              {propiedadEnConfirmacion.hipotecada
+                ? "deshipotecar"
+                : "hipotecar"}
             </button>
             <button onClick={() => setPropiedadEnConfirmacion(null)}>
               ❌ Cancelar
