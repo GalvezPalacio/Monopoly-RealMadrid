@@ -698,3 +698,52 @@ body {
   margin-top: 10px;
   letter-spacing: 1px;
 }
+.boton-propiedades {
+  background: linear-gradient(145deg, #ffd700, #ffae00);
+  color: #222;
+  font-weight: bold;
+  padding: 10px 16px;
+  border: none;
+  border-radius: 12px;
+  margin-top: 10px;
+  width: 100%;
+  cursor: pointer;
+  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  transition: all 0.2s ease-in-out;
+}
+
+.boton-propiedades:hover {
+  background: linear-gradient(145deg, #ffbf00, #ffa500);
+  transform: scale(1.05);
+}
+.submenu-propiedades {
+  margin-top: 16px;
+  background-color: rgba(255, 255, 255, 0.07);
+  border: 2px solid gold;
+  border-radius: 12px;
+  padding: 12px;
+  color: white;
+  max-height: 300px;
+  overflow-y: auto;
+}
+
+.submenu-propiedades h5 {
+  margin: 10px 0 6px;
+  font-size: 1rem;
+  color: gold;
+  border-bottom: 1px solid #888;
+}
+
+.tarjeta-propiedad-mini {
+  background-color: rgba(255, 255, 255, 0.15);
+  border: 1px solid white;
+  border-radius: 8px;
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  font-size: 0.9rem;
+}
+
+.tarjeta-propiedad-mini.sin-carta {
+  font-style: italic;
+  color: #ccc;
+}

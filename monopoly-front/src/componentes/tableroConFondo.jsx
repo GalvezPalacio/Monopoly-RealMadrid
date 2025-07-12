@@ -29,8 +29,32 @@ export default function TableroConFondo({
     gruposConCasas: [],
     gruposConHotel: [],
   });
+  const jugadorActual = jugadores.find((j) => j.turno);
+  useEffect(() => {
+    if (!jugadorActual) return;
+
+    // Cargar propiedades del jugador actual
+    fetch(
+      `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+    )
+      .then((res) => res.json())
+      .then((data) => setPropiedadesJugador(data))
+      .catch((err) => console.error("❌ Error al cargar propiedades:", err));
+  }, [jugadorActual]);
+  const [mostrarPropiedades, setMostrarPropiedades] = useState(false);
+
+  const tieneTarjetaSalirCarcel = jugadorActual?.tieneTarjetaSalirCarcel === 1;
+  const handleTogglePropiedades = () => {
+    setMostrarPropiedades(!mostrarPropiedades);
+  };
   const [mostrarSelectorCasa, setMostrarSelectorCasa] = useState(false);
+
   const [propiedadesJugador, setPropiedadesJugador] = useState([]);
+
+  const propiedadesFiltradas = propiedadesJugador;
+  console.log("✅ jugadorActual:", jugadorActual);
+  console.log("✅ propiedadesJugador:", propiedadesJugador);
+  console.log("✅ propiedadesFiltradas:", propiedadesFiltradas);
   const [mostrarSelectorHotel, setMostrarSelectorHotel] = useState(false);
   const [mensajeEspecial, setMensajeEspecial] = useState(null);
   const [tipoMensaje, setTipoMensaje] = useState(null);
@@ -40,7 +64,7 @@ export default function TableroConFondo({
   const [mostrarAdjudicacion, setMostrarAdjudicacion] = useState(false);
   const [mostrarTarjetaCarcel, setMostrarTarjetaCarcel] = useState(false);
   const [mostrarPopupGrada, setMostrarPopupGrada] = useState(false);
-  const jugadorActual = jugadores.find((j) => j.turno);
+
   const [mostrarSelectorDevolver, setMostrarSelectorDevolver] = useState(false);
   const [alertaSuperior, setAlertaSuperior] = useState(null);
   const [mensajeLateral, setMensajeLateral] = useState(null);
@@ -798,7 +822,6 @@ export default function TableroConFondo({
           <img src="/tarjetas/comunidad-tablero.png" alt="Comunidad" />
         </div>
       </div>
-
       <div className="panel-inferior-jugador">
         <div className="info-jugador">
           <h4 className="etiqueta">NOMBRE JUGADOR</h4>
@@ -806,7 +829,73 @@ export default function TableroConFondo({
 
           <h4 className="etiqueta">DINERO</h4>
           <p>🪙 {jugadorActual?.dinero}€</p>
+
+          <button
+            className="boton-propiedades"
+            onClick={() => setMostrarPropiedades(!mostrarPropiedades)}
+          >
+            📜 Ver propiedades
+          </button>
         </div>
+
+        {mostrarPropiedades && (
+          <div className="submenu-propiedades">
+            <h4 className="titulo-submenu">Tus propiedades</h4>
+
+            {/* CALLES */}
+            <div className="seccion-propiedades">
+              <h5>Calles</h5>
+              {propiedadesFiltradas
+                ?.filter((p) => p.propiedad.tipo === "propiedad")
+                .map((prop) => (
+                  <div key={prop.id} className="tarjeta-propiedad-mini">
+                    {prop.propiedad.nombre}
+                  </div>
+                ))}
+            </div>
+
+            {/* ESTACIONES */}
+            <div className="seccion-propiedades">
+              <h5>Estaciones</h5>
+              {propiedadesFiltradas
+                ?.filter((p) => p.propiedad.tipo === "estacion")
+                .map((prop) => (
+                  <div key={prop.id} className="tarjeta-propiedad-mini">
+                    {prop.propiedad.nombre}
+                  </div>
+                ))}
+            </div>
+
+            {/* COMPAÑÍAS */}
+            <div className="seccion-propiedades">
+              <h5>Compañías</h5>
+              {propiedadesFiltradas
+                ?.filter(
+                  (p) =>
+                    p.propiedad.tipo === "compañia" ||
+                    p.propiedad.tipo === "compania"
+                )
+                .map((prop) => (
+                  <div key={prop.id} className="tarjeta-propiedad-mini">
+                    {prop.propiedad.nombre}
+                  </div>
+                ))}
+            </div>
+
+            <div className="seccion-cartas">
+              <h5>Cartas especiales</h5>
+              {tieneTarjetaSalirCarcel ? (
+                <div className="tarjeta-propiedad-mini">
+                  🎟️ Salir de la cárcel
+                </div>
+              ) : (
+                <div className="tarjeta-propiedad-mini sin-carta">
+                  No tienes cartas
+                </div>
+              )}
+            </div>
+          </div>
+        )}
       </div>
 
       <div className="botones-partida-container">
