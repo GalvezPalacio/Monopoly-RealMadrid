@@ -26,6 +26,7 @@ export default function TableroConFondo({
   const [mensajeBienvenida, setMensajeBienvenida] = useState("");
   const [jugadores, setJugadores] = useState([]);
   const [turnoRecienCambiado, setTurnoRecienCambiado] = useState(false);
+  const [suprimirMensajeTurno, setSuprimirMensajeTurno] = useState(false);
   const [propiedadEnConfirmacion, setPropiedadEnConfirmacion] = useState(null);
   const [opcionesConstruccion, setOpcionesConstruccion] = useState({
     gruposConCasas: [],
@@ -186,6 +187,9 @@ export default function TableroConFondo({
 
   const hipotecarPropiedad = async (prop) => {
     try {
+      setSuprimirMensajeTurno(true); // Evitar mensaje de turno
+      setTurnoRecienCambiado(false); // Asegura que no se dispare por error anterior
+
       const res = await fetch(
         "http://localhost:8081/api/propiedadPartida/hipotecar",
         {
@@ -201,7 +205,6 @@ export default function TableroConFondo({
       const resultado = await res.text();
       alert(resultado);
 
-      // 🔁 Refrescar datos
       const nuevos = await fetch(
         `http://localhost:8081/api/partidas/${partidaId}/jugadores`
       ).then((r) => r.json());
@@ -212,10 +215,12 @@ export default function TableroConFondo({
       ).then((r) => r.json());
       setPropiedadesJugador(props);
 
-      setPropiedadEnAccion(null); // cerrar popup
+      setPropiedadEnAccion(null);
     } catch (err) {
       console.error("❌ Error al hipotecar propiedad:", err);
       alert("Error al intentar hipotecar");
+    } finally {
+      setSuprimirMensajeTurno(false); // Restaurar el mensaje
     }
   };
 
@@ -338,7 +343,7 @@ export default function TableroConFondo({
   }, [posicionJugador, jugadores]);
 
   useEffect(() => {
-    if (!turnoRecienCambiado) return;
+    if (!turnoRecienCambiado || suprimirMensajeTurno) return;
 
     const jugadorTurno = jugadores.find((j) => j.turno);
     if (jugadorTurno) {
@@ -353,7 +358,7 @@ export default function TableroConFondo({
 
       return () => clearTimeout(timeout);
     }
-  }, [turnoRecienCambiado, jugadores]);
+  }, [turnoRecienCambiado, jugadores, suprimirMensajeTurno]);
 
   const tirarDado = async () => {
     if (mostrarBienvenida) setMostrarBienvenida(false);
@@ -901,7 +906,10 @@ export default function TableroConFondo({
                       className={`tarjeta-propiedad-mini color-${casilla?.color}`}
                       onClick={() => setPropiedadEnAccion(prop)}
                     >
-                      {prop.propiedad.nombre}
+                      {prop.propiedad.nombre}{" "}
+                      {prop.hipotecada && (
+                        <span title="Propiedad hipotecada">🏠🔒</span>
+                      )}
                     </div>
                   );
                 })}
@@ -1279,7 +1287,9 @@ export default function TableroConFondo({
           </h3>
           <p>
             ¿Estás seguro de que quieres hipotecar esta propiedad por{" "}
-            <strong>{`${propiedadEnConfirmacion.propiedad.precio / 2} €`}</strong>
+            <strong>{`${
+              propiedadEnConfirmacion.propiedad.precio / 2
+            } €`}</strong>
           </p>
 
           <div className="botones-acciones-propiedad">
