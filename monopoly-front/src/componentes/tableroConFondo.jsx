@@ -394,17 +394,6 @@ export default function TableroConFondo({
   }, [jugadorActual]);
 
   useEffect(() => {
-    const subastaGuardada = localStorage.getItem("subastaLanzada");
-    if (subastaGuardada) {
-      try {
-        setSubastaLanzada(JSON.parse(subastaGuardada));
-      } catch (e) {
-        console.error("❌ Error al leer subasta guardada:", e);
-      }
-    }
-  }, []);
-
-  useEffect(() => {
     // 🔁 Forzar recarga desde localStorage al cambiar de jugador
     const subastaGuardada = localStorage.getItem("subastaLanzada");
     if (subastaGuardada) {
@@ -1482,6 +1471,12 @@ export default function TableroConFondo({
         (console.log("🔁 Mostrar panel de puja para:", jugadorActual.nombre),
         (
           <div className="popup-subasta">
+            <p style={{ marginBottom: "10px", fontWeight: "bold", color: "black" }}>
+              {jugadores.find((j) => j.id === subastaLanzada.duenoId)?.nombre ||
+                "Un jugador"}{" "}
+              ha lanzado esta propiedad a subasta con un precio mínimo de{" "}
+              {subastaLanzada.minimo}€
+            </p>
             <h3
               className={`titulo-propiedad color-${
                 casillasInfo.find((c) => c.id === subastaLanzada.propiedad.id)
