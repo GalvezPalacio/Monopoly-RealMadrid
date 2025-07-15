@@ -8,6 +8,7 @@ package com.monopoly.monopoly_web.servicio;
  *
  * @author gabri
  */
+import com.monopoly.monopoly_web.dto.TransferenciaDTO;
 import com.monopoly.monopoly_web.modelo.Alquiler;
 import com.monopoly.monopoly_web.modelo.CostesConstruccion;
 import com.monopoly.monopoly_web.modelo.Jugador;
@@ -17,6 +18,7 @@ import com.monopoly.monopoly_web.modelo.PropiedadPartida;
 import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
+import jakarta.transaction.Transactional;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -461,5 +463,54 @@ public class PropiedadPartidaServicio {
 
         jugadorRepositorio.save(jugador);
         propiedadPartidaRepositorio.save(propiedad);
+    }
+
+    @Transactional
+    public void transferir(TransferenciaDTO dto) {
+        System.out.println("➡️ Entrando en transferir con DTO: " + dto);
+
+        // 1. Obtener la propiedad partida
+        System.out.println("🔍 Buscando propiedad con ID: " + dto.getPropiedadId());
+        PropiedadPartida propiedad = propiedadPartidaRepositorio.findById(dto.getPropiedadId())
+                .orElseThrow(() -> {
+                    System.out.println("❌ Propiedad no encontrada");
+                    return new RuntimeException("Propiedad no encontrada");
+                });
+        System.out.println("✅ Propiedad encontrada: " + propiedad.getPropiedad().getNombre());
+
+        // 2. Obtener comprador
+        System.out.println("🔍 Buscando comprador con ID: " + dto.getCompradorId());
+        Jugador comprador = jugadorRepositorio.findById(dto.getCompradorId())
+                .orElseThrow(() -> {
+                    System.out.println("❌ Comprador no encontrado");
+                    return new RuntimeException("Comprador no encontrado");
+                });
+        System.out.println("✅ Comprador encontrado: " + comprador.getNombre());
+
+        // 3. Obtener vendedor
+        System.out.println("🔍 Buscando vendedor con ID: " + dto.getVendedorId());
+        Jugador vendedor = jugadorRepositorio.findById(dto.getVendedorId())
+                .orElseThrow(() -> {
+                    System.out.println("❌ Vendedor no encontrado");
+                    return new RuntimeException("Vendedor no encontrado");
+                });
+        System.out.println("✅ Vendedor encontrado: " + vendedor.getNombre());
+
+        // 4. Asignar propiedad al comprador
+        System.out.println("🔁 Asignando propiedad al comprador...");
+        propiedad.setDueno(comprador);
+
+        // 5. Actualizar dinero
+        System.out.println("💰 Dinero antes de transferencia: Comprador=" + comprador.getDinero() + " | Vendedor=" + vendedor.getDinero());
+        comprador.setDinero(comprador.getDinero() - dto.getCantidad());
+        vendedor.setDinero(vendedor.getDinero() + dto.getCantidad());
+        System.out.println("💰 Dinero después de transferencia: Comprador=" + comprador.getDinero() + " | Vendedor=" + vendedor.getDinero());
+
+        // 6. Guardar cambios
+        jugadorRepositorio.save(comprador);
+        jugadorRepositorio.save(vendedor);
+        propiedadPartidaRepositorio.save(propiedad);
+
+        System.out.println("✅ Transferencia completada correctamente");
     }
 }

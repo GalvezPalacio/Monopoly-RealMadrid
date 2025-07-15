@@ -70,6 +70,9 @@ export default function TableroConFondo({
   const [subastaActiva, setSubastaActiva] = useState(null); // guarda la propiedad
   const [precioMinimo, setPrecioMinimo] = useState(""); // input de precio
   const [subastaLanzada, setSubastaLanzada] = useState(null); // guarda {propiedad, minimo, ofertas}
+  const [mensajeOferta, setMensajeOferta] = useState("");
+  const [mostrarPopupSubastaFinal, setMostrarPopupSubastaFinal] =
+    useState(false);
 
   const [mostrarSelectorDevolver, setMostrarSelectorDevolver] = useState(false);
   const [alertaSuperior, setAlertaSuperior] = useState(null);
@@ -185,6 +188,54 @@ export default function TableroConFondo({
       }
     } catch (error) {
       console.error("❌ Error al tirar desde la cárcel:", error);
+    }
+  };
+
+  const aceptarOferta = async (oferta) => {
+    try {
+      console.log("✅ Oferta aceptada:", oferta);
+
+      const res = await fetch(
+        "http://localhost:8081/api/propiedadPartida/transferir",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            propiedadId: subastaLanzada.propiedadPartidaId,
+            compradorId: oferta.jugadorId,
+            vendedorId: subastaLanzada.duenoId,
+            cantidad: oferta.cantidad,
+          }),
+        }
+      );
+
+      if (!res.ok) {
+        throw new Error("Error al transferir la propiedad");
+      }
+
+      const resultado = await res.text();
+      console.log("🎯 Resultado transferencia:", resultado);
+      alert(resultado);
+
+      // 🔁 Refrescar jugadores y propiedades
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+      setJugadores(nuevos);
+
+      const props = await fetch(
+        `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+      ).then((r) => r.json());
+      setPropiedadesJugador(props);
+    } catch (err) {
+      console.error("❌ Error al aceptar oferta:", err);
+      alert("Error al aceptar oferta");
+    } finally {
+      setMostrarPopupSubastaFinal(false);
+      setTimeout(() => {
+        setSubastaLanzada(null);
+        localStorage.removeItem("subastaLanzada");
+      }, 300);
     }
   };
 
@@ -307,6 +358,64 @@ export default function TableroConFondo({
       console.error("❌ Error al usar tarjeta:", error);
     }
   };
+
+  useEffect(() => {
+    if (subastaLanzada) {
+      localStorage.setItem("subastaLanzada", JSON.stringify(subastaLanzada));
+    } else {
+      localStorage.removeItem("subastaLanzada");
+    }
+  }, [subastaLanzada]);
+
+  useEffect(() => {
+    if (
+      subastaLanzada &&
+      jugadorActual &&
+      subastaLanzada.duenoId === jugadorActual.id &&
+      subastaLanzada.ofertas.length > 0
+    ) {
+      setMostrarPopupSubastaFinal(true);
+    } else {
+      setMostrarPopupSubastaFinal(false);
+    }
+  }, [subastaLanzada, jugadorActual]);
+
+  useEffect(() => {
+    // 🔁 Forzar recarga desde localStorage al cambiar de jugador
+    const subastaGuardada = localStorage.getItem("subastaLanzada");
+    if (subastaGuardada) {
+      try {
+        const subasta = JSON.parse(subastaGuardada);
+        setSubastaLanzada(subasta);
+      } catch (e) {
+        console.error("❌ Error al parsear subasta guardada:", e);
+      }
+    }
+  }, [jugadorActual]);
+
+  useEffect(() => {
+    const subastaGuardada = localStorage.getItem("subastaLanzada");
+    if (subastaGuardada) {
+      try {
+        setSubastaLanzada(JSON.parse(subastaGuardada));
+      } catch (e) {
+        console.error("❌ Error al leer subasta guardada:", e);
+      }
+    }
+  }, []);
+
+  useEffect(() => {
+    // 🔁 Forzar recarga desde localStorage al cambiar de jugador
+    const subastaGuardada = localStorage.getItem("subastaLanzada");
+    if (subastaGuardada) {
+      try {
+        const subasta = JSON.parse(subastaGuardada);
+        setSubastaLanzada(subasta);
+      } catch (e) {
+        console.error("❌ Error al parsear subasta guardada:", e);
+      }
+    }
+  }, [jugadorActual]);
 
   useEffect(() => {
     if (!partidaId) return;
@@ -1337,7 +1446,8 @@ export default function TableroConFondo({
               onClick={() => {
                 setSubastaLanzada({
                   propiedad: subastaActiva.propiedad,
-                  duenoId: subastaActiva.dueno.id, // Asume que subastaActiva tiene info del dueño
+                  propiedadPartidaId: subastaActiva.id, // ✅ añadir esto
+                  duenoId: jugadorActual.id,
                   minimo: parseInt(precioMinimo),
                   ofertas: [],
                 });
@@ -1368,7 +1478,9 @@ export default function TableroConFondo({
         jugadorActual.id !== subastaLanzada.duenoId &&
         !subastaLanzada.ofertas.some(
           (oferta) => oferta.jugadorId === jugadorActual.id
-        ) && (
+        ) &&
+        (console.log("🔁 Mostrar panel de puja para:", jugadorActual.nombre),
+        (
           <div className="popup-subasta">
             <h3
               className={`titulo-propiedad color-${
@@ -1394,10 +1506,20 @@ export default function TableroConFondo({
                     nombre: jugadorActual.nombre,
                     cantidad: parseInt(precioMinimo),
                   };
-                  setSubastaLanzada((prev) => ({
-                    ...prev,
-                    ofertas: [...prev.ofertas, nuevaOferta],
-                  }));
+                  setSubastaLanzada((prev) => {
+                    const actualizada = {
+                      ...prev,
+                      ofertas: [...prev.ofertas, nuevaOferta],
+                    };
+                    localStorage.setItem(
+                      "subastaLanzada",
+                      JSON.stringify(actualizada)
+                    );
+                    return actualizada;
+                  });
+                  setMensajeOferta("✅ Oferta enviada correctamente");
+                  setTimeout(() => setMensajeOferta(""), 2500);
+
                   setPrecioMinimo("");
                 }}
               >
@@ -1405,7 +1527,58 @@ export default function TableroConFondo({
               </button>
             </div>
           </div>
-        )}
+        ))}
+
+      {mostrarPopupSubastaFinal && subastaLanzada?.propiedad && (
+        <div className="popup-subasta">
+          <h3
+            className={`titulo-propiedad color-${
+              casillasInfo.find((c) => c.id === subastaLanzada.propiedad.id)
+                ?.color || "gris"
+            }`}
+          >
+            Ofertas por: {subastaLanzada.propiedad.nombre}
+          </h3>
+
+          {/* 🔍 Aquí empieza el mapa de ofertas */}
+          {subastaLanzada.ofertas.map((oferta, index) => {
+            const jugador = jugadores.find((j) => j.id === oferta.jugadorId);
+            const nombreMostrado =
+              jugador?.nombre || `Jugador ${oferta.jugadorId}`;
+
+            return (
+              <div
+                key={index}
+                className="oferta-subasta"
+                style={{ color: "black", marginBottom: "10px" }}
+              >
+                <p>
+                  💰 <strong>{nombreMostrado}</strong> ofrece{" "}
+                  <strong>{oferta.cantidad}€</strong>
+                </p>
+                <button onClick={() => aceptarOferta(oferta)}>
+                  ✅ Aceptar esta oferta
+                </button>
+              </div>
+            );
+          })}
+
+          <button
+            style={{ marginTop: "20px" }}
+            onClick={() => {
+              setMostrarPopupSubastaFinal(false); // cerrar primero
+              setTimeout(() => {
+                setSubastaLanzada(null);
+                localStorage.removeItem("subastaLanzada");
+              }, 200); // prevenir error en render
+            }}
+          >
+            ❌ Rechazar todas
+          </button>
+        </div>
+      )}
+
+      {mensajeOferta && <div className="mensaje-popup">🎯 {mensajeOferta}</div>}
 
       {propiedadEnConfirmacion && (
         <div className="popup-acciones-propiedad">

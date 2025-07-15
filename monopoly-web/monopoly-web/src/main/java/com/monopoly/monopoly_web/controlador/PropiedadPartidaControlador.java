@@ -6,6 +6,7 @@ package com.monopoly.monopoly_web.controlador;
 
 import com.monopoly.monopoly_web.dto.HipotecaDTO;
 import com.monopoly.monopoly_web.dto.PropiedadPartidaRespuestaDTO;
+import com.monopoly.monopoly_web.dto.TransferenciaDTO;
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Partida;
 import com.monopoly.monopoly_web.modelo.Propiedad;
@@ -184,6 +185,17 @@ public class PropiedadPartidaControlador {
             return ResponseEntity.ok("✅ Propiedad deshipotecada con éxito.");
         } catch (IllegalStateException e) {
             return ResponseEntity.badRequest().body("❌ " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/transferir")
+    public ResponseEntity<String> transferirPropiedad(@RequestBody TransferenciaDTO dto) {
+        try {
+            propiedadPartidaServicio.transferir(dto);
+            return ResponseEntity.ok("✅ Propiedad transferida correctamente.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("❌ Error al transferir: " + e.getMessage());
         }
     }
 }
