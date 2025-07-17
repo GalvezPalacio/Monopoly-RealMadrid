@@ -9,6 +9,7 @@ package com.monopoly.monopoly_web.servicio;
  * @author gabri
  */
 import com.monopoly.monopoly_web.dto.TransferenciaDTO;
+import com.monopoly.monopoly_web.dto.VentaBancoDTO;
 import com.monopoly.monopoly_web.modelo.Alquiler;
 import com.monopoly.monopoly_web.modelo.CostesConstruccion;
 import com.monopoly.monopoly_web.modelo.Jugador;
@@ -512,5 +513,20 @@ public class PropiedadPartidaServicio {
         propiedadPartidaRepositorio.save(propiedad);
 
         System.out.println("✅ Transferencia completada correctamente");
+    }
+
+    @Transactional
+    public void venderAlBanco(VentaBancoDTO dto) {
+        PropiedadPartida propiedad = propiedadPartidaRepositorio.findById(dto.getPropiedadId())
+                .orElseThrow(() -> new RuntimeException("Propiedad no encontrada"));
+
+        Jugador jugador = jugadorRepositorio.findById(dto.getJugadorId())
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+
+        propiedad.setDueno(null); // Borrar dueño
+        jugador.setDinero(jugador.getDinero() + dto.getCantidad());
+
+        jugadorRepositorio.save(jugador);
+        propiedadPartidaRepositorio.save(propiedad);
     }
 }

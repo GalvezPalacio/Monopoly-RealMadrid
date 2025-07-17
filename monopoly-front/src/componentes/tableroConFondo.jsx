@@ -73,6 +73,8 @@ export default function TableroConFondo({
   const [mensajeOferta, setMensajeOferta] = useState("");
   const [mostrarPopupSubastaFinal, setMostrarPopupSubastaFinal] =
     useState(false);
+  const [mostrarOpcionesVenta, setMostrarOpcionesVenta] = useState(false);
+  const [mostrarListaJugadores, setMostrarListaJugadores] = useState(false);
 
   const [mostrarSelectorDevolver, setMostrarSelectorDevolver] = useState(false);
   const [alertaSuperior, setAlertaSuperior] = useState(null);
@@ -670,6 +672,67 @@ export default function TableroConFondo({
       // setMostrarTarjetaReal(true); // NO lo pongas aquí, ya está activo
     } catch (e) {
       console.error("❌ Error al robar carta:", e);
+    }
+  };
+
+  const handleVentaBanco = () => {
+    console.log("🟢 CLICK DETECTADO EN VENDER AL BANCO");
+    console.log("📦 propiedadSeleccionada:", propiedadSeleccionada);
+    if (!propiedadSeleccionada) return;
+
+    const precioVenta = Math.floor(propiedadSeleccionada.propiedad.precio / 2);
+    const confirmacion = window.confirm(
+      `¿Seguro que quieres vender "${propiedadSeleccionada.propiedad.nombre}" al banco por ${precioVenta}€?`
+    );
+
+    if (confirmacion) {
+      setSuprimirMensajeTurno(true); // 🔕 evita mensaje de turno innecesario
+
+      const dto = {
+        propiedadId: propiedadSeleccionada.id,
+        jugadorId: jugadorActual.id,
+        cantidad: precioVenta,
+      };
+
+      fetch("http://localhost:8081/api/propiedadPartida/vender-banco", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(dto),
+      })
+        .then(async (res) => {
+          const mensaje = await res.text();
+          if (!res.ok) throw new Error(mensaje);
+
+          alert("✅ " + mensaje);
+
+          // 🔄 actualizar estado de jugadores y propiedades
+          const nuevos = await fetch(
+            `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+          ).then((r) => r.json());
+          setJugadores(nuevos);
+
+          const props = await fetch(
+            `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+          ).then((r) => r.json());
+          setPropiedadesJugador(props);
+
+          setPropiedadEnAccion(null);
+
+          // 🟢 cerrar todos los menús
+          setPropiedadSeleccionada(null); // primero anulamos
+          setMostrarTarjetaReal(false); // después ocultamos el menú
+          setMostrarOpcionesVenta(false);
+
+          // 🟢 permitir mensajes de turno otra vez (tras un breve retardo)
+          setTimeout(() => setSuprimirMensajeTurno(false), 300);
+        })
+        .catch((err) => {
+          console.error("❌ Error al vender al banco:", err);
+          alert("Error al vender al banco");
+          setSuprimirMensajeTurno(false); // liberar también en error
+        });
     }
   };
 
@@ -1402,6 +1465,15 @@ export default function TableroConFondo({
             >
               🛎️ Subastar
             </button>
+            <button
+              onClick={() => {
+                setPropiedadSeleccionada(propiedadEnAccion); // ← Aquí debes pasar la propiedad correcta
+                console.log("📦 propiedadEnAccion:", propiedadEnAccion);
+                setMostrarOpcionesVenta(true);
+              }}
+            >
+              💸 Vender
+            </button>
             <button>🤝 Trueque</button>
             <button>🏠 Vender casa</button>
             <button>🏨 Vender hotel</button>
@@ -1471,7 +1543,13 @@ export default function TableroConFondo({
         (console.log("🔁 Mostrar panel de puja para:", jugadorActual.nombre),
         (
           <div className="popup-subasta">
-            <p style={{ marginBottom: "10px", fontWeight: "bold", color: "black" }}>
+            <p
+              style={{
+                marginBottom: "10px",
+                fontWeight: "bold",
+                color: "black",
+              }}
+            >
               {jugadores.find((j) => j.id === subastaLanzada.duenoId)?.nombre ||
                 "Un jugador"}{" "}
               ha lanzado esta propiedad a subasta con un precio mínimo de{" "}
@@ -1523,6 +1601,63 @@ export default function TableroConFondo({
             </div>
           </div>
         ))}
+
+      {mostrarListaJugadores && (
+        <div className="popup-jugadores">
+          <h3>
+            ¿A qué jugador deseas vender{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {propiedadSeleccionada?.nombre}
+            </span>
+            ?
+          </h3>
+
+          {jugadores
+            .filter((j) => j.id !== jugadorActual?.id)
+            .map((jugador) => (
+              <button
+                key={jugador.id}
+                onClick={() => {
+                  alert(`Venta directa a ${jugador.nombre} (pendiente lógica)`);
+                  setMostrarListaJugadores(false);
+                }}
+              >
+                {jugador.nombre}
+              </button>
+            ))}
+
+          <button onClick={() => setMostrarListaJugadores(false)}>
+            ❌ Cancelar
+          </button>
+        </div>
+      )}
+
+      {mostrarOpcionesVenta && (
+        <div className="popup-venta popup-opciones">
+          <h3 style={{ marginBottom: "15px" }}>
+            ¿Cómo deseas vender{" "}
+            <span style={{ fontWeight: "bold" }}>
+              {propiedadSeleccionada?.nombre}
+            </span>
+            ?
+          </h3>
+
+          <button onClick={handleVentaBanco}>🏦 Vender al banco</button>
+
+          <button
+            onClick={() => {
+              setMostrarListaJugadores(true);
+              setMostrarOpcionesVenta(false);
+            }}
+          >
+            👤 Vender a un jugador
+          </button>
+
+          <button onClick={() => setMostrarOpcionesVenta(false)}>
+            ❌ Cancelar
+          </button>
+        </div>
+      )}
 
       {mostrarPopupSubastaFinal && subastaLanzada?.propiedad && (
         <div className="popup-subasta">

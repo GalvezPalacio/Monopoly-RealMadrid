@@ -839,3 +839,32 @@ body {
   color: #222;
   box-shadow: 0 0 10px rgba(0,0,0,0.3);
 }
+.popup-opciones {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  background-color: white;
+  border-radius: 15px;
+  padding: 20px;
+  box-shadow: 0 0 10px #00000066;
+  z-index: 10000;
+  width: 300px;
+  text-align: center;
+}
+.popup-opciones button {
+  display: block;
+  width: 100%;
+  margin: 10px 0;
+  padding: 10px;
+  border: none;
+  border-radius: 8px;
+  background-color: #f5f5f5;
+  font-size: 16px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.popup-opciones button:hover {
+  background-color: #ddd;
+}

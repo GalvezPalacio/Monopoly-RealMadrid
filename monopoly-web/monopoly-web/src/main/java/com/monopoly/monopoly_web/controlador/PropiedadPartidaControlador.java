@@ -7,6 +7,7 @@ package com.monopoly.monopoly_web.controlador;
 import com.monopoly.monopoly_web.dto.HipotecaDTO;
 import com.monopoly.monopoly_web.dto.PropiedadPartidaRespuestaDTO;
 import com.monopoly.monopoly_web.dto.TransferenciaDTO;
+import com.monopoly.monopoly_web.dto.VentaBancoDTO;
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Partida;
 import com.monopoly.monopoly_web.modelo.Propiedad;
@@ -196,6 +197,17 @@ public class PropiedadPartidaControlador {
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
                     .body("❌ Error al transferir: " + e.getMessage());
+        }
+    }
+
+    @PostMapping("/vender-banco")
+    public ResponseEntity<String> venderAlBanco(@RequestBody VentaBancoDTO dto) {
+        try {
+            propiedadPartidaServicio.venderAlBanco(dto);
+            return ResponseEntity.ok("Venta realizada");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("Error al vender al banco: " + e.getMessage());
         }
     }
 }
