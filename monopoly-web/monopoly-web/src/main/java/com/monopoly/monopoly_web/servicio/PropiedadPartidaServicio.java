@@ -412,22 +412,8 @@ public class PropiedadPartidaServicio {
             throw new IllegalStateException("Esta propiedad ya está hipotecada.");
         }
 
-        if (propiedad.getCasas() > 0 || propiedad.isHotel()) {
-            throw new IllegalStateException("No se puede hipotecar una propiedad con casas u hotel.");
-        }
-
-        // Comprobación de grupo
-        String colorGrupo = propiedad.getPropiedad().getGrupoColor();
-        Long partidaId = propiedad.getPartida().getId();
-
-        List<PropiedadPartida> grupo = propiedadPartidaRepositorio
-                .findByPartidaIdAndPropiedad_GrupoColor(partidaId, colorGrupo);
-
-        boolean grupoConConstrucciones = grupo.stream()
-                .anyMatch(p -> p.getCasas() > 0 || p.isHotel());
-
-        if (grupoConConstrucciones) {
-            throw new IllegalStateException("No se puede hipotecar: hay construcciones en el grupo.");
+        if (grupoTieneConstrucciones(propiedad)) {
+            throw new IllegalStateException("No se puede hipotecar: hay construcciones en esta propiedad o en su grupo.");
         }
 
         propiedad.setHipotecada(true);
@@ -523,10 +509,32 @@ public class PropiedadPartidaServicio {
         Jugador jugador = jugadorRepositorio.findById(dto.getJugadorId())
                 .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
 
+        // ❌ Verificamos si tiene construcciones o grupo con construcciones
+        if (grupoTieneConstrucciones(propiedad)) {
+            throw new IllegalStateException("No se puede vender: la propiedad o su grupo tienen construcciones.");
+        }
+
         propiedad.setDueno(null); // Borrar dueño
         jugador.setDinero(jugador.getDinero() + dto.getCantidad());
 
         jugadorRepositorio.save(jugador);
         propiedadPartidaRepositorio.save(propiedad);
+    }
+
+    public boolean grupoTieneConstrucciones(PropiedadPartida propiedad) {
+        // Verifica si la propiedad tiene casas u hotel
+        if (propiedad.getCasas() > 0 || propiedad.isHotel()) {
+            return true;
+        }
+
+        // Buscar propiedades del mismo grupo
+        String colorGrupo = propiedad.getPropiedad().getGrupoColor();
+        Long partidaId = propiedad.getPartida().getId();
+
+        List<PropiedadPartida> grupo = propiedadPartidaRepositorio
+                .findByPartidaIdAndPropiedad_GrupoColor(partidaId, colorGrupo);
+
+        // Verifica si alguna del grupo tiene construcciones
+        return grupo.stream().anyMatch(p -> p.getCasas() > 0 || p.isHotel());
     }
 }

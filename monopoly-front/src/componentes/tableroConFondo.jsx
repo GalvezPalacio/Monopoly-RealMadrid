@@ -75,6 +75,7 @@ export default function TableroConFondo({
     useState(false);
   const [mostrarOpcionesVenta, setMostrarOpcionesVenta] = useState(false);
   const [mostrarListaJugadores, setMostrarListaJugadores] = useState(false);
+  const [modoVenta, setModoVenta] = useState(false);
 
   const [mostrarSelectorDevolver, setMostrarSelectorDevolver] = useState(false);
   const [alertaSuperior, setAlertaSuperior] = useState(null);
@@ -724,14 +725,15 @@ export default function TableroConFondo({
           setPropiedadSeleccionada(null); // primero anulamos
           setMostrarTarjetaReal(false); // después ocultamos el menú
           setMostrarOpcionesVenta(false);
+          setModoVenta(false);
 
           // 🟢 permitir mensajes de turno otra vez (tras un breve retardo)
           setTimeout(() => setSuprimirMensajeTurno(false), 300);
         })
         .catch((err) => {
           console.error("❌ Error al vender al banco:", err);
-          alert("Error al vender al banco");
-          setSuprimirMensajeTurno(false); // liberar también en error
+          alert("❌ " + err.message); // ✅ muestra el mensaje real que viene del backend
+          setSuprimirMensajeTurno(false);
         });
     }
   };
@@ -1226,7 +1228,7 @@ export default function TableroConFondo({
         onUsarTarjetaCarcel={usarTarjetaCarcel}
       />
 
-      {propiedadSeleccionada && (
+      {propiedadSeleccionada && !modoVenta && (
         <TarjetaPropiedad
           propiedad={propiedadSeleccionada}
           tipoEspecial={tipoMensaje} // nuevo
@@ -1467,8 +1469,9 @@ export default function TableroConFondo({
             </button>
             <button
               onClick={() => {
+                setModoVenta(true);
                 setPropiedadSeleccionada(propiedadEnAccion); // ← Aquí debes pasar la propiedad correcta
-                console.log("📦 propiedadEnAccion:", propiedadEnAccion);
+                setMostrarTarjetaReal(false);
                 setMostrarOpcionesVenta(true);
               }}
             >
@@ -1653,7 +1656,13 @@ export default function TableroConFondo({
             👤 Vender a un jugador
           </button>
 
-          <button onClick={() => setMostrarOpcionesVenta(false)}>
+          <button
+            onClick={() => {
+              setMostrarOpcionesVenta(false);
+              setModoVenta(false); // ✅ salimos de modo venta
+              setPropiedadSeleccionada(null); // ✅ limpiamos propiedad para evitar que aparezca popup
+            }}
+          >
             ❌ Cancelar
           </button>
         </div>
