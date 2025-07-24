@@ -515,7 +515,22 @@ public class PropiedadPartidaServicio {
         }
 
         propiedad.setDueno(null); // Borrar dueño
-        jugador.setDinero(jugador.getDinero() + dto.getCantidad());
+        int precioOriginal = propiedad.getPropiedad().getPrecio();
+        int cantidadFinal;
+
+        if (propiedad.isHipotecada()) {
+            cantidadFinal = (int) Math.floor(precioOriginal * 0.4); // 40%
+        } else {
+            cantidadFinal = (int) Math.floor(precioOriginal * 0.5); // 50%
+        }
+
+        jugador.setDinero(jugador.getDinero() + cantidadFinal);
+
+        // 🧹 Resetear propiedad
+        propiedad.setDueno(null);
+        propiedad.setCasas(0);
+        propiedad.setHotel(false);
+        propiedad.setHipotecada(false);
 
         jugadorRepositorio.save(jugador);
         propiedadPartidaRepositorio.save(propiedad);

@@ -681,7 +681,11 @@ export default function TableroConFondo({
     console.log("📦 propiedadSeleccionada:", propiedadSeleccionada);
     if (!propiedadSeleccionada) return;
 
-    const precioVenta = Math.floor(propiedadSeleccionada.propiedad.precio / 2);
+    const estaHipotecada = propiedadSeleccionada.hipotecada;
+    const precioOriginal = propiedadSeleccionada.propiedad.precio;
+    const precioVenta = Math.floor(
+      precioOriginal * (estaHipotecada ? 0.4 : 0.5)
+    );
     const confirmacion = window.confirm(
       `¿Seguro que quieres vender "${propiedadSeleccionada.propiedad.nombre}" al banco por ${precioVenta}€?`
     );
@@ -944,10 +948,20 @@ export default function TableroConFondo({
       console.error("❌ Error al construir hotel:", err);
     }
   };
+
+  // 🟡 1. Primero calcula los grupos con hipoteca
+  const gruposConHipoteca = new Set(
+    propiedadesJugador
+      .filter((p) => p.hipotecada)
+      .map((p) => p.propiedad.grupoColor)
+  );
+
+  // 🟢 2. Luego calcula si hay alguna propiedad válida para construir casa
   const hayPropiedadesParaConstruirCasa = propiedadesJugador.some(
     (p) =>
       p.propiedad.tipo === "propiedad" &&
       opcionesConstruccion.gruposConCasas.includes(p.propiedad.grupoColor) &&
+      !gruposConHipoteca.has(p.propiedad.grupoColor) && // ❌ si hay hipoteca, no vale
       p.casas < 4 &&
       !p.hotel
   );
@@ -1247,10 +1261,13 @@ export default function TableroConFondo({
         <SelectorConstruccion
           propiedades={propiedadesJugador.filter(
             (p) =>
-              p.propiedad.tipo === "propiedad" && // ✅ Solo calles normales
+              p.propiedad.tipo === "propiedad" &&
               opcionesConstruccion.gruposConCasas.includes(
                 p.propiedad.grupoColor
-              )
+              ) &&
+              !gruposConHipoteca.has(p.propiedad.grupoColor) &&
+              p.casas < 4 &&
+              !p.hotel
           )}
           tipo="casa"
           onSeleccionar={async (propiedadId) => {
@@ -1267,7 +1284,9 @@ export default function TableroConFondo({
               p.propiedad.tipo === "propiedad" &&
               opcionesConstruccion.gruposConHotel.includes(
                 p.propiedad.grupoColor
-              )
+              ) &&
+              !gruposConHipoteca.has(p.propiedad.grupoColor) &&
+              p.hotel === false
           )}
           tipo="hotel"
           onSeleccionar={(id) => {
@@ -1461,6 +1480,23 @@ export default function TableroConFondo({
             </button>
             <button
               onClick={() => {
+                const grupoColor = propiedadEnAccion.propiedad.grupoColor;
+
+                const grupo = propiedadesJugador.filter(
+                  (p) => p.propiedad.grupoColor === grupoColor
+                );
+
+                const tieneConstruccion = grupo.some(
+                  (p) => p.casas > 0 || p.hotel
+                );
+
+                if (tieneConstruccion) {
+                  alert(
+                    "❌ No puedes subastar propiedades de un grupo con construcciones."
+                  );
+                  return;
+                }
+
                 setSubastaActiva(propiedadEnAccion);
                 setPropiedadEnAccion(null);
               }}
