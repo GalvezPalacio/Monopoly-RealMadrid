@@ -31,3 +31,48 @@ build/
 
 ### VS Code ###
 .vscode/
+
+# Archivos compilados
+*.class
+
+# Carpetas de compilación
+/build/
+/bin/
+/target/
+/dist/
+/nbbuild/
+/nbdist/
+**/src/main/**/build/
+/**/src/test/**/build/
+/**/src/main/**/target/
+/**/src/test/**/target/
+
+# NetBeans
+/nbproject/private/
+/.nb-gradle/
+
+# IntelliJ IDEA
+.idea/
+*.iws
+*.iml
+*.ipr
+
+# VSCode
+.vscode/
+
+# Archivos de entorno y configuración local
+.env
+application-local.properties
+
+# Archivos del sistema
+.DS_Store
+Thumbs.db
+
+# Spring Tool Suite (STS)
+.apt_generated
+.classpath
+.factorypath
+.project
+.settings
+.springBeans
+.sts4-cache
