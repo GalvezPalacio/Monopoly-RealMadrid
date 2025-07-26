@@ -24,6 +24,8 @@ Crea un nuevo jugador y lo asocia a una partida.
   "partidaId": 1
 }
 
+```
+
 ## 🧠 Partidas
 
 ### `POST /partidas`  
@@ -70,6 +72,8 @@ Aplica el efecto de la tarjeta robada sobre un jugador.
   "idJugador": 1,
   "idTarjeta": 3
 }
+
+```
 
 ## 🎲 Juego
 
