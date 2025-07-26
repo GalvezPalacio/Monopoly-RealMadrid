@@ -29,6 +29,8 @@ monopoly-web/
 ├── README.md                         ← Resumen general del proyecto y guía rápida
 └── LICENSE                           ← Licencia del proyecto
 
+```
+
 
 ## 🧩 Descripción de los paquetes principales
 
