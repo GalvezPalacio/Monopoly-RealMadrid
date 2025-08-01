@@ -79,7 +79,7 @@ Ahora mismo solo es en local, se tiene pensado poder configurar el juego online 
 
 ## 👨‍💻 Autor
 
-Desarrollado por **GabryDev** ([`@GalvezPalacio`](https://github.com/GalvezPalacio)) como proyecto personal y académico del Ciclo DAM.
+Desarrollado por **GabriDev** ([`@GalvezPalacio`](https://github.com/GalvezPalacio)) como proyecto personal y académico del Ciclo DAM.
 Si deseas usar este código o contribuir, por favor respeta los términos de la licencia.
 
 ---
