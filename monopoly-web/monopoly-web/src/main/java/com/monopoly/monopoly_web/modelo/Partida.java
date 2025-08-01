@@ -8,6 +8,7 @@ package com.monopoly.monopoly_web.modelo;
  *
  * @author gabri
  */
+import com.monopoly.monopoly_web.dto.VentaPendienteDTO;
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -29,6 +30,9 @@ public class Partida {
 
     private int ultimaTiradaDado1;
     private int ultimaTiradaDado2;
+
+    @Embedded
+    private VentaPendienteDTO ventaPendiente;
 
     // Constructor vacío
     public Partida() {
@@ -90,6 +94,13 @@ public class Partida {
     public void setUltimaTiradaDado2(int ultimaTiradaDado2) {
         this.ultimaTiradaDado2 = ultimaTiradaDado2;
     }
-    
+
+    public VentaPendienteDTO getVentaPendiente() {
+        return ventaPendiente;
+    }
+
+    public void setVentaPendiente(VentaPendienteDTO ventaPendiente) {
+        this.ventaPendiente = ventaPendiente;
+    }
 
 }

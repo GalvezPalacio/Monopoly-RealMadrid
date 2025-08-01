@@ -76,6 +76,49 @@ export default function TableroConFondo({
   const [mostrarOpcionesVenta, setMostrarOpcionesVenta] = useState(false);
   const [mostrarListaJugadores, setMostrarListaJugadores] = useState(false);
   const [modoVenta, setModoVenta] = useState(false);
+  const [mostrarVentaAJugador, setMostrarVentaAJugador] = useState(false);
+  const [cantidadVenta, setCantidadVenta] = useState("");
+  const [propuestaRecibida, setPropuestaRecibida] = useState(null);
+
+  const seleccionarJugadorVenta = (id) => {
+    if (!cantidadVenta || isNaN(cantidadVenta) || Number(cantidadVenta) <= 0) {
+      alert("Introduce una cantidad válida para vender la propiedad.");
+      return;
+    }
+
+    const dto = {
+      propiedadId: propiedadSeleccionada.id,
+      compradorId: id,
+      vendedorId: jugadorActual.id,
+      cantidad: Number(cantidadVenta),
+    };
+
+    fetch("http://localhost:8081/api/partidas/venta-pendiente", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(dto),
+    })
+      .then(async (res) => {
+        const mensaje = await res.text();
+        if (!res.ok) throw new Error(mensaje);
+        alert(
+          "✅ Propuesta enviada. Pendiente de confirmación por el jugador."
+        );
+        setCantidadVenta("");
+        setMostrarVentaAJugador(false);
+        setMostrarTarjetaReal(false);
+        setModoVenta(false);
+
+        const casillaActual = casillasInfo[jugadorActual.posicion];
+        setPropiedadSeleccionada(casillaActual);
+      })
+      .catch((err) => {
+        console.error("❌ Error al enviar propuesta:", err);
+        alert(err.message);
+      });
+  };
 
   const [mostrarSelectorDevolver, setMostrarSelectorDevolver] = useState(false);
   const [alertaSuperior, setAlertaSuperior] = useState(null);
@@ -464,6 +507,24 @@ export default function TableroConFondo({
       return () => clearTimeout(timeout);
     }
   }, [turnoRecienCambiado, jugadores, suprimirMensajeTurno]);
+
+  useEffect(() => {
+    if (!jugadorActual) return;
+
+    fetch(
+      `http://localhost:8081/api/partidas/venta-pendiente/${jugadorActual.id}`
+    )
+      .then((res) => {
+        if (!res.ok) throw new Error("Sin propuesta");
+        return res.json();
+      })
+      .then((data) => {
+        setPropuestaRecibida(data);
+      })
+      .catch(() => {
+        setPropuestaRecibida(null); // limpia si no hay propuesta
+      });
+  }, [jugadorActual]);
 
   const tirarDado = async () => {
     if (mostrarBienvenida) setMostrarBienvenida(false);
@@ -1641,32 +1702,38 @@ export default function TableroConFondo({
           </div>
         ))}
 
-      {mostrarListaJugadores && (
-        <div className="popup-jugadores">
-          <h3>
-            ¿A qué jugador deseas vender{" "}
-            <span style={{ fontWeight: "bold" }}>
-              {propiedadSeleccionada?.nombre}
-            </span>
-            ?
-          </h3>
-
-          {jugadores
-            .filter((j) => j.id !== jugadorActual?.id)
-            .map((jugador) => (
-              <button
-                key={jugador.id}
-                onClick={() => {
-                  alert(`Venta directa a ${jugador.nombre} (pendiente lógica)`);
-                  setMostrarListaJugadores(false);
-                }}
-              >
-                {jugador.nombre}
-              </button>
-            ))}
-
-          <button onClick={() => setMostrarListaJugadores(false)}>
-            ❌ Cancelar
+      {mostrarVentaAJugador && (
+        <div className="popup popup-vender-jugador">
+          <h2>¿A qué jugador deseas vender?</h2>
+          <div className="jugadores-disponibles">
+            <div className="bloque-cantidad">
+              <label htmlFor="cantidadVenta">¿Por qué cantidad?</label>
+              <input
+                type="number"
+                id="cantidadVenta"
+                value={cantidadVenta}
+                onChange={(e) => setCantidadVenta(e.target.value)}
+                className="input-cantidad"
+                min="1"
+              />
+            </div>
+            {jugadores
+              .filter((j) => j.id !== jugadorActual.id)
+              .map((j) => (
+                <button
+                  key={j.id}
+                  className="boton-jugador"
+                  onClick={() => seleccionarJugadorVenta(j.id)}
+                >
+                  {j.nombre}
+                </button>
+              ))}
+          </div>
+          <button
+            className="boton-cancelar"
+            onClick={() => setMostrarVentaAJugador(false)}
+          >
+            Cancelar
           </button>
         </div>
       )}
@@ -1685,7 +1752,7 @@ export default function TableroConFondo({
 
           <button
             onClick={() => {
-              setMostrarListaJugadores(true);
+              setMostrarVentaAJugador(true);
               setMostrarOpcionesVenta(false);
             }}
           >
@@ -1701,6 +1768,104 @@ export default function TableroConFondo({
           >
             ❌ Cancelar
           </button>
+        </div>
+      )}
+
+      {propuestaRecibida && (
+        <div className="popup-propuesta">
+          <h3>📜 Nueva propuesta de compra</h3>
+          <p>
+            {propuestaRecibida.duenoNombre} te ofrece{" "}
+            <strong>{propuestaRecibida.propiedadNombre}</strong> por{" "}
+            <strong>{propuestaRecibida.cantidad}€</strong>.
+          </p>
+          <div className="botones-popup">
+            <button
+              onClick={async () => {
+                try {
+                  const res = await fetch(
+                    "http://localhost:8081/api/propiedadPartida/transferir",
+                    {
+                      method: "POST",
+                      headers: {
+                        "Content-Type": "application/json",
+                      },
+                      body: JSON.stringify({
+                        propiedadId: propuestaRecibida.propiedadId,
+                        compradorId: propuestaRecibida.compradorId,
+                        vendedorId: propuestaRecibida.vendedorId,
+                        cantidad: propuestaRecibida.cantidad,
+                      }),
+                    }
+                  );
+
+                  const mensaje = await res.text();
+                  alert(mensaje);
+
+                  // 🔁 refrescar jugadores y propiedades
+                  const nuevos = await fetch(
+                    `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+                  ).then((r) => r.json());
+                  setJugadores(nuevos);
+
+                  const props = await fetch(
+                    `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+                  ).then((r) => r.json());
+                  setPropiedadesJugador(props);
+
+                  setPropiedadSeleccionada(null);
+                  setMostrarTarjetaReal(false);
+                  setModoVenta(false);
+
+                  const casillaActual = casillasInfo[jugadorActual.posicion];
+                  setPropiedadSeleccionada(casillaActual);
+                  await fetch(
+                    "http://localhost:8081/api/partidas/venta-pendiente",
+                    {
+                      method: "DELETE",
+                      headers: { "Content-Type": "application/json" },
+                      body: JSON.stringify({
+                        compradorId: propuestaRecibida.compradorId,
+                      }),
+                    }
+                  );
+                  localStorage.removeItem("ventaPendiente");
+                  setPropuestaRecibida(null);
+                } catch (err) {
+                  console.error("❌ Error al aceptar propuesta:", err);
+                  alert("Error al aceptar propuesta");
+                }
+              }}
+            >
+              ✅ Aceptar
+            </button>
+            <button
+              onClick={async () => {
+                await fetch(
+                  "http://localhost:8081/api/partidas/venta-pendiente",
+                  {
+                    method: "DELETE",
+                    headers: {
+                      "Content-Type": "application/json",
+                    },
+                    body: JSON.stringify({
+                      compradorId: propuestaRecibida.compradorId,
+                    }),
+                  }
+                );
+                localStorage.removeItem("ventaPendiente");
+                setPropiedadSeleccionada(null);
+                setMostrarTarjetaReal(false);
+                setModoVenta(false);
+
+                const casillaActual = casillasInfo[jugadorActual.posicion];
+                setPropiedadSeleccionada(casillaActual);
+                setPropuestaRecibida(null);
+              }}
+            >
+              ❌ Rechazar
+            </button>
+          </div>
         </div>
       )}
 
