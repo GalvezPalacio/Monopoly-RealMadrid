@@ -8,6 +8,7 @@ package com.monopoly.monopoly_web.controlador;
  *
  * @author gabri
  */
+import com.monopoly.monopoly_web.dto.TruequeDTO;
 import com.monopoly.monopoly_web.dto.VentaPendienteDTO;
 import com.monopoly.monopoly_web.modelo.Jugador;
 import com.monopoly.monopoly_web.modelo.Partida;
@@ -19,6 +20,7 @@ import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
 import com.monopoly.monopoly_web.servicio.PartidaServicio;
 import com.monopoly.monopoly_web.servicio.PropiedadPartidaServicio;
+import com.monopoly.monopoly_web.servicio.TruequePendienteServicio;
 import com.monopoly.monopoly_web.servicio.VentaPendienteServicio;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.EntityNotFoundException;
@@ -56,6 +58,9 @@ public class PartidaControlador {
 
     @Autowired
     private PropiedadPartidaRepositorio propiedadPartidaRepositorio;
+
+    @Autowired
+    private TruequePendienteServicio truequePendienteServicio;
 
     @Autowired
     public PartidaControlador(PartidaServicio partidaServicio) {
@@ -276,5 +281,26 @@ public class PartidaControlador {
         partidaRepositorio.save(partida);
 
         return ResponseEntity.ok("Propuesta cancelada");
+    }
+
+    @PostMapping("/trueque-pendiente")
+    public ResponseEntity<?> guardarTrueque(@RequestBody TruequeDTO dto) {
+        truequePendienteServicio.guardar(dto);
+        return ResponseEntity.ok("Propuesta de trueque enviada");
+    }
+
+    @GetMapping("/trueque-pendiente/{receptorId}")
+    public ResponseEntity<?> obtenerTrueque(@PathVariable Long receptorId) {
+        TruequeDTO dto = truequePendienteServicio.obtenerSiEsPara(receptorId);
+        if (dto == null) {
+            return ResponseEntity.notFound().build();
+        }
+        return ResponseEntity.ok(dto);
+    }
+
+    @DeleteMapping("/trueque-pendiente/{ofertanteId}")
+    public ResponseEntity<?> borrarTrueque(@PathVariable Long ofertanteId) {
+        truequePendienteServicio.borrarSiEsDe(ofertanteId);
+        return ResponseEntity.ok("Propuesta de trueque eliminada");
     }
 }
