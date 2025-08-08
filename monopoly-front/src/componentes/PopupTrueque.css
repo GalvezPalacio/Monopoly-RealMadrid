@@ -1,0 +1,143 @@
+.popup-trueque {
+  color: black;
+  position: fixed;
+  top: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 4px solid #00008b;
+  border-radius: 12px;
+  padding: 2rem;
+  z-index: 12000;
+  width: 450px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.contenedor-trueque h2,
+h3 {
+  text-align: center;
+  margin: 0.5rem 0;
+}
+
+.lista-ofrecidas,
+.lista-pedidas {
+  background: #f0f0f0;
+  padding: 10px;
+  min-height: 60px;
+  margin-bottom: 1rem;
+  border-radius: 8px;
+  max-height: 50px;
+  /* o el valor que prefieras */
+  overflow-y: auto;
+  padding-right: 5px;
+  /* opcional, para que no se corte el contenido */
+}
+
+.input-dinero {
+  width: 100%;
+  padding: 6px;
+  margin-top: 4px;
+  margin-bottom: 12px;
+}
+
+.btn-propias,
+.btn-jugador {
+  width: 100%;
+  margin-bottom: 0.5rem;
+  padding: 0.5rem;
+  background-color: #e0e0ff;
+  border: 1px solid #00008b;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.botones-finales {
+  display: flex;
+  justify-content: space-between;
+  margin-top: 1rem;
+}
+
+.btn-proponer {
+  background-color: #28a745;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+}
+
+.btn-cancelar {
+  background-color: #dc3545;
+  color: white;
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 8px;
+}
+
+.propiedad-item {
+  padding: 6px;
+  margin: 4px 0;
+  border: 1px solid #00008b;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+.item-base {
+  padding: 6px;
+  margin: 4px 0;
+  border: 1px solid #00008b;
+  border-radius: 6px;
+  cursor: pointer;
+}
+
+
+.propiedad-item.seleccionada {
+  background-color: #007bff;
+  color: white;
+}
+
+.dinero-ofrecido {
+  padding: 6px 12px;
+  margin-top: 4px;
+  background-color: white;
+  border: 2px solid #999;
+  border-radius: 6px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.dinero-pedido {
+  padding: 6px 12px;
+  margin-top: 4px;
+  background-color: white;
+  border: 2px dashed #444;
+  border-radius: 6px;
+  font-weight: bold;
+  text-align: center;
+}
+
+.lista-receptor {
+  max-height: 300px;
+  overflow-y: auto;
+  padding-right: 6px;
+}
+
+.btn-otro-jugador {
+  position: relative;
+  z-index: 9999;
+}
+
+.lista-propias,
+.lista-receptor {
+  max-height: 100px;
+  overflow-y: auto;
+  padding-right: 4px;
+}
+
+.color-marrón {
+  background-color: #a86b32;
+  color: white;
+}
+
+.color-celeste {
+  background-color: #6bd2f1;
+}

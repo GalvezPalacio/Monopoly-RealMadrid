@@ -210,4 +210,12 @@ public class PropiedadPartidaControlador {
                     .body("Error al vender al banco: " + e.getMessage());
         }
     }
+
+    @GetMapping("/partida/{partidaId}")
+    public List<PropiedadPartida> obtenerPropiedadesDeLaPartida(@PathVariable Long partidaId) {
+        Partida partida = partidaRepositorio.findById(partidaId)
+                .orElseThrow(() -> new ResponseStatusException(HttpStatus.NOT_FOUND, "Partida no encontrada"));
+
+        return propiedadPartidaRepositorio.findByPartida(partida);
+    }
 }

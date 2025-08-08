@@ -8,6 +8,7 @@ import fichasImagenes from "../datos/fichasImagenes";
 import SelectorConstruccion from "../componentes/SelectorConstructor";
 import TarjetaMensaje from "./TarjetaMensaje"; // Ajusta la ruta si es necesario
 import MiniTarjetaPropiedad from "./MiniTarjetaPropiedad";
+import PopupTrueque from "./PopupTrueque";
 
 export default function TableroConFondo({
   partidaId,
@@ -79,7 +80,8 @@ export default function TableroConFondo({
   const [mostrarVentaAJugador, setMostrarVentaAJugador] = useState(false);
   const [cantidadVenta, setCantidadVenta] = useState("");
   const [propuestaRecibida, setPropuestaRecibida] = useState(null);
-
+  const [mostrarPopupTrueque, setMostrarPopupTrueque] = useState(false);
+  const [propiedadesPartida, setPropiedadesPartida] = useState([]);
   const seleccionarJugadorVenta = (id) => {
     if (!cantidadVenta || isNaN(cantidadVenta) || Number(cantidadVenta) <= 0) {
       alert("Introduce una cantidad válida para vender la propiedad.");
@@ -454,6 +456,17 @@ export default function TableroConFondo({
 
   useEffect(() => {
     if (!partidaId) return;
+
+    // ✅ Paso 2: obtener TODAS las propiedades de la partida
+    fetch(`http://localhost:8081/api/propiedadPartida/partida/${partidaId}`)
+      .then((res) => res.json())
+      .then((data) => {
+        console.log("📦 Propiedades de la partida recibidas:", data);
+        setPropiedadesPartida(data); // 👈 asegúrate de haberlo declarado con useState
+      })
+      .catch((err) =>
+        console.error("❌ Error al obtener propiedades de la partida:", err)
+      );
 
     document.body.style.backgroundImage =
       'url("/fondo-monopoly-partida-4.jpeg")';
@@ -1574,7 +1587,9 @@ export default function TableroConFondo({
             >
               💸 Vender
             </button>
-            <button>🤝 Trueque</button>
+            <button onClick={() => setMostrarPopupTrueque(true)}>
+              🤝 Trueque
+            </button>
             <button>🏠 Vender casa</button>
             <button>🏨 Vender hotel</button>
             <button onClick={() => setPropiedadEnAccion(null)}>
@@ -1867,6 +1882,15 @@ export default function TableroConFondo({
             </button>
           </div>
         </div>
+      )}
+
+      {mostrarPopupTrueque && (
+        <PopupTrueque
+          jugadores={jugadores}
+          propiedades={propiedadesPartida} // ✅ TODAS las propiedades de la partida
+          jugadorActual={jugadorActual}
+          onClose={() => setMostrarPopupTrueque(false)}
+        />
       )}
 
       {mostrarPopupSubastaFinal && subastaLanzada?.propiedad && (
