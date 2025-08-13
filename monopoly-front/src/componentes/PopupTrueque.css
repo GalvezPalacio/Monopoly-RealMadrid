@@ -155,3 +155,7 @@ h3 {
   width: 450px;
   box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
 }
+.nombre-jugador {
+  color: #00008b;
+  font-weight: bold;
+}

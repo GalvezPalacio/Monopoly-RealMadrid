@@ -22,6 +22,7 @@ public class TruequeDTO {
     private List<Long> propiedadesPedidas; // IDs de propiedades del receptor
     private boolean pideTarjetaSalirCarcel;
     private int dineroPedido;
+    private String jugadorOfertanteNombre;
     
     // Getters y Setters
 
@@ -88,5 +89,14 @@ public class TruequeDTO {
     public void setDineroPedido(int dineroPedido) {
         this.dineroPedido = dineroPedido;
     }
+
+    public String getJugadorOfertanteNombre() {
+        return jugadorOfertanteNombre;
+    }
+
+    public void setJugadorOfertanteNombre(String jugadorOfertanteNombre) {
+        this.jugadorOfertanteNombre = jugadorOfertanteNombre;
+    }
+    
     
 }

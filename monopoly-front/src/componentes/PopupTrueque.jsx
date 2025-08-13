@@ -24,6 +24,8 @@ const PopupTrueque = ({
   const [mostrarListaReceptor, setMostrarListaReceptor] = useState(false);
   const [mostrarListaPropias, setMostrarListaPropias] = useState(false);
   const [propiedadesReceptor, setPropiedadesReceptor] = useState([]);
+  const [ofreceTarjeta, setOfreceTarjeta] = useState(false);
+  const [pideTarjeta, setPideTarjeta] = useState(false);
 
   const jugadoresDisponibles = jugadores.filter(
     (j) => j.id !== jugadorActual.id
@@ -54,10 +56,10 @@ const PopupTrueque = ({
       jugadorOfertanteId: jugadorActual.id,
       jugadorReceptorId: jugadorObjetivo.id,
       propiedadesOfrecidas,
-      ofreceTarjetaSalirCarcel: false,
+      ofreceTarjetaSalirCarcel: ofreceTarjeta,
       dineroOfrecido: parseInt(dineroOfrecido) || 0,
       propiedadesPedidas,
-      pideTarjetaSalirCarcel: false,
+      pideTarjetaSalirCarcel: pideTarjeta,
       dineroPedido: parseInt(dineroPedido) || 0,
     };
 
@@ -141,6 +143,18 @@ const PopupTrueque = ({
             {dineroOfrecido && (
               <div className="dinero-ofrecido">{dineroOfrecido} €</div>
             )}
+            {jugadorActual?.tieneTarjetaSalirCarcel && (
+              <div className="checkbox-trueque">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={ofreceTarjeta}
+                    onChange={(e) => setOfreceTarjeta(e.target.checked)}
+                  />
+                  Ofrecer tarjeta de “Salir de la cárcel”
+                </label>
+              </div>
+            )}
           </div>
 
           <label>
@@ -211,6 +225,18 @@ const PopupTrueque = ({
             {/* Mostrar dinero pedido si existe */}
             {dineroPedido && (
               <div className="dinero-pedido">{dineroPedido} €</div>
+            )}
+            {jugadorObjetivo?.tieneTarjetaSalirCarcel && (
+              <div className="checkbox-trueque">
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={pideTarjeta}
+                    onChange={(e) => setPideTarjeta(e.target.checked)}
+                  />
+                  Pedir tarjeta de “Salir de la cárcel”
+                </label>
+              </div>
             )}
           </div>
 

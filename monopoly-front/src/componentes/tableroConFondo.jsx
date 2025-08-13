@@ -62,7 +62,7 @@ export default function TableroConFondo({
   }, [jugadorActual]);
   const [mostrarPropiedades, setMostrarPropiedades] = useState(false);
 
-  const tieneTarjetaSalirCarcel = jugadorActual?.tieneTarjetaSalirCarcel === 1;
+  const tieneTarjetaSalirCarcel = !!jugadorActual?.tieneTarjetaSalirCarcel;
   const handleTogglePropiedades = () => {
     setMostrarPropiedades(!mostrarPropiedades);
   };

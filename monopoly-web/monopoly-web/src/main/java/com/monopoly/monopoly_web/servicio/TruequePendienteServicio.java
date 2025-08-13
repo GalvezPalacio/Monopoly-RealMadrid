@@ -69,6 +69,11 @@ public class TruequePendienteServicio {
             }
         }
 
+        // Guardar nombre del ofertante para mostrarlo en la propuesta
+        Jugador jugadorOfertante = jugadorRepositorio.findById(ofertanteId)
+                .orElseThrow(() -> new RuntimeException("Jugador ofertante no encontrado."));
+        dto.setJugadorOfertanteNombre(jugadorOfertante.getNombre());
+
         // Guardar propuesta
         truequesPendientes.put(dto.getJugadorReceptorId(), dto);
     }

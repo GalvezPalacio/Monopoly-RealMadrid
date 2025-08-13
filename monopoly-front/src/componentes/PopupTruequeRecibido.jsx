@@ -72,10 +72,15 @@ export default function PopupTruequeRecibido({
   return (
     <div className="popup-trueque-recibido">
       <div className="contenedor-trueque">
-        <h2>Propuesta de trueque</h2>
+        <h2>
+          Propuesta de trueque de{" "}
+          <span className="nombre-jugador">
+            {trueque?.jugadorOfertanteNombre}
+          </span>
+        </h2>
 
         <div className="seccion-ofrecidas">
-          <h3>Te ofrecen</h3>
+          <h3>Te ofrece</h3>
           <ul className="lista-ofrecidas">
             {listaOfrecidas.map((n, i) => (
               <li key={i} className="item-base">
@@ -94,7 +99,7 @@ export default function PopupTruequeRecibido({
         <hr />
 
         <div className="seccion-pedidas">
-          <h3>Y piden a cambio</h3>
+          <h3>Y pide a cambio</h3>
           <ul className="lista-pedidas">
             {listaPedidas.map((n, i) => (
               <li key={i} className="item-base">
