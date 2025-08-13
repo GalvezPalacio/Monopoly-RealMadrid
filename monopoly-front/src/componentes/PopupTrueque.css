@@ -141,3 +141,17 @@ h3 {
 .color-celeste {
   background-color: #6bd2f1;
 }
+.popup-trueque-recibido {
+  color: black;
+  position: fixed;
+  top: 3%;
+  left: 50%;
+  transform: translateX(-50%);
+  background: white;
+  border: 4px solid #00008b;
+  border-radius: 12px;
+  padding: 2rem;
+  z-index: 500; /* ✅ MÁS alto que el de propuesta */
+  width: 450px;
+  box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}

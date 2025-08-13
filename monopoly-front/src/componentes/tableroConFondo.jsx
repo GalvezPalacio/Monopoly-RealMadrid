@@ -9,6 +9,7 @@ import SelectorConstruccion from "../componentes/SelectorConstructor";
 import TarjetaMensaje from "./TarjetaMensaje"; // Ajusta la ruta si es necesario
 import MiniTarjetaPropiedad from "./MiniTarjetaPropiedad";
 import PopupTrueque from "./PopupTrueque";
+import PopupTruequeRecibido from "./PopupTruequeRecibido";
 
 export default function TableroConFondo({
   partidaId,
@@ -33,7 +34,21 @@ export default function TableroConFondo({
     gruposConCasas: [],
     gruposConHotel: [],
   });
+  // dentro de TableroConFondo
+  const cargarDatosPartida = async () => {
+    const nuevos = await fetch(
+      `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+    ).then((r) => r.json());
+    setJugadores(nuevos);
+
+    const props = await fetch(
+      `http://localhost:8081/api/propiedadPartida/partida/${partidaId}`
+    ).then((r) => r.json());
+    setPropiedadesPartida(props);
+  };
+
   const jugadorActual = jugadores.find((j) => j.turno);
+
   useEffect(() => {
     if (!jugadorActual) return;
 
@@ -82,6 +97,8 @@ export default function TableroConFondo({
   const [propuestaRecibida, setPropuestaRecibida] = useState(null);
   const [mostrarPopupTrueque, setMostrarPopupTrueque] = useState(false);
   const [propiedadesPartida, setPropiedadesPartida] = useState([]);
+  const [truequeRecibido, setTruequeRecibido] = useState(null);
+  const [jugadorObjetivo, setJugadorObjetivo] = useState(null);
   const seleccionarJugadorVenta = (id) => {
     if (!cantidadVenta || isNaN(cantidadVenta) || Number(cantidadVenta) <= 0) {
       alert("Introduce una cantidad válida para vender la propiedad.");
@@ -408,6 +425,41 @@ export default function TableroConFondo({
   };
 
   useEffect(() => {
+    if (!jugadorActual?.id) return;
+
+    const fetchTruequePendiente = async () => {
+      try {
+        const resp = await fetch(
+          `http://localhost:8081/api/trueque/pendiente/${jugadorActual.id}`
+        );
+        if (resp.status === 200) {
+          const data = await resp.json();
+          if (data && data.jugadorReceptorId && data.jugadorOfertanteId) {
+            if (data.jugadorReceptorId !== jugadorActual.id) {
+              // No es para este jugador, ignorar
+              return;
+            }
+
+            if (!truequeRecibido || data.id !== truequeRecibido.id) {
+              setTruequeRecibido(data);
+            }
+          } else {
+            console.warn("❌ Trueque recibido inválido:", data);
+            setTruequeRecibido(null);
+          }
+        }
+      } catch (error) {
+        console.error("Error consultando trueque pendiente:", error);
+      }
+    };
+
+    // Primera carga y cada 3 segundos
+    fetchTruequePendiente();
+    const intervalId = setInterval(fetchTruequePendiente, 3000);
+    return () => clearInterval(intervalId);
+  }, [jugadorActual]);
+
+  useEffect(() => {
     if (subastaLanzada) {
       localStorage.setItem("subastaLanzada", JSON.stringify(subastaLanzada));
     } else {
@@ -427,19 +479,6 @@ export default function TableroConFondo({
       setMostrarPopupSubastaFinal(false);
     }
   }, [subastaLanzada, jugadorActual]);
-
-  useEffect(() => {
-    // 🔁 Forzar recarga desde localStorage al cambiar de jugador
-    const subastaGuardada = localStorage.getItem("subastaLanzada");
-    if (subastaGuardada) {
-      try {
-        const subasta = JSON.parse(subastaGuardada);
-        setSubastaLanzada(subasta);
-      } catch (e) {
-        console.error("❌ Error al parsear subasta guardada:", e);
-      }
-    }
-  }, [jugadorActual]);
 
   useEffect(() => {
     // 🔁 Forzar recarga desde localStorage al cambiar de jugador
@@ -1883,13 +1922,23 @@ export default function TableroConFondo({
           </div>
         </div>
       )}
-
       {mostrarPopupTrueque && (
         <PopupTrueque
           jugadores={jugadores}
-          propiedades={propiedadesPartida} // ✅ TODAS las propiedades de la partida
+          propiedades={propiedadesPartida}
           jugadorActual={jugadorActual}
+          jugadorObjetivo={jugadorObjetivo}
+          setJugadorObjetivo={setJugadorObjetivo}
           onClose={() => setMostrarPopupTrueque(false)}
+        />
+      )}
+
+      {truequeRecibido && (
+        <PopupTruequeRecibido
+          trueque={truequeRecibido}
+          propiedades={propiedadesPartida}
+          onCerrar={() => setTruequeRecibido(null)}
+          onRefrescar={cargarDatosPartida}
         />
       )}
 

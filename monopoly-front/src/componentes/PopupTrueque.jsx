@@ -1,7 +1,18 @@
 import React, { useState, useEffect } from "react";
 import "./PopupTrueque.css";
 
-const PopupTrueque = ({ jugadores, propiedades, jugadorActual, onClose }) => {
+const PopupTrueque = ({
+  jugadores,
+  propiedades,
+  jugadorActual,
+  jugadorObjetivo,
+  setJugadorObjetivo,
+  onClose,
+}) => {
+  const handleCancelar = () => {
+    setJugadorObjetivo(null); // ✅ limpiar el estado global
+    onClose();
+  };
   const misPropiedades = propiedades.filter(
     (p) => p.dueno?.id === jugadorActual.id
   );
@@ -10,7 +21,6 @@ const PopupTrueque = ({ jugadores, propiedades, jugadorActual, onClose }) => {
   const [propiedadesPedidas, setPropiedadesPedidas] = useState([]);
   const [dineroOfrecido, setDineroOfrecido] = useState("");
   const [dineroPedido, setDineroPedido] = useState("");
-  const [jugadorObjetivo, setJugadorObjetivo] = useState(null);
   const [mostrarListaReceptor, setMostrarListaReceptor] = useState(false);
   const [mostrarListaPropias, setMostrarListaPropias] = useState(false);
   const [propiedadesReceptor, setPropiedadesReceptor] = useState([]);
@@ -33,16 +43,25 @@ const PopupTrueque = ({ jugadores, propiedades, jugadorActual, onClose }) => {
   };
 
   const proponerTrueque = async () => {
+    if (!jugadorObjetivo || !jugadorObjetivo.id) {
+      alert(
+        "❌ Debes seleccionar un jugador receptor antes de proponer el trueque."
+      );
+      return;
+    }
+
     const truequeDTO = {
       jugadorOfertanteId: jugadorActual.id,
-      jugadorReceptorId: jugadorObjetivo?.id,
+      jugadorReceptorId: jugadorObjetivo.id,
       propiedadesOfrecidas,
-      ofreceTarjetaSalirCarcel: false, // aún no implementado
+      ofreceTarjetaSalirCarcel: false,
       dineroOfrecido: parseInt(dineroOfrecido) || 0,
       propiedadesPedidas,
-      pideTarjetaSalirCarcel: false, // aún no implementado
+      pideTarjetaSalirCarcel: false,
       dineroPedido: parseInt(dineroPedido) || 0,
     };
+
+    console.log("📤 Enviando trueque:", truequeDTO); // ✅ AQUÍ VA
 
     try {
       const respuesta = await fetch(
@@ -256,7 +275,7 @@ const PopupTrueque = ({ jugadores, propiedades, jugadorActual, onClose }) => {
           <button className="btn-proponer" onClick={proponerTrueque}>
             Proponer trueque
           </button>
-          <button className="btn-cancelar" onClick={onClose}>
+          <button className="btn-cancelar" onClick={handleCancelar}>
             Cancelar
           </button>
         </div>

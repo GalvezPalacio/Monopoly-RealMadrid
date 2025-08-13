@@ -44,11 +44,16 @@ public class TruequeControlador {
 
     @GetMapping("/pendiente/{receptorId}")
     public ResponseEntity<?> obtenerTruequePendiente(@PathVariable Long receptorId) {
-        TruequeDTO dto = truequePendienteServicio.obtenerSiEsPara(receptorId);
-        if (dto != null) {
-            return ResponseEntity.ok(dto);
-        } else {
-            return ResponseEntity.noContent().build();
+        try {
+            TruequeDTO dto = truequePendienteServicio.obtenerSiEsPara(receptorId);
+            if (dto != null) {
+                return ResponseEntity.ok(dto);
+            } else {
+                return ResponseEntity.noContent().build();
+            }
+        } catch (Exception e) {
+            e.printStackTrace(); // para que veas en consola el fallo exacto
+            return ResponseEntity.status(500).body("Error al obtener el trueque pendiente");
         }
     }
 
@@ -56,5 +61,27 @@ public class TruequeControlador {
     public ResponseEntity<?> cancelarTrueque(@PathVariable Long ofertanteId) {
         truequePendienteServicio.borrarSiEsDe(ofertanteId);
         return ResponseEntity.ok("Propuesta cancelada.");
+    }
+
+    @PostMapping("/aceptar/{receptorId}")
+    public ResponseEntity<?> aceptarTrueque(@PathVariable Long receptorId) {
+        try {
+            truequePendienteServicio.aceptarTrueque(receptorId);
+            return ResponseEntity.ok("Trueque ejecutado con éxito.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body(e.getMessage());
+        }
+    }
+
+    @PostMapping("/rechazar/{ofertanteId}")
+    public ResponseEntity<?> rechazarTrueque(@PathVariable Long ofertanteId) {
+        truequePendienteServicio.borrarSiEsDe(ofertanteId);
+        return ResponseEntity.ok("Propuesta rechazada.");
+    }
+
+    @DeleteMapping("/limpiar")
+    public ResponseEntity<?> limpiarTodo() {
+        truequePendienteServicio.limpiarTodo();
+        return ResponseEntity.ok("Mapa de trueques limpiado.");
     }
 }
