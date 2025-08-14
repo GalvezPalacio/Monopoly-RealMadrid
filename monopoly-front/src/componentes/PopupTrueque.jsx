@@ -262,7 +262,6 @@ const PopupTrueque = ({
             ))}
           </div>
         </div>
-
         {/* BLOQUE RECEPTOR */}
         {mostrarListaReceptor && jugadorObjetivo && (
           <div className="lista-receptor">
@@ -280,6 +279,28 @@ const PopupTrueque = ({
                     propiedadesPedidas.includes(prop.id) ? "seleccionada" : ""
                   }`}
                   onClick={() => {
+                    // 🧠 VALIDACIÓN PARA IMPEDIR MEZCLA DE JUGADORES
+                    const jugadorActualSeleccionado = propiedades.find(
+                      (p) => p.id === prop.id
+                    )?.dueno?.id;
+
+                    const hayOtroJugadorSeleccionado = propiedadesPedidas.some(
+                      (id) =>
+                        propiedades.find((p) => p.id === id)?.dueno?.id !==
+                        jugadorActualSeleccionado
+                    );
+
+                    if (
+                      propiedadesPedidas.length > 0 &&
+                      hayOtroJugadorSeleccionado
+                    ) {
+                      alert(
+                        "❌ No puedes pedir propiedades de diferentes jugadores a la vez."
+                      );
+                      return;
+                    }
+
+                    // ✅ Selección o deselección normal
                     if (propiedadesPedidas.includes(prop.id)) {
                       setPropiedadesPedidas(
                         propiedadesPedidas.filter((id) => id !== prop.id)
