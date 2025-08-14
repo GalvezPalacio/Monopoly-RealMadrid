@@ -149,6 +149,18 @@ public class PropiedadPartidaControlador {
         return propiedadPartidaServicio.construirHotelEnPropiedad(jugadorId, propiedadId);
     }
 
+    @PostMapping("/vender-casa/{jugadorId}/{propiedadId}")
+    public ResponseEntity<String> venderCasa(@PathVariable Long jugadorId, @PathVariable Long propiedadId) {
+        String resultado = propiedadPartidaServicio.venderCasa(jugadorId, propiedadId);
+        return ResponseEntity.ok(resultado);
+    }
+
+    @PostMapping("/vender-hotel/{jugadorId}/{propiedadId}")
+    public ResponseEntity<String> venderHotel(@PathVariable Long jugadorId, @PathVariable Long propiedadId) {
+        String resultado = propiedadPartidaServicio.venderHotel(jugadorId, propiedadId);
+        return ResponseEntity.ok(resultado);
+    }
+
     @GetMapping("/opciones-construccion")
     public ResponseEntity<Map<String, List<String>>> obtenerOpcionesConstruccion(@RequestParam Long jugadorId) {
         Map<String, List<String>> opciones = propiedadPartidaServicio.obtenerOpcionesConstruccion(jugadorId);

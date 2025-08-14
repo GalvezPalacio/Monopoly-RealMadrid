@@ -156,6 +156,47 @@ export default function TableroConFondo({
     "#00008B": "azul-oscuro",
   };
 
+  const venderHotel = async () => {
+    if (!propiedadEnAccion || !jugadorActual) return;
+
+    const confirmacion = window.confirm(
+      `¿Seguro que quieres vender el hotel de "${propiedadEnAccion.propiedad.nombre}" por la mitad del coste de construcción?`
+    );
+    if (!confirmacion) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/propiedadPartida/vender-hotel/${jugadorActual.id}/${propiedadEnAccion.id}`,
+        {
+          method: "POST",
+        }
+      );
+
+      const mensaje = await res.text();
+      if (!res.ok) throw new Error(mensaje);
+
+      alert("✅ " + mensaje);
+
+      // Refrescar estado tras la venta
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+      setJugadores(nuevos);
+
+      const props = await fetch(
+        `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+      ).then((r) => r.json());
+      setPropiedadesJugador(props);
+
+      setPropiedadSeleccionada(null);
+      setMostrarTarjetaReal(false);
+      setPropiedadEnAccion(null);
+    } catch (err) {
+      console.error("❌ Error al vender hotel:", err);
+      alert("❌ " + err.message);
+    }
+  };
+
   const pagarSalidaCarcel = async () => {
     try {
       const res = await fetch(
@@ -976,6 +1017,11 @@ export default function TableroConFondo({
   const construirCasa = async (propiedadId) => {
     if (!jugadorActual || !partidaId) return;
 
+    const confirmacion = window.confirm(
+      "¿Quieres construir una casa en esta propiedad?"
+    );
+    if (!confirmacion) return;
+
     try {
       const res = await fetch(
         "http://localhost:8081/api/propiedadPartida/construir-casa",
@@ -1001,6 +1047,12 @@ export default function TableroConFondo({
       const props = await propsRes.json();
       setPropiedadesJugador(props);
 
+      // 🔁 ACTUALIZAR jugadores para reflejar dinero actualizado
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+      setJugadores(nuevos);
+
       // 🔁 ACTUALIZAR opciones de construcción después de construir
       const opcionesRes = await fetch(
         `http://localhost:8081/api/propiedadPartida/opciones-construccion?jugadorId=${jugadorActual.id}`
@@ -1011,11 +1063,17 @@ export default function TableroConFondo({
       setMostrarSelectorCasa(false);
     } catch (err) {
       console.error("❌ Error al construir casa:", err);
+      alert("❌ Error al construir casa");
     }
   };
 
   const construirHotel = async (propiedadId) => {
     if (!jugadorActual || !partidaId) return;
+
+    const confirmacion = window.confirm(
+      "¿Quieres construir un hotel en esta propiedad?"
+    );
+    if (!confirmacion) return;
 
     try {
       const res = await fetch(
@@ -1036,14 +1094,14 @@ export default function TableroConFondo({
       const mensaje = await res.text();
       alert(mensaje);
 
-      // 🔁 Refrescar propiedades (para actualizar visualización de hoteles)
+      // 🔁 Refrescar propiedades (para mostrar hoteles actualizados)
       const propsRes = await fetch(
         `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
       );
       const props = await propsRes.json();
-      setPropiedadesJugador(props); // 👈 Esto faltaba
+      setPropiedadesJugador(props);
 
-      // 🔁 Refrescar jugadores
+      // 🔁 Refrescar jugadores (para ver dinero actualizado)
       const nuevos = await fetch(
         `http://localhost:8081/api/partidas/${partidaId}/jugadores`
       ).then((r) => r.json());
@@ -1056,9 +1114,10 @@ export default function TableroConFondo({
       const nuevasOpciones = await opcionesRes.json();
       setOpcionesConstruccion(nuevasOpciones);
 
-      setMostrarSelectorHotel(false); // opcional: cierra selector al construir
+      setMostrarSelectorHotel(false);
     } catch (err) {
       console.error("❌ Error al construir hotel:", err);
+      alert("❌ Error al construir hotel");
     }
   };
 
@@ -1630,7 +1689,7 @@ export default function TableroConFondo({
               🤝 Trueque
             </button>
             <button>🏠 Vender casa</button>
-            <button>🏨 Vender hotel</button>
+            <button onClick={venderHotel}>🏨 Vender hotel</button>
             <button onClick={() => setPropiedadEnAccion(null)}>
               ❌ Cancelar
             </button>

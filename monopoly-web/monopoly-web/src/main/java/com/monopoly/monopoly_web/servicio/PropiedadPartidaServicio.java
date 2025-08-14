@@ -280,6 +280,85 @@ public class PropiedadPartidaServicio {
         return "Hotel construido con éxito en '" + propiedadPartida.getPropiedad().getNombre() + "'.";
     }
 
+    @Transactional
+    public String venderCasa(Long jugadorId, Long propiedadId) {
+        Jugador jugador = jugadorRepositorio.findById(jugadorId)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+
+        PropiedadPartida propiedad = propiedadPartidaRepositorio.findById(propiedadId)
+                .orElseThrow(() -> new RuntimeException("Propiedad no encontrada"));
+
+        if (propiedad.getDueno() == null || !propiedad.getDueno().getId().equals(jugadorId)) {
+            return "Esta propiedad no te pertenece.";
+        }
+
+        if (propiedad.getCasas() == 0 || propiedad.isHotel()) {
+            return "No hay casas para vender en esta propiedad.";
+        }
+
+        String grupoColor = propiedad.getPropiedad().getGrupoColor();
+        List<PropiedadPartida> grupo = propiedadPartidaRepositorio
+                .findByPartidaIdAndPropiedad_GrupoColor(
+                        propiedad.getPartida().getId(), grupoColor);
+
+        // ⚠️ Si alguna propiedad del grupo tiene un hotel, no puedes vender casas
+        boolean algunaTieneHotel = grupo.stream().anyMatch(PropiedadPartida::isHotel);
+        if (algunaTieneHotel) {
+            return "Debes vender primero el hotel antes de vender casas en este grupo.";
+        }
+
+        int casasActuales = propiedad.getCasas();
+        boolean rompeUniformidad = grupo.stream()
+                .filter(p -> !p.getId().equals(propiedad.getId())) // ignorar la actual
+                .anyMatch(p -> p.getCasas() < casasActuales);
+
+        if (rompeUniformidad) {
+            return "Debes vender casas de forma uniforme en todas las propiedades del grupo.";
+        }
+
+        int devolucion = CostesConstruccion.getCoste(grupoColor) / 2;
+        propiedad.setCasas(casasActuales - 1);
+        jugador.setDinero(jugador.getDinero() + devolucion);
+
+        propiedadPartidaRepositorio.save(propiedad);
+        jugadorRepositorio.save(jugador);
+
+        return "Casa vendida en '" + propiedad.getPropiedad().getNombre() + "'. Ahora tiene "
+                + propiedad.getCasas() + " casas. Has recibido " + devolucion + "€.";
+    }
+
+    @Transactional
+    public String venderHotel(Long jugadorId, Long propiedadId) {
+        Jugador jugador = jugadorRepositorio.findById(jugadorId)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+
+        PropiedadPartida propiedad = propiedadPartidaRepositorio.findById(propiedadId)
+                .orElseThrow(() -> new RuntimeException("Propiedad no encontrada"));
+
+        if (propiedad.getDueno() == null || !propiedad.getDueno().getId().equals(jugadorId)) {
+            return "Esta propiedad no te pertenece.";
+        }
+
+        if (!propiedad.isHotel()) {
+            return "Esta propiedad no tiene un hotel para vender.";
+        }
+
+        // Calcular la devolución: mitad del coste de construcción
+        String grupoColor = propiedad.getPropiedad().getGrupoColor();
+        int devolucion = CostesConstruccion.getCoste(grupoColor) / 2;
+
+        // Al vender el hotel, se obtienen 4 casas
+        propiedad.setHotel(false);
+        propiedad.setCasas(4);
+        jugador.setDinero(jugador.getDinero() + devolucion);
+
+        propiedadPartidaRepositorio.save(propiedad);
+        jugadorRepositorio.save(jugador);
+
+        return "Hotel vendido en '" + propiedad.getPropiedad().getNombre()
+                + "'. Ahora tiene 4 casas. Has recibido " + devolucion + "€.";
+    }
+
     public Map<String, List<String>> obtenerOpcionesConstruccion(Long jugadorId) {
         List<PropiedadPartida> propiedadesJugador = propiedadPartidaRepositorio.findByDuenoId(jugadorId);
 
