@@ -309,8 +309,8 @@ public class PropiedadPartidaServicio {
 
         int casasActuales = propiedad.getCasas();
         boolean rompeUniformidad = grupo.stream()
-                .filter(p -> !p.getId().equals(propiedad.getId())) // ignorar la actual
-                .anyMatch(p -> p.getCasas() < casasActuales);
+                .filter(p -> !p.getId().equals(propiedad.getId()))
+                .anyMatch(p -> propiedad.getCasas() - 1 < p.getCasas() - 1);
 
         if (rompeUniformidad) {
             return "Debes vender casas de forma uniforme en todas las propiedades del grupo.";

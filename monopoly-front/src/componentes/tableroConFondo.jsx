@@ -156,6 +156,45 @@ export default function TableroConFondo({
     "#00008B": "azul-oscuro",
   };
 
+  const venderCasa = async () => {
+    if (!propiedadEnAccion || !jugadorActual) return;
+
+    const confirmar = window.confirm(
+      `¿Estás seguro de que quieres vender una casa en "${propiedadEnAccion.propiedad?.nombre}"?`
+    );
+    if (!confirmar) return;
+
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/propiedadPartida/vender-casa/${jugadorActual.id}/${propiedadEnAccion.id}`,
+        { method: "POST" }
+      );
+
+      const txt = await res.text();
+      alert(txt);
+
+      // ✅ Recargar propiedades actualizadas del jugador
+      const props = await fetch(
+        `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+      ).then((r) => r.json());
+      setPropiedadesJugador(props);
+
+      // ✅ Verificar opciones de construcción tras la venta
+      const opcionesRes = await fetch(
+        `http://localhost:8081/api/propiedades/opciones-construccion?jugadorId=${jugadorActual.id}`
+      );
+      const opciones = await opcionesRes.json();
+      setOpcionesConstruccion(opciones);
+
+      setPropiedadSeleccionada(null);
+      setMostrarTarjetaReal(false);
+      setPropiedadEnAccion(null);
+    } catch (err) {
+      console.error("❌ Error al vender casa:", err);
+      alert("❌ " + err.message);
+    }
+  };
+
   const venderHotel = async () => {
     if (!propiedadEnAccion || !jugadorActual) return;
 
@@ -1132,6 +1171,7 @@ export default function TableroConFondo({
   const hayPropiedadesParaConstruirCasa = propiedadesJugador.some(
     (p) =>
       p.propiedad.tipo === "propiedad" &&
+      Array.isArray(opcionesConstruccion.gruposConCasas) &&
       opcionesConstruccion.gruposConCasas.includes(p.propiedad.grupoColor) &&
       !gruposConHipoteca.has(p.propiedad.grupoColor) && // ❌ si hay hipoteca, no vale
       p.casas < 4 &&
@@ -1688,7 +1728,7 @@ export default function TableroConFondo({
             <button onClick={() => setMostrarPopupTrueque(true)}>
               🤝 Trueque
             </button>
-            <button>🏠 Vender casa</button>
+            <button onClick={venderCasa}>🏠 Vender casa</button>
             <button onClick={venderHotel}>🏨 Vender hotel</button>
             <button onClick={() => setPropiedadEnAccion(null)}>
               ❌ Cancelar
