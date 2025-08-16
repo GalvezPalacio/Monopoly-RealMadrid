@@ -84,4 +84,27 @@ public class PartidaServicio {
         partidaRepositorio.deleteById(id);
     }
 
+    @Transactional
+    public void intentarPago(Jugador deudor, int cantidad, Jugador acreedor) {
+        if (deudor.getDinero() >= cantidad) {
+            // ✅ Puede pagar normalmente
+            deudor.setDinero(deudor.getDinero() - cantidad);
+            if (acreedor != null) {
+                acreedor.setDinero(acreedor.getDinero() + cantidad);
+                jugadorRepositorio.save(acreedor);
+            }
+            deudor.setEnQuiebra(false);
+            deudor.setDeudaPendiente(0);
+            deudor.setJugadorAcreedor(null);
+        } else {
+            // ❌ No puede pagar → entra en quiebra
+            int deuda = cantidad - deudor.getDinero();
+            deudor.setEnQuiebra(true);
+            deudor.setDeudaPendiente(deuda);
+            deudor.setJugadorAcreedor(acreedor); // puede ser null si la deuda es con el banco
+        }
+
+        jugadorRepositorio.save(deudor);
+    }
+
 }

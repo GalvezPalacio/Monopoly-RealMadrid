@@ -303,4 +303,30 @@ public class PartidaControlador {
         truequePendienteServicio.borrarSiEsDe(ofertanteId);
         return ResponseEntity.ok("Propuesta de trueque eliminada");
     }
+
+    @PostMapping("/intentar-pago")
+    public ResponseEntity<String> intentarPago(
+            @RequestParam Long deudorId,
+            @RequestParam int cantidad,
+            @RequestParam(required = false) Long acreedorId
+    ) {
+        Optional<Jugador> deudorOpt = jugadorRepositorio.findById(deudorId);
+        if (deudorOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Jugador deudor = deudorOpt.get();
+        Jugador acreedor = null;
+
+        if (acreedorId != null) {
+            Optional<Jugador> acreedorOpt = jugadorRepositorio.findById(acreedorId);
+            if (acreedorOpt.isEmpty()) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body("Acreedor no encontrado.");
+            }
+            acreedor = acreedorOpt.get();
+        }
+
+        partidaServicio.intentarPago(deudor, cantidad, acreedor);
+        return ResponseEntity.ok("Pago procesado o marcado como quiebra.");
+    }
 }

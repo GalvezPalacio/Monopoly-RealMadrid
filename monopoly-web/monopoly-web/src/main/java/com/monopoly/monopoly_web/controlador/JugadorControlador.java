@@ -221,7 +221,8 @@ public class JugadorControlador {
 
         if (dado1 == dado2) {
             mensajeExtra += "🎲 Has sacado dobles. Vuelves a tirar.";
-        } /* else {
+        }
+        /* else {
             jugador.setTurno(false);
             jugadorRepositorio.save(jugador);
             List<Jugador> jugadores = jugadorRepositorio.findByPartidaIdOrderById(partidaId);
@@ -280,7 +281,6 @@ public class JugadorControlador {
 //
 //        return "Has comprado " + propiedad.getNombre() + " por " + propiedad.getPrecio() + "€.";
 //    }
-    
     @Transactional
     private void pasarTurnoAlSiguiente(Long idActual) {
         Jugador jugadorActual = jugadorRepositorio.findById(idActual)
@@ -556,5 +556,33 @@ public class JugadorControlador {
         jugador.setPierdeTurno(true);
         jugadorRepositorio.save(jugador);
         return ResponseEntity.ok("🔁 El jugador perderá su próximo turno.");
+    }
+
+    @GetMapping("/estado/{id}")
+    public ResponseEntity<Map<String, Object>> obtenerEstadoJugador(@PathVariable Long id) {
+        Optional<Jugador> jugadorOpt = jugadorRepositorio.findById(id);
+        if (jugadorOpt.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        Jugador jugador = jugadorOpt.get();
+
+        // Construimos el mapa de respuesta evitando nulos
+        Map<String, Object> estado = new HashMap<>();
+        estado.put("enQuiebra", Boolean.TRUE.equals(jugador.getEnQuiebra()));
+        estado.put("deudaPendiente", jugador.getDeudaPendiente() != null ? jugador.getDeudaPendiente() : 0);
+
+        Jugador acreedor = jugador.getJugadorAcreedor();
+        if (acreedor != null) {
+            estado.put("jugadorAcreedor", acreedor.getNombre());
+            estado.put("idAcreedor", acreedor.getId());
+        } else {
+            estado.put("jugadorAcreedor", null);
+            estado.put("idAcreedor", null);
+        }
+
+        estado.put("dinero", jugador.getDinero());
+
+        return ResponseEntity.ok(estado);
     }
 }

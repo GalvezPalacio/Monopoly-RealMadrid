@@ -39,11 +39,22 @@ public class Jugador {
     private int turnosEnCarcel = 0;
 
     @Column(name = "tiene_tarjeta_salir_carcel")
-    private boolean tieneTarjetaSalirCarcel = false;;
+    private boolean tieneTarjetaSalirCarcel = false;
+    ;
     
     private boolean pierdeTurno = false;
-    
+
     private int doblesSeguidos = 0;
+
+    @Column(name = "en_quiebra")
+    private Boolean enQuiebra = false;
+
+    @Column(name = "deuda_pendiente")
+    private Integer deudaPendiente = 0;
+
+    @ManyToOne
+    @JoinColumn(name = "jugador_acreedor_id")
+    private Jugador jugadorAcreedor; // null si la deuda es con el banco
 
     // Getters y setters
     public Long getId() {
@@ -149,7 +160,30 @@ public class Jugador {
     public void setDoblesSeguidos(int doblesSeguidos) {
         this.doblesSeguidos = doblesSeguidos;
     }
-    
-    
+
+    public Boolean getEnQuiebra() {
+        return enQuiebra;
+    }
+
+    public void setEnQuiebra(Boolean enQuiebra) {
+        this.enQuiebra = enQuiebra;
+    }
+
+    public Integer getDeudaPendiente() {
+        return deudaPendiente;
+    }
+
+    public void setDeudaPendiente(Integer deudaPendiente) {
+        this.deudaPendiente = deudaPendiente;
+    }
+
+    public Jugador getJugadorAcreedor() {
+        return jugadorAcreedor;
+    }
+
+    public void setJugadorAcreedor(Jugador jugadorAcreedor) {
+        this.jugadorAcreedor = jugadorAcreedor;
+    }
+
 
 }
