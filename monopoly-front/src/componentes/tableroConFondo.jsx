@@ -10,6 +10,7 @@ import TarjetaMensaje from "./TarjetaMensaje"; // Ajusta la ruta si es necesario
 import MiniTarjetaPropiedad from "./MiniTarjetaPropiedad";
 import PopupTrueque from "./PopupTrueque";
 import PopupTruequeRecibido from "./PopupTruequeRecibido";
+import PopupQuiebra from "./PopupQuiebra";
 
 export default function TableroConFondo({
   partidaId,
@@ -48,6 +49,27 @@ export default function TableroConFondo({
   };
 
   const jugadorActual = jugadores.find((j) => j.turno);
+
+  useEffect(() => {
+    if (!jugadorActual?.id) return;
+
+    fetch(`http://localhost:8081/api/jugadores/estado/${jugadorActual.id}`)
+      .then((res) => {
+        if (!res.ok) throw new Error("Error al consultar estado de quiebra");
+        return res.json();
+      })
+      .then((data) => {
+        setEstadoJugador(data);
+        if (data.enQuiebra) {
+          setMostrarPopupQuiebra(true);
+        } else {
+          setMostrarPopupQuiebra(false);
+        }
+      })
+      .catch((err) => {
+        console.error("❌ Error al consultar estado de quiebra:", err);
+      });
+  }, [jugadorActual]);
 
   useEffect(() => {
     if (!jugadorActual) return;
@@ -99,6 +121,37 @@ export default function TableroConFondo({
   const [propiedadesPartida, setPropiedadesPartida] = useState([]);
   const [truequeRecibido, setTruequeRecibido] = useState(null);
   const [jugadorObjetivo, setJugadorObjetivo] = useState(null);
+  const [estadoJugador, setEstadoJugador] = useState(null);
+  const handleEliminarse = async () => {
+    // lógica para eliminar jugador
+  };
+
+  const handleTransferir = async () => {
+    // lógica para transferir propiedades al acreedor
+  };
+
+  const handleIntentarPagar = async () => {
+    // lógica para intentar pagar la deuda
+  };
+  const [mostrarPopupQuiebra, setMostrarPopupQuiebra] = useState(false);
+  const cargarEstadoJugador = async () => {
+    try {
+      const res = await fetch(
+        `http://localhost:8081/api/jugadores/estado/${jugadorActual.id}`
+      );
+      const datos = await res.json();
+
+      console.log("Estado actualizado del jugador:", datos);
+      setEstadoJugador(datos); // <-- importante para que se pase a PopupQuiebra
+      console.log("¿En quiebra?", datos.enQuiebra); // <--- AÑADE ESTO
+      if (datos.enQuiebra) {
+        console.log("ACTIVANDO POPUP DE QUIEBRA"); // <--- AÑADE ESTO
+        setMostrarPopupQuiebra(true);
+      }
+    } catch (error) {
+      console.error("Error al cargar estado del jugador:", error);
+    }
+  };
   const seleccionarJugadorVenta = (id) => {
     if (!cantidadVenta || isNaN(cantidadVenta) || Number(cantidadVenta) <= 0) {
       alert("Introduce una cantidad válida para vender la propiedad.");
@@ -505,6 +558,13 @@ export default function TableroConFondo({
   };
 
   useEffect(() => {
+    if (estadoJugador?.enQuiebra) {
+      console.log("useEffect detecta enQuiebra → mostrando popup"); // <--- AÑADE ESTO
+      setMostrarPopupQuiebra(true);
+    }
+  }, [estadoJugador?.enQuiebra]);
+
+  useEffect(() => {
     if (!jugadorActual?.id) return;
 
     const fetchTruequePendiente = async () => {
@@ -827,10 +887,21 @@ export default function TableroConFondo({
 
             const alquiler = datos.alquilerCalculado ?? 0;
 
-            setMensajeLateral(
-              `Has caído en ${casilla.nombre}, propiedad de ${propiedadPartida.dueno.nombre}. Le pagas ${alquiler}€ ${motivo}.`
-            );
-            setAccionesDisponibles(["Pagar alquiler"]);
+            try {
+              const res = await fetch(
+                `http://localhost:8081/api/partidas/intentar-pago?deudorId=${jugadorActual.id}&cantidad=${alquiler}&acreedorId=${propiedadPartida.dueno.id}`,
+                { method: "POST" }
+              );
+              const texto = await res.text();
+              console.log("Resultado intento de pago:", texto);
+              await cargarEstadoJugador();
+
+              setMensajeLateral(
+                `Has caído en ${casilla.nombre}, propiedad de ${propiedadPartida.dueno.nombre}. Le pagas ${alquiler}€ ${motivo}.`
+              );
+            } catch (err) {
+              console.error("Error al intentar pagar alquiler:", err);
+            }
           }
         } else {
           console.warn("No se encontró propiedadPartida para esta casilla.");
@@ -2038,6 +2109,15 @@ export default function TableroConFondo({
           propiedades={propiedadesPartida}
           onCerrar={() => setTruequeRecibido(null)}
           onRefrescar={cargarDatosPartida}
+        />
+      )}
+
+      {mostrarPopupQuiebra && (
+        <PopupQuiebra
+          estado={estadoJugador}
+          onEliminarse={handleEliminarse}
+          onTransferir={handleTransferir}
+          onIntentarPagar={handleIntentarPagar}
         />
       )}
 

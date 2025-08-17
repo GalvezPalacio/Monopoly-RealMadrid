@@ -17,6 +17,7 @@ import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
 import com.monopoly.monopoly_web.repositorio.PartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
+import com.monopoly.monopoly_web.servicio.PartidaServicio;
 import com.monopoly.monopoly_web.servicio.PropiedadPartidaServicio;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -45,6 +46,9 @@ public class JugadorControlador {
 
     @Autowired
     private PropiedadPartidaServicio propiedadPartidaServicio;
+
+    @Autowired
+    private PartidaServicio partidaServicio;
 
     @GetMapping
     public List<Jugador> obtenerTodos() {
@@ -203,10 +207,7 @@ public class JugadorControlador {
                         int numCompanias = propiedadPartidaRepositorio.contarPorDuenoYTipo(dueno.getId(), partidaId, "compania");
                         detalleConstruccion = " porque tiene " + numCompanias + " compañía" + (numCompanias > 1 ? "s" : "") + " y sacaste " + suma;
                     }
-
-                    jugador.setDinero(jugador.getDinero() - alquiler);
-                    dueno.setDinero(dueno.getDinero() + alquiler);
-
+                    partidaServicio.intentarPago(jugador, alquiler, dueno);
                     jugadorRepositorio.save(dueno);
 
                     mensajeExtra += "Has caído en " + propiedadPartida.getPropiedad().getNombre()
