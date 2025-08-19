@@ -17,6 +17,7 @@ import com.monopoly.monopoly_web.repositorio.JugadorRepositorio;
 import com.monopoly.monopoly_web.repositorio.PartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadPartidaRepositorio;
 import com.monopoly.monopoly_web.repositorio.PropiedadRepositorio;
+import com.monopoly.monopoly_web.servicio.JugadorServicio;
 import com.monopoly.monopoly_web.servicio.PartidaServicio;
 import com.monopoly.monopoly_web.servicio.PropiedadPartidaServicio;
 import jakarta.transaction.Transactional;
@@ -49,6 +50,9 @@ public class JugadorControlador {
 
     @Autowired
     private PartidaServicio partidaServicio;
+
+    @Autowired
+    private JugadorServicio jugadorServicio;
 
     @GetMapping
     public List<Jugador> obtenerTodos() {
@@ -282,46 +286,45 @@ public class JugadorControlador {
 //
 //        return "Has comprado " + propiedad.getNombre() + " por " + propiedad.getPrecio() + "€.";
 //    }
-    @Transactional
-    private void pasarTurnoAlSiguiente(Long idActual) {
-        Jugador jugadorActual = jugadorRepositorio.findById(idActual)
-                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
-        Long partidaId = jugadorActual.getPartida().getId();
-
-        List<Jugador> jugadores = jugadorRepositorio.findByPartidaIdOrderById(partidaId);
-
-        // Quitar turno a todos
-        for (Jugador j : jugadores) {
-            j.setTurno(false);
-        }
-
-        // Buscar índice del jugador actual
-        int actualIndex = -1;
-        for (int i = 0; i < jugadores.size(); i++) {
-            if (jugadores.get(i).getId().equals(idActual)) {
-                actualIndex = i;
-                break;
-            }
-        }
-
-        // Asignar turno al siguiente jugador
-        int siguiente = (actualIndex + 1) % jugadores.size();
-        Jugador jugadorSiguiente = jugadores.get(siguiente);
-
-// 🔁 Saltar jugadores que pierden turno
-        while (jugadorSiguiente.isPierdeTurno()) {
-            jugadorSiguiente.setPierdeTurno(false); // quitar penalización
-            siguiente = (siguiente + 1) % jugadores.size();
-            jugadorSiguiente = jugadores.get(siguiente);
-        }
-
-// ✅ Asignar turno solo al jugador válido
-        jugadorSiguiente.setTurno(true);
-
-// 💾 Guardar todo
-        jugadorRepositorio.saveAll(jugadores);
-    }
-
+//    @Transactional
+//    private void pasarTurnoAlSiguiente(Long idActual) {
+//        Jugador jugadorActual = jugadorRepositorio.findById(idActual)
+//                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+//        Long partidaId = jugadorActual.getPartida().getId();
+//
+//        List<Jugador> jugadores = jugadorRepositorio.findByPartidaIdOrderById(partidaId);
+//
+//        // Quitar turno a todos
+//        for (Jugador j : jugadores) {
+//            j.setTurno(false);
+//        }
+//
+//        // Buscar índice del jugador actual
+//        int actualIndex = -1;
+//        for (int i = 0; i < jugadores.size(); i++) {
+//            if (jugadores.get(i).getId().equals(idActual)) {
+//                actualIndex = i;
+//                break;
+//            }
+//        }
+//
+//        // Asignar turno al siguiente jugador
+//        int siguiente = (actualIndex + 1) % jugadores.size();
+//        Jugador jugadorSiguiente = jugadores.get(siguiente);
+//
+//// 🔁 Saltar jugadores que pierden turno
+//        while (jugadorSiguiente.isPierdeTurno()) {
+//            jugadorSiguiente.setPierdeTurno(false); // quitar penalización
+//            siguiente = (siguiente + 1) % jugadores.size();
+//            jugadorSiguiente = jugadores.get(siguiente);
+//        }
+//
+//// ✅ Asignar turno solo al jugador válido
+//        jugadorSiguiente.setTurno(true);
+//
+//// 💾 Guardar todo
+//        jugadorRepositorio.saveAll(jugadores);
+//    }
 //    @PostMapping("/{jugadorId}/construir-grupo")
 //    public String construirGrupo(
 //            @PathVariable Long jugadorId,
@@ -389,7 +392,7 @@ public class JugadorControlador {
 
     @PostMapping("/{id}/terminar-turno")
     public ResponseEntity<String> terminarTurno(@PathVariable Long id) {
-        pasarTurnoAlSiguiente(id); // ✅ Llama al método bueno directamente
+        jugadorServicio.pasarTurnoAlSiguiente(id);
         return ResponseEntity.ok("Turno terminado correctamente.");
     }
 
@@ -415,7 +418,7 @@ public class JugadorControlador {
         jugador.setEnCarcel(true);
         jugador.setTurno(false);
         jugadorRepositorio.save(jugador);
-        pasarTurnoAlSiguiente(jugador.getId());
+        jugadorServicio.pasarTurnoAlSiguiente(jugador.getId());
         return "Has sido enviado a la grada. Turno del siguiente jugador.";
     }
 
@@ -469,7 +472,7 @@ public class JugadorControlador {
                 jugador.setPosicion(nuevaPos);
                 jugador.setTurno(false);
                 jugadorRepositorio.save(jugador);
-                pasarTurnoAlSiguiente(jugador.getId());
+                jugadorServicio.pasarTurnoAlSiguiente(jugador.getId());
 
                 mensaje += "😤 Has cumplido 3 turnos. Pagas 50€ y sales. Avanzas " + suma + " casillas.";
 
@@ -484,7 +487,7 @@ public class JugadorControlador {
                 // 😐 Sigue en la cárcel, no se mueve
                 jugador.setTurno(false);
                 jugadorRepositorio.save(jugador);
-                pasarTurnoAlSiguiente(jugador.getId());
+                jugadorServicio.pasarTurnoAlSiguiente(jugador.getId());
 
                 return ResponseEntity.ok(Map.of(
                         "dado1", dado1,
@@ -557,6 +560,27 @@ public class JugadorControlador {
         jugador.setPierdeTurno(true);
         jugadorRepositorio.save(jugador);
         return ResponseEntity.ok("🔁 El jugador perderá su próximo turno.");
+    }
+
+    @PostMapping("/{id}/transferir-todo")
+    public ResponseEntity<String> transferirTodoAlAcreedor(@PathVariable Long id) {
+        Optional<Jugador> optionalJugador = jugadorRepositorio.findById(id);
+        if (optionalJugador.isEmpty()) {
+            return ResponseEntity.notFound().build();
+        }
+
+        try {
+            String resultado = partidaServicio.transferirTodoAlAcreedor(optionalJugador.get());
+
+            if (resultado.startsWith("ganador:")) {
+                String ganador = resultado.split(":")[1];
+                return ResponseEntity.ok("🎉 ¡" + ganador + " ha ganado la partida!");
+            }
+
+            return ResponseEntity.ok("Propiedades y dinero transferidos. Jugador eliminado.");
+        } catch (IllegalStateException e) {
+            return ResponseEntity.badRequest().body("❌ " + e.getMessage());
+        }
     }
 
     @GetMapping("/estado/{id}")

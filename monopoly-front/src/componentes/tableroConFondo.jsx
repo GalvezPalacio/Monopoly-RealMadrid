@@ -122,12 +122,62 @@ export default function TableroConFondo({
   const [truequeRecibido, setTruequeRecibido] = useState(null);
   const [jugadorObjetivo, setJugadorObjetivo] = useState(null);
   const [estadoJugador, setEstadoJugador] = useState(null);
+  const [mostrarImagenEliminado, setMostrarImagenEliminado] = useState(false);
+  const [mostrarModalEliminado, setMostrarModalEliminado] = useState(false);
+  const [ganador, setGanador] = useState(null); // string con nombre del jugador
+  const [mostrarModalGanador, setMostrarModalGanador] = useState(false);
   const handleEliminarse = async () => {
     // lógica para eliminar jugador
   };
 
   const handleTransferir = async () => {
-    // lógica para transferir propiedades al acreedor
+    try {
+      const response = await fetch(
+        `http://localhost:8081/api/jugadores/${jugadorActual.id}/transferir-todo`,
+        { method: "POST" }
+      );
+
+      const mensaje = await response.text();
+
+      if (response.ok) {
+        // ✅ Mostrar imagen y modal de quiebra
+        setMostrarImagenEliminado(true);
+        setMostrarModalEliminado(true);
+
+        // 🏆 Detectar si es victoria
+        if (
+          mensaje.startsWith("🎉 ¡") ||
+          mensaje.toLowerCase().includes("ha ganado la partida")
+        ) {
+          const nombreGanador =
+            mensaje.split("¡")[1]?.split(" ")[0] || "Jugador";
+
+          setGanador(nombreGanador);
+          setMostrarPopupQuiebra(false);
+          setMostrarImagenEliminado(false);
+          setMostrarModalEliminado(false);
+          setMostrarModalGanador(true);
+
+          // 🔄 Asegurar que se actualiza el estado del jugador ganador
+          await cargarDatosPartida();
+          return; // ⛔ Evitar seguir ejecutando lógica innecesaria
+        }
+
+        // 🔄 Si no es victoria, actualizar partida y ocultar modales
+        setTimeout(async () => {
+          await cargarDatosPartida();
+          setMostrarPopupQuiebra(false);
+          setEstadoJugador(null);
+          setMostrarImagenEliminado(false);
+          setMostrarModalEliminado(false);
+        }, 300);
+      } else {
+        alert("❌ Error al transferir: " + mensaje);
+      }
+    } catch (error) {
+      console.error("❌ Error inesperado:", error);
+      alert("❌ Error inesperado al transferir al acreedor.");
+    }
   };
 
   const handleIntentarPagar = async () => {
@@ -717,6 +767,13 @@ export default function TableroConFondo({
         setPropuestaRecibida(null); // limpia si no hay propuesta
       });
   }, [jugadorActual]);
+
+  useEffect(() => {
+    const actual = jugadores.find((j) => j.turno);
+    if (actual) {
+      console.log("✅ Nuevo jugador con el turno:", actual.nombre);
+    }
+  }, [jugadores]);
 
   const tirarDado = async () => {
     if (mostrarBienvenida) setMostrarBienvenida(false);
@@ -2119,6 +2176,81 @@ export default function TableroConFondo({
           onTransferir={handleTransferir}
           onIntentarPagar={handleIntentarPagar}
         />
+      )}
+
+      {mostrarImagenEliminado && (
+        <div className="imagen-quiebra-popup">
+          <img
+            src="/public/jugador-eliminado.png" // Usa esta ruta al colocar tu imagen
+            alt="Jugador eliminado"
+            className="imagen-quiebra"
+          />
+        </div>
+      )}
+
+      {mostrarModalEliminado && (
+        <div className="modal-eliminado-overlay">
+          <div className="modal-eliminado">
+            <h2>⚠️ Propiedades y dinero transferidos</h2>
+            <h1 className="texto-eliminado">Jugador eliminado</h1>
+            <img
+              src="/imagenes/eliminado-barcelona.png"
+              alt="Jugador eliminado"
+              className="imagen-modal-eliminado"
+            />
+            <button
+              className="boton-confirmar-modal"
+              onClick={async () => {
+                await cargarDatosPartida();
+                setMostrarPopupQuiebra(false);
+                setEstadoJugador(null);
+                setMostrarImagenEliminado(false);
+                setMostrarModalEliminado(false);
+              }}
+            >
+              ✅ Aceptar
+            </button>
+          </div>
+        </div>
+      )}
+
+      {mostrarModalGanador && (
+        <div className="modal-victoria-overlay">
+          <div className="modal-victoria">
+            <h2>🏆 ¡Victoria!</h2>
+            <h1 className="texto-victoria">{ganador} ha ganado la partida</h1>
+            <img
+              src="/public/jugador-ganador.png"
+              alt="Jugador ganador"
+              className="imagen-modal-victoria"
+            />
+            <button
+              className="boton-confirmar-modal"
+              onClick={async () => {
+                try {
+                  if (!guardadaEnEstaSesion) {
+                    await fetch(
+                      `http://localhost:8081/api/partidas/${partidaId}/finalizar`,
+                      {
+                        method: "DELETE",
+                      }
+                    );
+                  }
+                } catch (error) {
+                  console.error(
+                    "❌ Error al finalizar la partida automáticamente",
+                    error
+                  );
+                } finally {
+                  setMostrarModalGanador(false);
+                  window.location.href = "/";
+                }
+              }}
+            >
+              🔁 Finalizar Partida
+            </button>
+          </div>
+        </div>
       )}
 
       {mostrarPopupSubastaFinal && subastaLanzada?.propiedad && (

@@ -607,7 +607,7 @@ body {
   box-shadow: 0 0 4px rgba(0, 0, 0, 0.15);
   transition: transform 0.2s ease;
 
-   /* 🧲 Alineación perfecta */
+  /* 🧲 Alineación perfecta */
   display: flex;
   justify-content: center;
   align-items: center;
@@ -617,15 +617,51 @@ body {
 .tarjeta-propiedad-construccion:hover {
   transform: scale(1.05);
 }
-.color-marron     { background-color: #a86b32; color: white; }
-.color-azul-claro { background-color: #6bd2f1; color: black; }
-.color-rosa       { background-color: #cc2867; color: white; }
-.color-naranja    { background-color: #f18b1e; color: white; }
-.color-rojo       { background-color: #f00c1f; color: white; }
-.color-amarillo   { background-color: #ffda06; color: black; }
-.color-verde      { background-color: #4CAF50; color: white; }
-.color-azul-oscuro { background-color: #0419fd; color: white; }
-.color-gris       { background-color: #888; color: white; }
+
+.color-marron {
+  background-color: #a86b32;
+  color: white;
+}
+
+.color-azul-claro {
+  background-color: #6bd2f1;
+  color: black;
+}
+
+.color-rosa {
+  background-color: #cc2867;
+  color: white;
+}
+
+.color-naranja {
+  background-color: #f18b1e;
+  color: white;
+}
+
+.color-rojo {
+  background-color: #f00c1f;
+  color: white;
+}
+
+.color-amarillo {
+  background-color: #ffda06;
+  color: black;
+}
+
+.color-verde {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.color-azul-oscuro {
+  background-color: #0419fd;
+  color: white;
+}
+
+.color-gris {
+  background-color: #888;
+  color: white;
+}
 
 .alerta-superior {
   position: absolute;
@@ -636,11 +672,12 @@ body {
   color: #222;
   padding: 1rem 2rem;
   border-radius: 10px;
-  box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
   font-weight: bold;
   font-size: 1.1rem;
   z-index: 999;
 }
+
 .mensaje-lateral {
   position: absolute;
   top: 30%;
@@ -649,18 +686,20 @@ body {
   color: #000;
   padding: 15px;
   border-radius: 10px;
-  box-shadow: 0 0 10px rgba(0,0,0,0.2);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.2);
   z-index: 1000;
   font-weight: bold;
   max-width: 300px;
 }
+
 .panel-inferior-jugador {
   position: fixed;
   bottom: 30px;
   right: 40px;
   width: 300px;
   height: 300px;
-  background-image: url('/marcoMenuJugador.png'); /* fondo metálico */
+  background-image: url('/marcoMenuJugador.png');
+  /* fondo metálico */
   background-size: cover;
   background-position: center;
   border-radius: 12px;
@@ -676,6 +715,7 @@ body {
   align-items: center;
   text-align: center;
 }
+
 .panel-inferior-jugador .info-jugador h3 {
   margin: 0;
   font-size: 1.5rem;
@@ -689,6 +729,7 @@ body {
   color: #ffd700;
   font-weight: bold;
 }
+
 .panel-inferior-jugador .etiqueta {
   font-size: 0.9rem;
   font-weight: bold;
@@ -698,6 +739,7 @@ body {
   margin-top: 10px;
   letter-spacing: 1px;
 }
+
 .boton-propiedades {
   background: linear-gradient(145deg, #ffd700, #ffae00);
   color: #222;
@@ -708,7 +750,7 @@ body {
   margin-top: 10px;
   width: 100%;
   cursor: pointer;
-  box-shadow: 0 4px 8px rgba(0,0,0,0.2);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
   transition: all 0.2s ease-in-out;
 }
 
@@ -716,6 +758,7 @@ body {
   background: linear-gradient(145deg, #ffbf00, #ffa500);
   transform: scale(1.05);
 }
+
 .submenu-propiedades {
   margin-top: 16px;
   background-color: rgba(255, 255, 255, 0.07);
@@ -747,15 +790,19 @@ body {
   font-style: italic;
   color: #ccc;
 }
+
 .color-estacion {
-  background-color: #e0e0e0; /* Gris claro tipo andén */
+  background-color: #e0e0e0;
+  /* Gris claro tipo andén */
   color: #222;
 }
 
 .color-compania {
-  background-color: #f5f5dc; /* Beige clásico */
+  background-color: #f5f5dc;
+  /* Beige clásico */
   color: #222;
 }
+
 .popup-acciones-propiedad {
   position: fixed;
   top: 50%;
@@ -791,6 +838,7 @@ body {
 .botones-acciones-propiedad button:hover {
   background-color: #ddd;
 }
+
 .titulo-propiedad {
   padding: 8px 12px;
   border-radius: 8px;
@@ -800,10 +848,12 @@ body {
   text-align: center;
   color: white;
 }
+
 .icono-hipoteca {
   margin-left: 6px;
   font-size: 1rem;
 }
+
 .popup-subasta {
   position: fixed;
   top: 25%;
@@ -817,6 +867,7 @@ body {
   width: 350px;
   text-align: center;
 }
+
 .popup-subasta input {
   width: 60%;
   padding: 0.5rem;
@@ -825,6 +876,7 @@ body {
   border-radius: 10px;
   border: 2px solid #ccc;
 }
+
 .mensaje-popup {
   position: absolute;
   top: 30%;
@@ -833,12 +885,14 @@ body {
   background: rgba(255, 255, 255, 0.9);
   border-radius: 10px;
   padding: 10px 20px;
-  z-index: 9999; /* Asegura que esté al frente */
+  z-index: 9999;
+  /* Asegura que esté al frente */
   font-weight: bold;
   font-size: 18px;
   color: #222;
-  box-shadow: 0 0 10px rgba(0,0,0,0.3);
+  box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
 }
+
 .popup-opciones {
   position: absolute;
   top: 50%;
@@ -852,6 +906,7 @@ body {
   width: 300px;
   text-align: center;
 }
+
 .popup-opciones button {
   display: block;
   width: 100%;
@@ -878,7 +933,7 @@ body {
   background: white;
   padding: 2rem;
   border-radius: 10px;
-  box-shadow: 0 0 15px rgba(0,0,0,0.3);
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
   z-index: 999;
   width: 400px;
   text-align: center;
@@ -914,6 +969,7 @@ body {
   border-radius: 6px;
   cursor: pointer;
 }
+
 .popup-vender-jugador {
   position: fixed !important;
   top: 50% !important;
@@ -921,6 +977,7 @@ body {
   transform: translate(-50%, -50%) !important;
   z-index: 9999 !important;
 }
+
 .bloque-cantidad {
   margin-top: 1rem;
   margin-bottom: 1rem;
@@ -934,6 +991,7 @@ body {
   border-radius: 6px;
   border: 1px solid #ccc;
 }
+
 .popup-propuesta {
   color: black;
   position: fixed;
@@ -971,4 +1029,134 @@ body {
 
 .popup-propuesta button:hover {
   background-color: #0055aa;
+}
+
+.imagen-quiebra-popup {
+  position: fixed;
+  top: 60px;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 9999;
+  background-color: rgba(0, 0, 0, 0.75);
+  padding: 10px;
+  border-radius: 10px;
+}
+
+.imagen-quiebra-popup img {
+  max-width: 400px;
+  border: 3px solid white;
+  border-radius: 10px;
+}
+
+.modal-eliminado-overlay {
+  position: fixed;
+  top: 5%;
+  left: 20%;
+  transform: translateX(-50%);
+  z-index: 99999;
+  background: none;
+  /* quitamos el fondo oscuro */
+}
+
+.modal-eliminado {
+  background-color: rgba(0, 0, 0, 0.9);
+  padding: 1.5rem 2rem;
+  border-radius: 12px;
+  box-shadow: 0 0 20px rgba(255, 255, 255, 0.2);
+  color: white;
+  max-width: 420px;
+  text-align: center;
+  backdrop-filter: blur(8px);
+}
+
+.modal-eliminado h2 {
+  font-size: 1.4rem;
+  margin-bottom: 0.5rem;
+}
+
+.texto-eliminado {
+  font-size: 1.9rem;
+  color: #ff4444;
+  text-shadow: 0 0 10px #ff4444;
+  margin-bottom: 1rem;
+}
+
+.imagen-modal-eliminado {
+  display: none;
+  /* ya no es necesaria en el modal si está detrás */
+}
+
+.boton-confirmar-modal {
+  background-color: #00cc66;
+  color: white;
+  font-size: 1rem;
+  padding: 0.5rem 1.2rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  margin-top: 10px;
+}
+
+.boton-confirmar-modal:hover {
+  background-color: #00b359;
+}
+
+.modal-victoria-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(10, 10, 10, 0.88);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 99999;
+}
+
+.modal-victoria {
+  background-color: #141414;
+  padding: 2rem 1.5rem;
+  border-radius: 15px;
+  text-align: center;
+  max-width: 500px;
+  width: 90%;
+  color: white;
+  box-shadow: 0 0 30px rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(10px);
+}
+
+.modal-victoria h2 {
+  font-size: 1.8rem;
+  margin-bottom: 0.5rem;
+  color: #ffd700;
+}
+
+.texto-victoria {
+  font-size: 2rem;
+  color: #00ff99;
+  margin-bottom: 1.2rem;
+  text-shadow: 0 0 10px #00ff99;
+}
+
+.imagen-modal-victoria {
+  max-width: 75%;
+  height: auto;
+  border-radius: 10px;
+  margin-bottom: 1.2rem;
+  box-shadow: 0 0 10px rgba(255, 255, 255, 0.3);
+}
+
+.boton-confirmar-modal {
+  background-color: #00cc66;
+  color: white;
+  font-size: 1.1rem;
+  padding: 0.6rem 1.4rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.boton-confirmar-modal:hover {
+  background-color: #00b359;
 }
