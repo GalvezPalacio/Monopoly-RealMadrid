@@ -11,6 +11,7 @@ import MiniTarjetaPropiedad from "./MiniTarjetaPropiedad";
 import PopupTrueque from "./PopupTrueque";
 import PopupTruequeRecibido from "./PopupTruequeRecibido";
 import PopupQuiebra from "./PopupQuiebra";
+import "./TarjetaPropiedad.css";
 
 export default function TableroConFondo({
   partidaId,
@@ -126,6 +127,7 @@ export default function TableroConFondo({
   const [mostrarModalEliminado, setMostrarModalEliminado] = useState(false);
   const [ganador, setGanador] = useState(null); // string con nombre del jugador
   const [mostrarModalGanador, setMostrarModalGanador] = useState(false);
+  const [mostrarIntentarPagar, setMostrarIntentarPagar] = useState(false);
   const handleEliminarse = async () => {
     // lógica para eliminar jugador
   };
@@ -180,9 +182,21 @@ export default function TableroConFondo({
     }
   };
 
-  const handleIntentarPagar = async () => {
-    // lógica para intentar pagar la deuda
+  const handleIntentarPagar = () => {
+    fetch(
+      `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+    )
+      .then((res) => res.json())
+      .then((data) => setPropiedadesJugador(data))
+      .catch((err) =>
+        console.error("❌ Error al cargar propiedades (intentar pagar):", err)
+      );
+
+    // Muestra el popup de intentar pagar y oculta el de quiebra
+    setMostrarPopupQuiebra(false);
+    setMostrarIntentarPagar(true);
   };
+
   const [mostrarPopupQuiebra, setMostrarPopupQuiebra] = useState(false);
   const cargarEstadoJugador = async () => {
     try {
@@ -2248,6 +2262,56 @@ export default function TableroConFondo({
               }}
             >
               🔁 Finalizar Partida
+            </button>
+          </div>
+        </div>
+      )}
+
+      {mostrarIntentarPagar && (
+        <div className="modal-overlay">
+          <div className="modal-intentar-pagar">
+            <h2 className="modal-titulo">💰 Intentar pagar la deuda</h2>
+
+            {propiedadesJugador.length === 0 ? (
+              <p style={{ textAlign: "center", marginTop: "1rem" }}>
+                No tienes propiedades disponibles.
+              </p>
+            ) : (
+              <div className="submenu-propiedades">
+                <h3 className="subtitulo-submenu">Selecciona una propiedad:</h3>
+                <div className="lista-propiedades-horizontal">
+                  {propiedadesJugador.map((propiedad) => {
+                    const grupoColor =
+                      propiedad.propiedad?.grupoColor || "GRIS";
+                    const color = grupoColor.toLowerCase().replace(/_/g, "-");
+
+                    const colorClase = `color-${color}`;
+
+                    console.log("🎯 grupoColor:", grupoColor);
+                    console.log("🎨 class final:", colorClase);
+
+                    return (
+                      <div
+                        key={propiedad.id}
+                        className={`tarjeta-propiedad-mini ${colorClase}`}
+                        onClick={() => setPropiedadSeleccionada(propiedad)}
+                      >
+                        {propiedad.propiedad?.nombre || propiedad.nombre}
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
+
+            <button
+              className="boton-cancelar-modal"
+              onClick={() => {
+                setMostrarIntentarPagar(false);
+                setMostrarPopupQuiebra(true);
+              }}
+            >
+              ❌ Cancelar
             </button>
           </div>
         </div>

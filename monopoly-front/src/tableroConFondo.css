@@ -1160,3 +1160,133 @@ body {
 .boton-confirmar-modal:hover {
   background-color: #00b359;
 }
+
+.modal-intentar-pagar {
+
+  margin: auto;
+  /* ya está */
+  background: white;
+  padding: 2rem;
+  border-radius: 16px;
+  width: 500px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  color: #000;
+  overflow: hidden;
+  box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(5px);
+  z-index: 1000;
+}
+
+.submenu-propiedades {
+  background: #f7f7f7;
+  border: 2px solid gold;
+  border-radius: 12px;
+  padding: 1rem;
+  width: 100%;
+  max-height: 220px;
+  overflow-y: auto;
+  overflow-x: hidden;
+}
+
+.subtitulo-submenu {
+  font-weight: bold;
+  font-size: 1rem;
+  margin-bottom: 0.8rem;
+  text-align: center;
+  color: black;
+}
+
+.lista-propiedades-horizontal {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+.tarjeta-propiedad-mini {
+  padding: 0.5rem 1rem;
+  border-radius: 8px;
+  font-weight: bold;
+  color: white;
+  cursor: pointer;
+  text-align: center;
+  white-space: nowrap;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
+  border: none;
+  
+}
+
+.tarjeta-propiedad-mini:hover {
+  filter: brightness(1.1);
+  transform: scale(1.05);
+  transition: 0.2s;
+}
+
+.tarjeta-propiedad-mini {
+
+  color: black;
+}
+
+.tarjeta-propiedad-mini.color-azul-oscuro,
+.tarjeta-propiedad-mini.color-verde,
+.tarjeta-propiedad-mini.color-amarillo,
+.tarjeta-propiedad-mini.color-rosa,
+.tarjeta-propiedad-mini.color-marron,
+.tarjeta-propiedad-mini.color-celeste {
+  color: white;
+}
+
+.tarjeta-propiedad-mini.color-marron {
+  background-color: #a86b32;
+  color: white;
+}
+
+.tarjeta-propiedad-mini.color-azul-claro {
+  background-color: #6bd2f1;
+  color: black;
+}
+
+.tarjeta-propiedad-mini.color-rosa {
+  background-color: #cc2867;
+  color: white;
+}
+
+.tarjeta-propiedad-mini.color-naranja {
+  background-color: #f18b1e;
+  color: white;
+}
+
+.tarjeta-propiedad-mini.color-rojo {
+  background-color: #f00c1f;
+  color: white;
+}
+
+.tarjeta-propiedad-mini.color-amarillo {
+  background-color: #ffda06;
+  color: black;
+}
+
+.tarjeta-propiedad-mini.color-verde {
+  background-color: #4CAF50;
+  color: white;
+}
+
+.tarjeta-propiedad-mini.color-azul-oscuro {
+  background-color: #0419fd;
+  color: white;
+}
