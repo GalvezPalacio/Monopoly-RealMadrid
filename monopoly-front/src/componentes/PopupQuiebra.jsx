@@ -32,7 +32,7 @@ const PopupQuiebra = ({
               💸 Transferir todo al acreedor
             </button>
           )}
-          <button onClick={onIntentarPagar}>✅ Intentar pagar</button>
+          <button onClick={onIntentarPagar}>🔁 Simular ventas</button>
         </div>
       </div>
     </div>

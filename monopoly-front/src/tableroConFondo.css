@@ -1162,7 +1162,8 @@ body {
 }
 
 .modal-intentar-pagar {
-
+  position: relative;
+  border: 3px solid gold;
   margin: auto;
   /* ya está */
   background: white;
@@ -1212,7 +1213,14 @@ body {
 }
 
 .lista-propiedades-horizontal {
+  border: 2px solid gold;
+  border-radius: 12px;
+  padding: 1rem;
+  /* ✅ Añade padding para que el borde se separe del contenido */
+  background: #f7f7f7;
+  /* ✅ Añade fondo para que se vea el área del borde */
   display: flex;
+  flex-direction: column;
   flex-wrap: wrap;
   justify-content: center;
   gap: 0.5rem;
@@ -1228,7 +1236,7 @@ body {
   white-space: nowrap;
   box-shadow: 0 1px 4px rgba(0, 0, 0, 0.15);
   border: none;
-  
+
 }
 
 .tarjeta-propiedad-mini:hover {
@@ -1240,6 +1248,22 @@ body {
 .tarjeta-propiedad-mini {
 
   color: black;
+}
+
+.boton-cancelar-modal {
+  background-color: #e63946;
+  color: white;
+  border: none;
+  padding: 0.6rem 1.2rem;
+  border-radius: 8px;
+  font-weight: bold;
+  cursor: pointer;
+  margin-top: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.boton-cancelar-modal:hover {
+  background-color: #c0323c;
 }
 
 .tarjeta-propiedad-mini.color-azul-oscuro,
@@ -1289,4 +1313,92 @@ body {
 .tarjeta-propiedad-mini.color-azul-oscuro {
   background-color: #0419fd;
   color: white;
+}
+
+.contenedor-doble-columna {
+  display: flex;
+  gap: 1rem;
+  width: 100%;
+}
+
+/* COLUMNA IZQUIERDA (PROPIEDADES) */
+.columna-propiedades-scroll {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+}
+
+.lista-propiedades-scroll {
+  max-height: 320px;
+  overflow-y: auto;
+  padding: 0.5rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  justify-content: center;
+  background: #f9f9f9;
+  border-radius: 10px;
+  border: 2px solid gold;
+}
+
+/* COLUMNA DERECHA (ACCIONES SIMULADAS) */
+.columna-acciones-scroll {
+  width: 50%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  background: #f7f7f7;
+  border: 2px solid gold;
+  border-radius: 12px;
+  padding: 1rem;
+}
+
+.lista-acciones-scroll {
+  max-height: 180px;
+  overflow-y: auto;
+  margin-bottom: 1rem;
+}
+
+.lista-acciones {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  font-weight: bold;
+}
+
+.resumen-deuda-fijo {
+  border-top: 2px dashed #ccc;
+  padding-top: 1rem;
+  font-weight: bold;
+}
+
+.popup-simulacion {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  background: white;
+  border-radius: 16px;
+  padding: 1rem;
+  width: 380px;
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .35);
+  border: 2px solid #111;
+  /* o dorado si quieres */
+  z-index: 2000;
+  /* por encima del contenido del modal */
+}
+
+.popup-simulacion button {
+  width: 100%;
+  padding: .75rem 1rem;
+  margin: .35rem 0;
+  border: none;
+  border-radius: 12px;
+  font-weight: 700;
+  background: #efefef;
+  cursor: pointer;
+}
+
+.popup-simulacion button:hover {
+  filter: brightness(0.98);
 }

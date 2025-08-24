@@ -128,6 +128,115 @@ export default function TableroConFondo({
   const [ganador, setGanador] = useState(null); // string con nombre del jugador
   const [mostrarModalGanador, setMostrarModalGanador] = useState(false);
   const [mostrarIntentarPagar, setMostrarIntentarPagar] = useState(false);
+  const [menuSimulacionActivo, setMenuSimulacionActivo] = useState(false);
+  const [propiedadSimulada, setPropiedadSimulada] = useState(null);
+  const [accionesSimuladas, setAccionesSimuladas] = useState([]);
+  const [dineroSimulado, setDineroSimulado] = useState(0);
+  const dineroActual = jugadorActual?.dinero ?? 0;
+  const [deudaPendiente, setDeudaPendiente] = useState(
+    jugadorActual?.deuda ?? 0
+  );
+  const puedeAceptar = dineroActual + dineroSimulado >= deudaPendiente;
+  const getHipoteca = (p) => Math.floor(p?.propiedad?.precio * 0.5) || 0;
+  const getValorVentaCasa = (p) => {
+    const info = casillasInfo.find((c) => c.id === p.propiedad?.id);
+    return Math.floor((info?.costeCasa ?? 0) / 2);
+  };
+  const getValorVentaHotel = (p) => {
+    const info = casillasInfo.find((c) => c.id === p.propiedad?.id);
+    return Math.floor((info?.costeHotel ?? 0) / 2);
+  };
+  const getValorVentaPropiedad = (p) => {
+    const precio = p?.propiedad?.precio ?? 0;
+    const estaHipotecada =
+      p?.hipotecada ||
+      accionesSimuladas.some(
+        (a) => a.tipo === "HIPOTECAR" && a.propiedadId === p.id
+      );
+
+    return Math.floor(precio * (estaHipotecada ? 0.4 : 0.5));
+  };
+
+  const pushAccion = (accion) => {
+    setAccionesSimuladas((prev) => [...prev, accion]);
+    setDineroSimulado((prev) => prev + accion.importe);
+  };
+
+  // 🏦 Hipotecar
+  const simularHipoteca = (p) => {
+    if (p?.hipotecada) return; // no duplicar
+    const importe = getHipoteca(p);
+    if (
+      accionesSimuladas.some(
+        (a) => a.tipo === "HIPOTECAR" && a.propiedadId === p.id
+      )
+    )
+      return;
+    pushAccion({
+      tipo: "HIPOTECAR",
+      propiedadId: p.id,
+      importe,
+      label: `🏦 Hipotecar ${p.propiedad?.nombre}`,
+    });
+  };
+
+  // 🏚️ Vender casa
+  const simularVentaCasa = (p) => {
+    if ((p?.casas ?? 0) <= 0) return;
+    const construccionesSimuladas = accionesSimuladas.filter(
+      (a) => a.tipo === "VENDER_CASA" && a.propiedadId === p.id
+    ).length;
+
+    if ((p.casas ?? 0) - construccionesSimuladas <= 0) return;
+    const importe = getValorVentaCasa(p);
+    pushAccion({
+      tipo: "VENDER_CASA",
+      propiedadId: p.id,
+      importe,
+      cantidad: 1,
+      label: `🏚️ Vender 1 casa de ${p.propiedad?.nombre}`,
+    });
+  };
+
+  const simularVentaHotel = (p) => {
+    if (!p?.hotel) return;
+
+    // Cuenta cuántas construcciones ya se han simulado (hotel o casa)
+    const construccionesSimuladas = accionesSimuladas.filter(
+      (a) =>
+        (a.tipo === "VENDER_CASA" || a.tipo === "VENDER_HOTEL") &&
+        a.propiedadId === p.id
+    ).length;
+
+    // Si ya has simulado 5 ventas (máximo posible con hotel), no dejes continuar
+    if (construccionesSimuladas >= 5) return;
+
+    const importe = getValorVentaHotel(p);
+    pushAccion({
+      tipo: "VENDER_HOTEL",
+      propiedadId: p.id,
+      importe,
+      label: `🏨 Vender hotel de ${p.propiedad?.nombre}`,
+    });
+  };
+
+  // 🏷️ Vender propiedad al banco
+  const simularVentaPropiedad = (p) => {
+    const importe = getValorVentaPropiedad(p);
+    if (
+      accionesSimuladas.some(
+        (a) => a.tipo === "VENDER_PROPIEDAD" && a.propiedadId === p.id
+      )
+    )
+      return;
+    pushAccion({
+      tipo: "VENDER_PROPIEDAD",
+      propiedadId: p.id,
+      importe,
+      label: `🏷️ Vender ${p.propiedad?.nombre}`,
+    });
+  };
+
   const handleEliminarse = async () => {
     // lógica para eliminar jugador
   };
@@ -183,6 +292,10 @@ export default function TableroConFondo({
   };
 
   const handleIntentarPagar = () => {
+    // ✅ Primero actualizas la deuda pendiente
+    setDeudaPendiente(jugadorActual?.deudaPendiente ?? 0);
+
+    // Luego haces el fetch para traer las propiedades
     fetch(
       `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
     )
@@ -192,7 +305,7 @@ export default function TableroConFondo({
         console.error("❌ Error al cargar propiedades (intentar pagar):", err)
       );
 
-    // Muestra el popup de intentar pagar y oculta el de quiebra
+    // Muestras el popup
     setMostrarPopupQuiebra(false);
     setMostrarIntentarPagar(true);
   };
@@ -2277,29 +2390,53 @@ export default function TableroConFondo({
                 No tienes propiedades disponibles.
               </p>
             ) : (
-              <div className="submenu-propiedades">
-                <h3 className="subtitulo-submenu">Selecciona una propiedad:</h3>
-                <div className="lista-propiedades-horizontal">
-                  {propiedadesJugador.map((propiedad) => {
-                    const grupoColor =
-                      propiedad.propiedad?.grupoColor || "GRIS";
-                    const color = grupoColor.toLowerCase().replace(/_/g, "-");
+              <div className="contenedor-doble-columna">
+                {/* 🧱 Columna izquierda: propiedades */}
+                <div className="columna-propiedades-scroll">
+                  <h3 className="subtitulo-submenu">
+                    Selecciona una propiedad:
+                  </h3>
+                  <div className="lista-propiedades-scroll">
+                    {propiedadesJugador.map((propiedad) => {
+                      const grupoColor =
+                        propiedad.propiedad?.grupoColor || "GRIS";
+                      const color = grupoColor.toLowerCase().replace(/_/g, "-");
+                      const colorClase = `color-${color}`;
 
-                    const colorClase = `color-${color}`;
+                      return (
+                        <div
+                          key={propiedad.id}
+                          className={`tarjeta-propiedad-mini ${colorClase}`}
+                          onClick={() => {
+                            setPropiedadSimulada(propiedad);
+                            setMenuSimulacionActivo(true);
+                          }}
+                        >
+                          {propiedad.propiedad?.nombre || propiedad.nombre}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
 
-                    console.log("🎯 grupoColor:", grupoColor);
-                    console.log("🎨 class final:", colorClase);
+                {/* 🧾 Columna derecha: acciones */}
+                <div className="columna-acciones-scroll">
+                  <h3 className="subtitulo-submenu">Acciones simuladas:</h3>
+                  <div className="lista-acciones-scroll">
+                    <ul className="lista-acciones">
+                      {accionesSimuladas.map((a, i) => (
+                        <li key={i}>
+                          {a.label} — +{a.importe}€
+                        </li>
+                      ))}
+                    </ul>
+                  </div>
 
-                    return (
-                      <div
-                        key={propiedad.id}
-                        className={`tarjeta-propiedad-mini ${colorClase}`}
-                        onClick={() => setPropiedadSeleccionada(propiedad)}
-                      >
-                        {propiedad.propiedad?.nombre || propiedad.nombre}
-                      </div>
-                    );
-                  })}
+                  <div className="resumen-deuda-fijo">
+                    <p>💵 Dinero actual: {dineroActual}</p>
+                    <p>💸 Deuda pendiente: {deudaPendiente}</p>
+                    <p>📈 Dinero con acciones: {dineroSimulado}</p>
+                  </div>
                 </div>
               </div>
             )}
@@ -2314,6 +2451,42 @@ export default function TableroConFondo({
               ❌ Cancelar
             </button>
           </div>
+        </div>
+      )}
+
+      {menuSimulacionActivo && propiedadSimulada && (
+        <div className="popup-simulacion">
+          <h4>{propiedadSimulada.propiedad?.nombre}</h4>
+
+          {/* Solo mostrar si la propiedad no está hipotecada */}
+          {!propiedadSimulada.hipotecada && (
+            <button onClick={() => simularHipoteca(propiedadSimulada)}>
+              🏦 Hipotecar
+            </button>
+          )}
+
+          {/* Mostrar vender casa si tiene casas */}
+          {propiedadSimulada.casas > 0 && (
+            <button onClick={() => simularVentaCasa(propiedadSimulada)}>
+              🏚️ Vender construcción
+            </button>
+          )}
+
+          {/* Mostrar vender hotel si tiene hotel */}
+          {propiedadSimulada.hotel && (
+            <button onClick={() => simularVentaHotel(propiedadSimulada)}>
+              🏨 Vender construcción
+            </button>
+          )}
+
+          {/* Siempre puede vender la propiedad al banco */}
+          <button onClick={() => simularVentaPropiedad(propiedadSimulada)}>
+            🏷️ Vender propiedad
+          </button>
+
+          <button onClick={() => setMenuSimulacionActivo(false)}>
+            ❌ Cancelar
+          </button>
         </div>
       )}
 
