@@ -33,6 +33,7 @@ export default function TableroConFondo({
   const [jugadores, setJugadores] = useState([]);
   const [turnoRecienCambiado, setTurnoRecienCambiado] = useState(false);
   const [suprimirMensajeTurno, setSuprimirMensajeTurno] = useState(false);
+  const [propiedadesEnPartida, setPropiedadesEnPartida] = useState([]);
   const [propiedadEnConfirmacion, setPropiedadEnConfirmacion] = useState(null);
   const [opcionesConstruccion, setOpcionesConstruccion] = useState({
     gruposConCasas: [],
@@ -926,6 +927,20 @@ export default function TableroConFondo({
     }
   }, [jugadores]);
 
+  useEffect(() => {
+    const obtenerConstrucciones = async () => {
+      const res = await fetch(
+        `http://localhost:8081/api/propiedadPartida/partida/${jugadorActual.partida.id}`
+      );
+      const data = await res.json();
+      setPropiedadesEnPartida(data);
+    };
+
+    if (jugadorActual?.partida?.id) {
+      obtenerConstrucciones();
+    }
+  }, [jugadorActual]);
+
   const tirarDado = async () => {
     haPagadoAlquiler.current = false;
     if (mostrarBienvenida) setMostrarBienvenida(false);
@@ -1541,6 +1556,11 @@ export default function TableroConFondo({
           else if (casilla.id >= 21 && casilla.id <= 30) clase = "arriba";
           else if (casilla.id >= 31 && casilla.id <= 39) clase = "derecha";
 
+          // Buscar la propiedad dinámica asociada
+          const propiedad = propiedadesEnPartida.find(
+            (p) => p.propiedad.posicion === casilla.id
+          );
+
           return (
             <div
               key={casilla.id}
@@ -1565,6 +1585,23 @@ export default function TableroConFondo({
                 }
               }}
             >
+              {/* Render de construcciones si existen */}
+              {propiedad?.hotel ? (
+                <div className="casillas-casas">
+                  <img src="/public/hotel-monopoly.png" className="icono-hotel" />
+                </div>
+              ) : (
+                <div className="casillas-casas">
+                  {[...Array(propiedad?.casas || 0)].map((_, i) => (
+                    <img
+                      key={i}
+                      src="/public/casa-monopoly.png"
+                      className="icono-casa"
+                    />
+                  ))}
+                </div>
+              )}
+
               {casilla.nombre}
               {jugadores
                 .filter((j) => j.posicion === casilla.id)
