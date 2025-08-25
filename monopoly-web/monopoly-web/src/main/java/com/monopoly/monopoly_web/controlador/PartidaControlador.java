@@ -329,4 +329,15 @@ public class PartidaControlador {
         partidaServicio.intentarPago(deudor, cantidad, acreedor);
         return ResponseEntity.ok("Pago procesado o marcado como quiebra.");
     }
+
+    @PostMapping("/pagar-deuda")
+    public ResponseEntity<String> pagarDeuda(@RequestParam Long jugadorId) {
+        try {
+            partidaServicio.pagarDeuda(jugadorId);
+            return ResponseEntity.ok("✅ Deuda pagada correctamente.");
+        } catch (Exception e) {
+            return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR)
+                    .body("❌ Error al pagar deuda: " + e.getMessage());
+        }
+    }
 }

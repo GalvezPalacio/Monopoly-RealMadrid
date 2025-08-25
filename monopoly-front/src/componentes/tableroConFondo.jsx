@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { useLocation } from "react-router-dom";
 import "../tableroConFondo.css";
 import casillasInfo from "../datos/casillasInfo";
@@ -12,6 +12,8 @@ import PopupTrueque from "./PopupTrueque";
 import PopupTruequeRecibido from "./PopupTruequeRecibido";
 import PopupQuiebra from "./PopupQuiebra";
 import "./TarjetaPropiedad.css";
+import PopupRealizarVentas from "./PopupRealizarVentas";
+import "./PopupRealizarVentas.css";
 
 export default function TableroConFondo({
   partidaId,
@@ -20,7 +22,7 @@ export default function TableroConFondo({
 }) {
   const location = useLocation();
   const jugadorInicial = location.state?.jugadorInicial || "Jugador 1";
-
+  const haPagadoAlquiler = useRef(false);
   const [posicionJugador, setPosicionJugador] = useState(0);
   const [propiedadEnAccion, setPropiedadEnAccion] = useState(null);
   const [resultadoDado, setResultadoDado] = useState(null);
@@ -133,9 +135,25 @@ export default function TableroConFondo({
   const [accionesSimuladas, setAccionesSimuladas] = useState([]);
   const [dineroSimulado, setDineroSimulado] = useState(0);
   const dineroActual = jugadorActual?.dinero ?? 0;
+  const [mostrarRealizarVentas, setMostrarRealizarVentas] = useState(false);
   const [deudaPendiente, setDeudaPendiente] = useState(
     jugadorActual?.deuda ?? 0
   );
+  const venderConstruccion = (propiedad) => {
+    if (!propiedad) return;
+
+    setPropiedadEnAccion(propiedad); // ✅ IMPORTANTE
+
+    if (propiedad.hotel > 0) {
+      venderHotel(propiedad);
+    } else if (propiedad.casas > 0) {
+      venderCasa(propiedad);
+    }
+  };
+  const abrirPopupRealizarVentas = () => {
+    setDeudaPendiente(jugadorActual?.deudaPendiente ?? 0);
+    setMostrarRealizarVentas(true);
+  };
   const puedeAceptar = dineroActual + dineroSimulado >= deudaPendiente;
   const getHipoteca = (p) => Math.floor(p?.propiedad?.precio * 0.5) || 0;
   const getValorVentaCasa = (p) => {
@@ -408,6 +426,12 @@ export default function TableroConFondo({
         `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
       ).then((r) => r.json());
       setPropiedadesJugador(props);
+
+      // ✅ NUEVO: recargar jugadores para actualizar dinero
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+      setJugadores(nuevos);
 
       // ✅ Verificar opciones de construcción tras la venta
       const opcionesRes = await fetch(
@@ -903,6 +927,7 @@ export default function TableroConFondo({
   }, [jugadores]);
 
   const tirarDado = async () => {
+    haPagadoAlquiler.current = false;
     if (mostrarBienvenida) setMostrarBienvenida(false);
     if (!jugadorActual) return;
     setMensajeLateral(null);
@@ -1071,21 +1096,9 @@ export default function TableroConFondo({
 
             const alquiler = datos.alquilerCalculado ?? 0;
 
-            try {
-              const res = await fetch(
-                `http://localhost:8081/api/partidas/intentar-pago?deudorId=${jugadorActual.id}&cantidad=${alquiler}&acreedorId=${propiedadPartida.dueno.id}`,
-                { method: "POST" }
-              );
-              const texto = await res.text();
-              console.log("Resultado intento de pago:", texto);
-              await cargarEstadoJugador();
-
-              setMensajeLateral(
-                `Has caído en ${casilla.nombre}, propiedad de ${propiedadPartida.dueno.nombre}. Le pagas ${alquiler}€ ${motivo}.`
-              );
-            } catch (err) {
-              console.error("Error al intentar pagar alquiler:", err);
-            }
+            setMensajeLateral(
+              `Has caído en ${casilla.nombre}, propiedad de ${propiedadPartida.dueno.nombre}. Le pagas ${alquiler}€ ${motivo}.`
+            );
           }
         } else {
           console.warn("No se encontró propiedadPartida para esta casilla.");
@@ -1187,6 +1200,62 @@ export default function TableroConFondo({
           alert("❌ " + err.message); // ✅ muestra el mensaje real que viene del backend
           setSuprimirMensajeTurno(false);
         });
+    }
+  };
+
+  const venderPropiedadAlBanco = async (prop) => {
+    if (!prop || !jugadorActual) return;
+
+    const estaHipotecada = prop.hipotecada;
+    const precioOriginal = prop.propiedad.precio;
+    const precioVenta = Math.floor(
+      precioOriginal * (estaHipotecada ? 0.4 : 0.5)
+    );
+
+    const confirmacion = window.confirm(
+      `¿Seguro que quieres vender "${prop.propiedad.nombre}" al banco por ${precioVenta}€?`
+    );
+    if (!confirmacion) return;
+
+    try {
+      setSuprimirMensajeTurno(true);
+
+      const dto = {
+        propiedadId: prop.id,
+        jugadorId: jugadorActual.id,
+        cantidad: precioVenta,
+      };
+
+      const res = await fetch(
+        "http://localhost:8081/api/propiedadPartida/vender-banco",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(dto),
+        }
+      );
+
+      const mensaje = await res.text();
+      if (!res.ok) throw new Error(mensaje);
+      alert("✅ " + mensaje);
+
+      // 🔁 actualizar jugador y propiedades
+      const nuevos = await fetch(
+        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+      ).then((r) => r.json());
+      setJugadores(nuevos);
+
+      const props = await fetch(
+        `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+      ).then((r) => r.json());
+      setPropiedadesJugador(props);
+
+      setPropiedadEnAccion(null);
+    } catch (err) {
+      console.error("❌ Error al vender propiedad:", err);
+      alert("❌ " + err.message);
+    } finally {
+      setTimeout(() => setSuprimirMensajeTurno(false), 200);
     }
   };
 
@@ -1709,7 +1778,7 @@ export default function TableroConFondo({
         onUsarTarjetaCarcel={usarTarjetaCarcel}
       />
 
-      {propiedadSeleccionada && !modoVenta && (
+      {propiedadSeleccionada && !modoVenta && !mostrarRealizarVentas && (
         <TarjetaPropiedad
           propiedad={propiedadSeleccionada}
           tipoEspecial={tipoMensaje} // nuevo
@@ -1724,6 +1793,7 @@ export default function TableroConFondo({
           robarCarta={robarCarta}
         />
       )}
+
       {mostrarSelectorCasa && (
         <SelectorConstruccion
           propiedades={propiedadesJugador.filter(
@@ -2302,6 +2372,7 @@ export default function TableroConFondo({
           onEliminarse={handleEliminarse}
           onTransferir={handleTransferir}
           onIntentarPagar={handleIntentarPagar}
+          abrirPopupRealizarVentas={abrirPopupRealizarVentas} // ✅ nuevo prop
         />
       )}
 
@@ -2383,7 +2454,7 @@ export default function TableroConFondo({
       {mostrarIntentarPagar && (
         <div className="modal-overlay">
           <div className="modal-intentar-pagar">
-            <h2 className="modal-titulo">💰 Intentar pagar la deuda</h2>
+            <h2 className="modal-titulo">💰 Simular acciones de venta</h2>
 
             {propiedadesJugador.length === 0 ? (
               <p style={{ textAlign: "center", marginTop: "1rem" }}>
@@ -2488,6 +2559,24 @@ export default function TableroConFondo({
             ❌ Cancelar
           </button>
         </div>
+      )}
+
+      {mostrarRealizarVentas && (
+        <PopupRealizarVentas
+          jugadorActual={jugadorActual}
+          propiedades={
+            Array.isArray(propiedadesJugador) ? propiedadesJugador : []
+          }
+          setMostrarRealizarVentas={setMostrarRealizarVentas}
+          deudaPendiente={deudaPendiente}
+          setMostrarPopupQuiebra={setMostrarPopupQuiebra}
+          propiedadEnAccion={propiedadEnAccion}
+          onVenderConstruccion={venderConstruccion}
+          onHipotecarPropiedad={hipotecarPropiedad}
+          onVenderPropiedad={venderPropiedadAlBanco}
+          setJugadores={setJugadores}
+          setPropiedadesJugador={setPropiedadesJugador}
+        />
       )}
 
       {mostrarPopupSubastaFinal && subastaLanzada?.propiedad && (

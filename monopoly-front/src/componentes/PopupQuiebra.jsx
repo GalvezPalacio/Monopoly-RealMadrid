@@ -6,6 +6,7 @@ const PopupQuiebra = ({
   onEliminarse,
   onTransferir,
   onIntentarPagar,
+  abrirPopupRealizarVentas,
 }) => {
   if (!estado?.enQuiebra) return null;
 
@@ -34,6 +35,13 @@ const PopupQuiebra = ({
           )}
           <button onClick={onIntentarPagar}>🔁 Simular ventas</button>
         </div>
+
+        <button
+          className="boton-realizar-ventas"
+          onClick={abrirPopupRealizarVentas}
+        >
+          🛠️ Realizar acciones de venta
+        </button>
       </div>
     </div>
   );

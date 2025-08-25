@@ -176,4 +176,35 @@ public class PartidaServicio {
         return "eliminado";
     }
 
+    @Transactional
+    public void pagarDeuda(Long jugadorId) {
+        Jugador deudor = jugadorRepositorio.findById(jugadorId)
+                .orElseThrow(() -> new RuntimeException("Jugador no encontrado"));
+
+        if (deudor.getDeudaPendiente() == null || deudor.getDeudaPendiente() <= 0) {
+            throw new RuntimeException("No hay deuda pendiente.");
+        }
+
+        Jugador acreedor = deudor.getJugadorAcreedor();
+        int deuda = deudor.getDeudaPendiente();
+        int dinero = deudor.getDinero();
+
+        if (dinero < deuda) {
+            throw new RuntimeException("No tienes suficiente dinero para pagar la deuda.");
+        }
+
+        // Restar al deudor
+        deudor.setDinero(dinero - deuda);
+        deudor.setDeudaPendiente(0);
+        deudor.setJugadorAcreedor(null);
+        deudor.setEnQuiebra(false);
+
+        jugadorRepositorio.save(deudor);
+
+        if (acreedor != null) {
+            acreedor.setDinero(acreedor.getDinero() + deuda);
+            jugadorRepositorio.save(acreedor);
+        }
+    }
+
 }
