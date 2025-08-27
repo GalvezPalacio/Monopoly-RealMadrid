@@ -14,6 +14,7 @@ import PopupQuiebra from "./PopupQuiebra";
 import "./TarjetaPropiedad.css";
 import PopupRealizarVentas from "./PopupRealizarVentas";
 import "./PopupRealizarVentas.css";
+import DadosAnimados from "./DadosAnimados";
 
 export default function TableroConFondo({
   partidaId,
@@ -137,6 +138,8 @@ export default function TableroConFondo({
   const [dineroSimulado, setDineroSimulado] = useState(0);
   const dineroActual = jugadorActual?.dinero ?? 0;
   const [mostrarRealizarVentas, setMostrarRealizarVentas] = useState(false);
+  const [mostrarDados, setMostrarDados] = useState(false);
+  const [tiradaPendiente, setTiradaPendiente] = useState(null);
   const [deudaPendiente, setDeudaPendiente] = useState(
     jugadorActual?.deuda ?? 0
   );
@@ -954,187 +957,185 @@ export default function TableroConFondo({
       );
 
       const data = await res.json();
-      const { dado1, dado2, suma, mensaje, carcel } = data;
-
-      console.log("🎲 Dados:", dado1, dado2, "→ total:", suma);
-      console.log("📩 Mensaje:", mensaje);
-
-      if (carcel) {
-        alert("⚠️ Has sacado dobles 3 veces seguidas. Vas directo a la grada.");
-        setMostrarPopupGrada(true);
-        setResultadoDado(null);
-        setAccionesDisponibles([]);
-        setPropiedadSeleccionada(null);
-        return;
-      }
-
-      if (mensaje === "CARCEL_DIRECTA") {
-        setMostrarPopupGrada(true);
-        return;
-      }
-
-      if (mensaje.includes("casilla de salida")) {
-        setMensajeSalida(
-          "💸 Has pasado por la casilla de salida. ¡Cobras 200€!"
-        );
-        setTimeout(() => setMensajeSalida(null), 2000);
-      }
-
-      const mensajeSinSalida = mensaje.replace(
-        "Has pasado por la casilla de salida. ¡Cobras 200€! ",
-        ""
-      );
-
-      // Tarjeta de COMUNIDAD o SUERTE
-      let fueTarjeta = false;
-
-      if (
-        mensajeSinSalida.includes("Caja de Comunidad") ||
-        mensajeSinSalida.includes("Has caído en 'Caja de Comunidad'")
-      ) {
-        setTipoMensaje("comunidad");
-        setMensajeEspecial(null); // aún no hay carta
-        setMostrarTarjetaReal(true); // mostramos el popup con botón "Roba una carta"
-        fueTarjeta = true;
-      } else if (mensajeSinSalida.includes("Has caído en 'Suerte'")) {
-        setTipoMensaje("suerte");
-        setMensajeEspecial(null); // aún no hay carta
-        setMostrarTarjetaReal(true); // mostramos el popup con botón "Roba una carta"
-        fueTarjeta = true;
-      }
-
-      // ⚠️ SOLO limpiamos si no fue tarjeta y no fue casilla especial
-      const casillaTemp = casillasInfo.find((c) =>
-        mensajeSinSalida.includes(c.nombre)
-      );
-      const tipoCasillaTemp = casillaTemp?.tipo;
-
-      if (!fueTarjeta && tipoCasillaTemp) {
-        const casillasConPopup = [
-          "suerte",
-          "comunidad",
-          "impuesto",
-          "palco-vip",
-          "vas-grada",
-          "visita-carcel",
-          "salida",
-        ];
-
-        if (!casillasConPopup.includes(tipoCasillaTemp)) {
-          setTipoMensaje(null);
-          setMensajeEspecial(null);
-          setMostrarTarjetaReal(false);
-        }
-      }
-
-      // 🔁 Actualizar estado general
-      const nuevos = await fetch(
-        `http://localhost:8081/api/partidas/${partidaId}/jugadores`
-      ).then((r) => r.json());
-      setJugadores(nuevos);
-
-      const jugadorActualizado = nuevos.find((j) => j.id === jugadorActual.id);
-      const nuevaPos = jugadorActualizado?.posicion ?? 0;
-
-      setResultadoDado({ dado1, dado2, suma });
-      setPosicionJugador(nuevaPos);
-
-      const opcionesRes = await fetch(
-        `http://localhost:8081/api/propiedadPartida/opciones-construccion?jugadorId=${jugadorActual.id}`
-      );
-      const opciones = await opcionesRes.json();
-      setOpcionesConstruccion(opciones);
-
-      const propsRes = await fetch(
-        `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
-      );
-      const props = await propsRes.json();
-      setPropiedadesJugador(props);
-
-      const casilla = casillasInfo[nuevaPos];
-      setPropiedadSeleccionada(casilla);
-
-      if (
-        [
-          "suerte",
-          "comunidad",
-          "impuesto",
-          "palco-vip",
-          "visita-carcel",
-          "vas-grada",
-          "salida",
-        ].includes(casilla.tipo)
-      ) {
-        setMostrarTarjetaReal(true);
-      }
-
-      if (["propiedad", "compania", "estacion"].includes(casilla.tipo)) {
-        const propiedadPartidaRes = await fetch(
-          `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
-        );
-
-        if (propiedadPartidaRes.ok) {
-          const datos = await propiedadPartidaRes.json();
-          const propiedadPartida = datos.propiedadPartida;
-          const estaciones = datos.estacionesDelDueno || 1;
-          const companias = datos.companiasDelDueno || 1;
-          const sumaDados = datos.sumaDados || 0;
-          const tipo = casilla.tipo;
-          let motivo = "";
-
-          if (!propiedadPartida.dueno) {
-            setMensajeLateral(
-              `Has caído en ${casilla.nombre}. No tiene dueño, puedes comprarla.`
-            );
-            setAccionesDisponibles(["Comprar"]);
-          } else if (propiedadPartida.dueno.id === jugadorActual.id) {
-            setMensajeLateral(`Has caído en ${casilla.nombre}. Es tuya.`);
-            setAccionesDisponibles(["Hipotecar"]);
-          } else {
-            if (tipo === "propiedad") {
-              if (propiedadPartida.hotel) {
-                motivo = "porque tiene un hotel";
-              } else if (propiedadPartida.casas > 0) {
-                motivo = `porque tiene ${propiedadPartida.casas} casa(s)`;
-              } else {
-                motivo = "por el alquiler base";
-              }
-            } else if (tipo === "estacion") {
-              motivo = `porque tiene ${estaciones} estación${
-                estaciones > 1 ? "es" : ""
-              }`;
-            } else if (tipo === "compania") {
-              motivo = `porque tiene ${companias} compañía${
-                companias > 1 ? "s" : ""
-              } y sacaste ${sumaDados}`;
-            }
-
-            const alquiler = datos.alquilerCalculado ?? 0;
-
-            setMensajeLateral(
-              `Has caído en ${casilla.nombre}, propiedad de ${propiedadPartida.dueno.nombre}. Le pagas ${alquiler}€ ${motivo}.`
-            );
-          }
-        } else {
-          console.warn("No se encontró propiedadPartida para esta casilla.");
-          setAccionesDisponibles([]);
-        }
-      } else {
-        setAccionesDisponibles([]);
-        setPropiedadSeleccionada(casilla);
-      }
-
-      if (mensaje.includes("Vuelves a tirar")) {
-        setMostrarBotonTirar(true);
-        setAlertaSuperior(
-          "🎲 Has sacado dobles. Realiza las acciones que quieras y vuelve a tirar al pulsar 'Terminar turno'."
-        );
-        setTimeout(() => setAlertaSuperior(false), 2000);
-      } else {
-        // No cambiamos el turno aquí. Lo hará el botón "Terminar turno".
-      }
+      setTiradaPendiente(data); // ⬅️ Almacena los datos reales
+      setMostrarDados(true); // ⬅️ Muestra la animación
     } catch (err) {
       console.error("❌ Error al tirar el dado:", err);
+    }
+  };
+
+  const procesarTirada = async (data) => {
+    const { dado1, dado2, suma, mensaje, carcel } = data;
+
+    console.log("🎲 Dados:", dado1, dado2, "→ total:", suma);
+    console.log("📩 Mensaje:", mensaje);
+
+    if (carcel) {
+      alert("⚠️ Has sacado dobles 3 veces seguidas. Vas directo a la grada.");
+      setMostrarPopupGrada(true);
+      setResultadoDado(null);
+      setAccionesDisponibles([]);
+      setPropiedadSeleccionada(null);
+      return;
+    }
+
+    if (mensaje === "CARCEL_DIRECTA") {
+      setMostrarPopupGrada(true);
+      return;
+    }
+
+    if (mensaje.includes("casilla de salida")) {
+      setMensajeSalida("💸 Has pasado por la casilla de salida. ¡Cobras 200€!");
+      setTimeout(() => setMensajeSalida(null), 2000);
+    }
+
+    const mensajeSinSalida = mensaje.replace(
+      "Has pasado por la casilla de salida. ¡Cobras 200€! ",
+      ""
+    );
+
+    let fueTarjeta = false;
+
+    if (
+      mensajeSinSalida.includes("Caja de Comunidad") ||
+      mensajeSinSalida.includes("Has caído en 'Caja de Comunidad'")
+    ) {
+      setTipoMensaje("comunidad");
+      setMensajeEspecial(null);
+      setMostrarTarjetaReal(true);
+      fueTarjeta = true;
+    } else if (mensajeSinSalida.includes("Has caído en 'Suerte'")) {
+      setTipoMensaje("suerte");
+      setMensajeEspecial(null);
+      setMostrarTarjetaReal(true);
+      fueTarjeta = true;
+    }
+
+    const casillaTemp = casillasInfo.find((c) =>
+      mensajeSinSalida.includes(c.nombre)
+    );
+    const tipoCasillaTemp = casillaTemp?.tipo;
+
+    if (!fueTarjeta && tipoCasillaTemp) {
+      const casillasConPopup = [
+        "suerte",
+        "comunidad",
+        "impuesto",
+        "palco-vip",
+        "vas-grada",
+        "visita-carcel",
+        "salida",
+      ];
+      if (!casillasConPopup.includes(tipoCasillaTemp)) {
+        setTipoMensaje(null);
+        setMensajeEspecial(null);
+        setMostrarTarjetaReal(false);
+      }
+    }
+
+    // 🔁 Actualizar estado general
+    const nuevos = await fetch(
+      `http://localhost:8081/api/partidas/${partidaId}/jugadores`
+    ).then((r) => r.json());
+    setJugadores(nuevos);
+
+    const jugadorActualizado = nuevos.find((j) => j.id === jugadorActual.id);
+    const nuevaPos = jugadorActualizado?.posicion ?? 0;
+
+    setResultadoDado({ dado1, dado2, suma });
+    setPosicionJugador(nuevaPos);
+
+    const opcionesRes = await fetch(
+      `http://localhost:8081/api/propiedadPartida/opciones-construccion?jugadorId=${jugadorActual.id}`
+    );
+    const opciones = await opcionesRes.json();
+    setOpcionesConstruccion(opciones);
+
+    const propsRes = await fetch(
+      `http://localhost:8081/api/propiedadPartida/del-jugador?jugadorId=${jugadorActual.id}`
+    );
+    const props = await propsRes.json();
+    setPropiedadesJugador(props);
+
+    const casilla = casillasInfo[nuevaPos];
+    setPropiedadSeleccionada(casilla);
+
+    if (
+      [
+        "suerte",
+        "comunidad",
+        "impuesto",
+        "palco-vip",
+        "visita-carcel",
+        "vas-grada",
+        "salida",
+      ].includes(casilla.tipo)
+    ) {
+      setMostrarTarjetaReal(true);
+    }
+
+    if (["propiedad", "compania", "estacion"].includes(casilla.tipo)) {
+      const propiedadPartidaRes = await fetch(
+        `http://localhost:8081/api/propiedadPartida/partida/${partidaId}/posicion/${casilla.id}`
+      );
+
+      if (propiedadPartidaRes.ok) {
+        const datos = await propiedadPartidaRes.json();
+        const propiedadPartida = datos.propiedadPartida;
+        const estaciones = datos.estacionesDelDueno || 1;
+        const companias = datos.companiasDelDueno || 1;
+        const sumaDados = datos.sumaDados || 0;
+        const tipo = casilla.tipo;
+        let motivo = "";
+
+        if (!propiedadPartida.dueno) {
+          setMensajeLateral(
+            `Has caído en ${casilla.nombre}. No tiene dueño, puedes comprarla.`
+          );
+          setAccionesDisponibles(["Comprar"]);
+        } else if (propiedadPartida.dueno.id === jugadorActual.id) {
+          setMensajeLateral(`Has caído en ${casilla.nombre}. Es tuya.`);
+          setAccionesDisponibles(["Hipotecar"]);
+        } else {
+          if (tipo === "propiedad") {
+            if (propiedadPartida.hotel) {
+              motivo = "porque tiene un hotel";
+            } else if (propiedadPartida.casas > 0) {
+              motivo = `porque tiene ${propiedadPartida.casas} casa(s)`;
+            } else {
+              motivo = "por el alquiler base";
+            }
+          } else if (tipo === "estacion") {
+            motivo = `porque tiene ${estaciones} estación${
+              estaciones > 1 ? "es" : ""
+            }`;
+          } else if (tipo === "compania") {
+            motivo = `porque tiene ${companias} compañía${
+              companias > 1 ? "s" : ""
+            } y sacaste ${sumaDados}`;
+          }
+
+          const alquiler = datos.alquilerCalculado ?? 0;
+
+          setMensajeLateral(
+            `Has caído en ${casilla.nombre}, propiedad de ${propiedadPartida.dueno.nombre}. Le pagas ${alquiler}€ ${motivo}.`
+          );
+        }
+      } else {
+        console.warn("No se encontró propiedadPartida para esta casilla.");
+        setAccionesDisponibles([]);
+      }
+    } else {
+      setAccionesDisponibles([]);
+      setPropiedadSeleccionada(casilla);
+    }
+
+    if (mensaje.includes("Vuelves a tirar")) {
+      setMostrarBotonTirar(true);
+      setAlertaSuperior(
+        "🎲 Has sacado dobles. Realiza las acciones que quieras y vuelve a tirar al pulsar 'Terminar turno'."
+      );
+      setTimeout(() => setAlertaSuperior(false), 2000);
     }
   };
 
@@ -1588,7 +1589,10 @@ export default function TableroConFondo({
               {/* Render de construcciones si existen */}
               {propiedad?.hotel ? (
                 <div className="casillas-casas">
-                  <img src="/public/hotel-monopoly.png" className="icono-hotel" />
+                  <img
+                    src="/public/hotel-monopoly.png"
+                    className="icono-hotel"
+                  />
                 </div>
               ) : (
                 <div className="casillas-casas">
@@ -2613,6 +2617,18 @@ export default function TableroConFondo({
           onVenderPropiedad={venderPropiedadAlBanco}
           setJugadores={setJugadores}
           setPropiedadesJugador={setPropiedadesJugador}
+        />
+      )}
+
+      {mostrarDados && tiradaPendiente && (
+        <DadosAnimados
+          dado1={tiradaPendiente.dado1}
+          dado2={tiradaPendiente.dado2}
+          onFinish={() => {
+            setMostrarDados(false);
+            procesarTirada(tiradaPendiente);
+            setTiradaPendiente(null);
+          }}
         />
       )}
 
